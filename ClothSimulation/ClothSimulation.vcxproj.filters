@@ -3,8 +3,12 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="CApplication.cpp" />
+    <ClCompile Include="CSimulationSystem.cpp" />
+    <ClCompile Include="CClothSimulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
+    <ClInclude Include="CSimulationSystem.h" />
+    <ClInclude Include="CClothSimulation.h" />
   </ItemGroup>
 </Project>
