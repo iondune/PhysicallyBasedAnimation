@@ -53,9 +53,10 @@ void CSimulationSystem::Update()
 
 			if (DisplayedFrame < MaxFrames)
 			{
+				++DisplayedFrame;
 				for (auto Simulation : Simulations)
 				{
-					Simulation->UpdateSceneObjects(++DisplayedFrame);
+					Simulation->UpdateSceneObjects(DisplayedFrame);
 				}
 			}
 		}

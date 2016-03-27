@@ -76,6 +76,7 @@ void CApplication::InitializeEngine()
 void CApplication::LoadAssets()
 {
 	CubeMesh = CGeometryCreator::CreateCube();
+	SphereMesh = CGeometryCreator::CreateSphere();
 
 	ClothShader = AssetManager->LoadShader("Cloth");
 	GroundShader = AssetManager->LoadShader("Ground");
@@ -131,6 +132,7 @@ void CApplication::AddSceneObjects()
 void CApplication::MainLoop()
 {
 	SimulationSystem.AddSimulation(new CClothSimulation());
+	SimulationSystem.AddSimulation(new CSphereSlideSimulation());
 	SimulationSystem.Start(RenderPass);
 
 	TimeManager->Init();

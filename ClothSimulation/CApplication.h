@@ -3,6 +3,7 @@
 
 #include <ionEngine.h>
 #include "CSimulationSystem.h"
+#include "CSphereSlideSimulation.h"
 
 
 class CApplication : public Singleton<CApplication>, public IEventListener
@@ -29,6 +30,7 @@ public:
 	SharedPointer<ion::Graphics::IShaderProgram> DiffuseShader;
 
 	ion::Scene::CSimpleMesh * CubeMesh = nullptr;
+	ion::Scene::CSimpleMesh * SphereMesh = nullptr;
 	
 	SharedPointer<ion::Graphics::ITexture> GroundTexture;
 
