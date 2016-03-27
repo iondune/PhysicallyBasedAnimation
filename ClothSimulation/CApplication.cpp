@@ -124,38 +124,12 @@ void CApplication::AddSceneObjects()
 
 	PointLight = new CPointLight();
 	RenderPass->AddLight(PointLight);
-
-	ClothSimulation.Setup();
-	ClothSimulation.AddSceneObjects(RenderPass);
-	ClothSimulation.UpdateSceneObjects(DisplayedFrame);
 }
 
 
 void CApplication::MainLoop()
 {
-	double const TimeStep = 1e-2;
-
-	bool Running = true;
-	bool Simulating = false;
-	bool Paused = false;
-
-	std::thread SimulationThread([this, &Running, &Simulating, TimeStep]()
-	{
-		while (Running)
-		{
-			if (Simulating)
-			{
-				ClothSimulation.SimulateStep(TimeStep);
-				SimulatedFrames ++;
-			}
-			else
-			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
-			}
-		}
-	});
-
-	double StepAccumulator = 0;
+	SimulationSystem.Start(RenderPass);
 
 	TimeManager->Init();
 	while (WindowManager->Run())
@@ -164,80 +138,9 @@ void CApplication::MainLoop()
 		
 		// GUI
 		GUIManager->NewFrame();
-		ImGui::SetNextWindowPos(ImVec2(10, 10));
-		ImGui::Begin("Simulation");
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		int MaxFrames = SimulatedFrames - 1;
-		ImGui::Separator();
-		if (Simulating)
-		{
-			if (ImGui::Button("Stop"))
-			{
-				Simulating = false;
-			}
-		}
-		else
-		{
-			if (ImGui::Button("Simulate"))
-			{
-				Simulating = true;
-			}
-		}
-		ImGui::SameLine();
-		if (Paused)
-		{
-			if (ImGui::Button("Play"))
-			{
-				Paused = false;
-			}
-		}
-		else
-		{
-			if (ImGui::Button("Pause"))
-			{
-				Paused = true;
-			}
-		}
-		ImGui::Text("Simulated Frames: %d", MaxFrames);
-		if (ImGui::SliderInt("Current Frame", &DisplayedFrame, 0, MaxFrames))
-		{
-			ClothSimulation.UpdateSceneObjects(DisplayedFrame);
-			Paused = true;
-		}
-		if (ImGui::Button("<< Previous"))
-		{
-			if (DisplayedFrame > 0)
-			{
-				ClothSimulation.UpdateSceneObjects(DisplayedFrame--);
-			}
-			Paused = true;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Next >>"))
-		{
-			if (DisplayedFrame < MaxFrames)
-			{
-				ClothSimulation.UpdateSceneObjects(DisplayedFrame++);
-			}
-			Paused = true;
-		}
-		ImGui::End();
+		SimulationSystem.GUI();
 
-		if (! Paused)
-		{
-			StepAccumulator += TimeManager->GetElapsedTime();
-
-			if (StepAccumulator > TimeStep)
-			{
-				StepAccumulator = 0;
-
-				if (DisplayedFrame < MaxFrames)
-				{
-					ClothSimulation.UpdateSceneObjects(DisplayedFrame++);
-				}
-			}
-		}
-
+		SimulationSystem.Update();
 		PointLight->SetPosition(FreeCamera->GetPosition());
 
 		// Draw
@@ -247,6 +150,5 @@ void CApplication::MainLoop()
 		Window->SwapBuffers();
 	}
 
-	Running = false;
-	SimulationThread.join();
+	SimulationSystem.Stop();
 }

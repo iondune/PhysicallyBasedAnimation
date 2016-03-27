@@ -2,7 +2,7 @@
 #pragma once
 
 #include <ionEngine.h>
-#include "CClothSimulation.h"
+#include "CSimulationSystem.h"
 
 
 class CApplication : public Singleton<CApplication>, public IEventListener
@@ -32,8 +32,6 @@ public:
 	
 	SharedPointer<ion::Graphics::ITexture> GroundTexture;
 
-	CClothSimulation ClothSimulation;
-
 protected:
 
 	void InitializeEngine();
@@ -46,8 +44,7 @@ protected:
 	ion::Scene::CPerspectiveCamera * FreeCamera = nullptr;
 	ion::Scene::CPointLight * PointLight = nullptr;
 
-	int DisplayedFrame = 0;
-	std::atomic<int> SimulatedFrames = 1;
+	CSimulationSystem SimulationSystem;
 
 private:
 
