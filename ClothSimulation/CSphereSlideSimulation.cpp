@@ -33,7 +33,7 @@ void CSphereSlideSimulation::AddSceneObjects(ion::Scene::CRenderPass * RenderPas
 	SphereObject = new CSimpleMeshSceneObject();
 	SphereObject->SetMesh(Application->SphereMesh);
 	SphereObject->SetShader(Application->DiffuseShader);
-	SphereObject->SetScale(vec3f((float) Radius));
+	SphereObject->SetScale(vec3f((float) Radius * 2));
 	RenderPass->AddSceneObject(SphereObject);
 }
 
