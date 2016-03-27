@@ -114,7 +114,7 @@ void CApplication::AddSceneObjects()
 	GroundObject->SetMesh(CubeMesh);
 	GroundObject->SetShader(GroundShader);
 	GroundObject->SetScale(vec3f(16, 1, 16));
-	GroundObject->SetPosition(vec3f(0, -0.5f, 0));
+	GroundObject->SetPosition(vec3f(0, -2.5f, 0));
 	GroundObject->SetTexture("uTexture", GroundTexture);
 	RenderPass->AddSceneObject(GroundObject);
 	
@@ -122,6 +122,7 @@ void CApplication::AddSceneObjects()
 	Light->SetDirection(vec3f(1, -1, 1));
 	RenderPass->AddLight(Light);
 
+	ClothSimulation.Setup();
 	ClothSimulation.AddSceneObjects(RenderPass);
 }
 
@@ -144,6 +145,7 @@ void CApplication::MainLoop()
 			ImGui::End();
 		}
 
+		ClothSimulation.SimulateStep(1e-2);
 		ClothSimulation.UpdateSceneObjects();
 
 		// Draw
