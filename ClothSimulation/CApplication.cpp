@@ -76,8 +76,8 @@ void CApplication::LoadAssets()
 {
 	CubeMesh = CGeometryCreator::CreateCube();
 
-	SimpleShader = AssetManager->LoadShader("Simple");
-	SimpleTextureShader = AssetManager->LoadShader("SimpleTexture");
+	ClothShader = AssetManager->LoadShader("Cloth");
+	GroundShader = AssetManager->LoadShader("Ground");
 	DiffuseShader = AssetManager->LoadShader("Diffuse");
 
 	GroundTexture = AssetManager->LoadTexture("Ground.png");
@@ -112,7 +112,7 @@ void CApplication::AddSceneObjects()
 {
 	CSimpleMeshSceneObject * GroundObject = new CSimpleMeshSceneObject();
 	GroundObject->SetMesh(CubeMesh);
-	GroundObject->SetShader(SimpleTextureShader);
+	GroundObject->SetShader(GroundShader);
 	GroundObject->SetScale(vec3f(16, 1, 16));
 	GroundObject->SetPosition(vec3f(0, -0.5f, 0));
 	GroundObject->SetTexture("uTexture", GroundTexture);
@@ -121,6 +121,8 @@ void CApplication::AddSceneObjects()
 	CDirectionalLight * Light = new CDirectionalLight();
 	Light->SetDirection(vec3f(1, -1, 1));
 	RenderPass->AddLight(Light);
+
+	ClothSimulation.AddSceneObjects(RenderPass);
 }
 
 
@@ -141,6 +143,8 @@ void CApplication::MainLoop()
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::End();
 		}
+
+		ClothSimulation.UpdateSceneObjects();
 
 		// Draw
 		RenderTarget->ClearColorAndDepth();

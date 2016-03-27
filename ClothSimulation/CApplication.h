@@ -2,6 +2,7 @@
 #pragma once
 
 #include <ionEngine.h>
+#include "CClothSimulation.h"
 
 
 class CApplication : public Singleton<CApplication>, public IEventListener
@@ -23,13 +24,15 @@ public:
 	SharedPointer<ion::Graphics::IGraphicsContext> GraphicsContext;
 	ion::Scene::CRenderPass * RenderPass = nullptr;
 
-	SharedPointer<ion::Graphics::IShaderProgram> SimpleShader;
-	SharedPointer<ion::Graphics::IShaderProgram> SimpleTextureShader;
+	SharedPointer<ion::Graphics::IShaderProgram> ClothShader;
+	SharedPointer<ion::Graphics::IShaderProgram> GroundShader;
 	SharedPointer<ion::Graphics::IShaderProgram> DiffuseShader;
 
 	ion::Scene::CSimpleMesh * CubeMesh = nullptr;
 	
 	SharedPointer<ion::Graphics::ITexture> GroundTexture;
+
+	CClothSimulation ClothSimulation;
 
 protected:
 
