@@ -47,7 +47,9 @@ void CSimulationSystem::Update()
 	{
 		StepAccumulator += TimeManager->GetElapsedTime();
 
-		if (StepAccumulator > TimeStep)
+		double TimeNeeded = TimeStep / pow(10, PlaybackSpeed);
+
+		if (StepAccumulator > TimeNeeded)
 		{
 			StepAccumulator = 0;
 
@@ -100,6 +102,9 @@ void CSimulationSystem::GUI()
 			Paused = true;
 		}
 	}
+
+	ImGui::Text("Playback Speed: 1e%d", PlaybackSpeed);
+	ImGui::SliderInt("Playback Speed", &PlaybackSpeed, -3, 0);
 
 	bool UpdatedNeeded = false;
 

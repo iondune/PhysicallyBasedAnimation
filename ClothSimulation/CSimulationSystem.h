@@ -47,6 +47,8 @@ protected:
 	double const TimeStep = 1e-2;
 	double StepAccumulator = 0;
 
+	int PlaybackSpeed = 0;
+
 	ion::Scene::CRenderPass * RenderPass = nullptr;
 
 };
