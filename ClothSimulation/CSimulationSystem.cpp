@@ -104,7 +104,7 @@ void CSimulationSystem::GUI()
 	}
 
 	ImGui::Text("Playback Speed: 1e%d", PlaybackSpeed);
-	ImGui::SliderInt("Playback Speed", &PlaybackSpeed, -3, 0);
+	ImGui::SliderInt("Playback Speed", &PlaybackSpeed, -2, 0);
 
 	bool UpdatedNeeded = false;
 

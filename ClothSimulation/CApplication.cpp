@@ -131,8 +131,11 @@ void CApplication::AddSceneObjects()
 
 void CApplication::MainLoop()
 {
-	SimulationSystem.AddSimulation(new CClothSimulation());
-	SimulationSystem.AddSimulation(new CSphereSlideSimulation());
+	CSphereSlideSimulation * SphereSlideSimulation = new CSphereSlideSimulation();
+	CClothSimulation * ClothSimulation = new CClothSimulation(SphereSlideSimulation);
+
+	SimulationSystem.AddSimulation(SphereSlideSimulation);
+	SimulationSystem.AddSimulation(ClothSimulation);
 	SimulationSystem.Start(RenderPass);
 
 	TimeManager->Init();

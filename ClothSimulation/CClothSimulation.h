@@ -3,12 +3,15 @@
 
 #include <ionEngine.h>
 #include "CSimulationSystem.h"
+#include "CSphereSlideSimulation.h"
 
 
 class CClothSimulation : public ISimulation
 {
 
 public:
+
+	CClothSimulation(CSphereSlideSimulation * Sphere);
 
 	void Setup();
 	void SimulateStep(double const TimeDelta);
@@ -57,6 +60,8 @@ protected:
 	mutex ParticlesMutex;
 
 	SParticle * GetParticle(vec2i const & Index);
+
+	CSphereSlideSimulation * Sphere = nullptr;
 
 	ion::Scene::CSimpleMesh * ClothMesh = nullptr;
 	ion::Scene::CSimpleMeshSceneObject * ClothObjectFront = nullptr;
