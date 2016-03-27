@@ -6,9 +6,12 @@ void CSimulationSystem::Start(ion::Scene::CRenderPass * RenderPass)
 {
 	this->RenderPass = RenderPass;
 
-	ClothSimulation.Setup();
-	ClothSimulation.AddSceneObjects(RenderPass);
-	ClothSimulation.UpdateSceneObjects(DisplayedFrame);
+	for (auto Simulation : Simulations)
+	{
+		Simulation->Setup();
+		Simulation->AddSceneObjects(RenderPass);
+		Simulation->UpdateSceneObjects(DisplayedFrame);
+	}
 
 	SimulationThread = thread([this]()
 	{
@@ -16,7 +19,10 @@ void CSimulationSystem::Start(ion::Scene::CRenderPass * RenderPass)
 		{
 			if (Simulating)
 			{
-				ClothSimulation.SimulateStep(TimeStep);
+				for (auto Simulation : Simulations)
+				{
+					Simulation->SimulateStep(TimeStep);
+				}
 				SimulatedFrames ++;
 			}
 			else
@@ -47,7 +53,10 @@ void CSimulationSystem::Update()
 
 			if (DisplayedFrame < MaxFrames)
 			{
-				ClothSimulation.UpdateSceneObjects(++DisplayedFrame);
+				for (auto Simulation : Simulations)
+				{
+					Simulation->UpdateSceneObjects(++DisplayedFrame);
+				}
 			}
 		}
 	}
@@ -90,17 +99,21 @@ void CSimulationSystem::GUI()
 			Paused = true;
 		}
 	}
+
+	bool UpdatedNeeded = false;
+
 	ImGui::Text("Simulated Frames: %d", MaxFrames);
 	if (ImGui::SliderInt("Current Frame", &DisplayedFrame, 0, MaxFrames))
 	{
-		ClothSimulation.UpdateSceneObjects(DisplayedFrame);
+		UpdatedNeeded = true;
 		Paused = true;
 	}
 	if (ImGui::Button("<< Previous"))
 	{
 		if (DisplayedFrame > 0)
 		{
-			ClothSimulation.UpdateSceneObjects(--DisplayedFrame);
+			--DisplayedFrame;
+			UpdatedNeeded = true;
 		}
 		Paused = true;
 	}
@@ -109,9 +122,24 @@ void CSimulationSystem::GUI()
 	{
 		if (DisplayedFrame < MaxFrames)
 		{
-			ClothSimulation.UpdateSceneObjects(++DisplayedFrame);
+			++DisplayedFrame;
+			UpdatedNeeded = true;
 		}
 		Paused = true;
 	}
+
+	if (UpdatedNeeded)
+	{
+		for (auto Simulation : Simulations)
+		{
+			Simulation->UpdateSceneObjects(DisplayedFrame);
+		}
+	}
+
 	ImGui::End();
+}
+
+void CSimulationSystem::AddSimulation(ISimulation * Simulation)
+{
+	Simulations.push_back(Simulation);
 }

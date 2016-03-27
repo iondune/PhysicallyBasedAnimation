@@ -1,5 +1,6 @@
 
 #include "CApplication.h"
+#include "CClothSimulation.h"
 
 using namespace ion;
 using namespace ion::Scene;
@@ -129,6 +130,7 @@ void CApplication::AddSceneObjects()
 
 void CApplication::MainLoop()
 {
+	SimulationSystem.AddSimulation(new CClothSimulation());
 	SimulationSystem.Start(RenderPass);
 
 	TimeManager->Init();

@@ -2,9 +2,10 @@
 #pragma once
 
 #include <ionEngine.h>
+#include "CSimulationSystem.h"
 
 
-class CClothSimulation
+class CClothSimulation : public ISimulation
 {
 
 public:

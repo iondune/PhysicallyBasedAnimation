@@ -2,8 +2,20 @@
 #pragma once
 
 #include <ionEngine.h>
-#include "CClothSimulation.h"
 
+
+class ISimulation
+{
+
+public:
+
+	virtual void Setup() = 0;
+	virtual void SimulateStep(double const TimeDelta) = 0;
+
+	virtual void AddSceneObjects(ion::Scene::CRenderPass * RenderPass) = 0;
+	virtual void UpdateSceneObjects(uint const CurrentFrame) = 0;
+
+};
 
 class CSimulationSystem
 {
@@ -16,9 +28,11 @@ public:
 	void Update();
 	void GUI();
 
+	void AddSimulation(ISimulation * Simulation);
+
 protected:
 
-	CClothSimulation ClothSimulation;
+	vector<ISimulation *> Simulations;
 
 	thread SimulationThread;
 	int DisplayedFrame = 0;
