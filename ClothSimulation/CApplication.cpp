@@ -95,13 +95,13 @@ void CApplication::SetupScene()
 	SceneManager->AddRenderPass(RenderPass);
 
 	FreeCamera = new CPerspectiveCamera(Window->GetAspectRatio());
-	FreeCamera->SetPosition(vec3f(0, 3, -5));
+	FreeCamera->SetPosition(vec3f(-1, 0.3f, 0));
 	FreeCamera->SetFocalLength(0.4f);
 	FreeCamera->SetFarPlane(10000.f);
 
 	CCameraController * Controller = new CCameraController(FreeCamera);
-	Controller->SetTheta(15.f * Constants32::Pi / 48.f);
-	Controller->SetPhi(-Constants32::Pi / 16.f);
+	Controller->SetTheta(0);
+	Controller->SetPhi(0);
 	Window->AddListener(Controller);
 	TimeManager->MakeUpdateTick(0.02)->AddListener(Controller);
 
@@ -114,7 +114,7 @@ void CApplication::AddSceneObjects()
 	GroundObject->SetMesh(CubeMesh);
 	GroundObject->SetShader(GroundShader);
 	GroundObject->SetScale(vec3f(16, 1, 16));
-	GroundObject->SetPosition(vec3f(0, -2.5f, 0));
+	GroundObject->SetPosition(vec3f(0, -1, 0));
 	GroundObject->SetTexture("uTexture", GroundTexture);
 	RenderPass->AddSceneObject(GroundObject);
 	
@@ -136,16 +136,25 @@ void CApplication::MainLoop()
 	double const TimeStep = 1e-2;
 
 	bool Running = true;
-	std::thread SimulationThread([this, &Running, TimeStep]()
+	bool Simulating = false;
+	bool Paused = false;
+
+	std::thread SimulationThread([this, &Running, &Simulating, TimeStep]()
 	{
 		while (Running)
 		{
-			ClothSimulation.SimulateStep(TimeStep);
-			SimulatedFrames ++;
+			if (Simulating)
+			{
+				ClothSimulation.SimulateStep(TimeStep);
+				SimulatedFrames ++;
+			}
+			else
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			}
 		}
 	});
 
-	bool Paused = false;
 	double StepAccumulator = 0;
 
 	TimeManager->Init();
@@ -160,6 +169,35 @@ void CApplication::MainLoop()
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		int MaxFrames = SimulatedFrames - 1;
 		ImGui::Separator();
+		if (Simulating)
+		{
+			if (ImGui::Button("Stop"))
+			{
+				Simulating = false;
+			}
+		}
+		else
+		{
+			if (ImGui::Button("Simulate"))
+			{
+				Simulating = true;
+			}
+		}
+		ImGui::SameLine();
+		if (Paused)
+		{
+			if (ImGui::Button("Play"))
+			{
+				Paused = false;
+			}
+		}
+		else
+		{
+			if (ImGui::Button("Pause"))
+			{
+				Paused = true;
+			}
+		}
 		ImGui::Text("Simulated Frames: %d", MaxFrames);
 		if (ImGui::SliderInt("Current Frame", &DisplayedFrame, 0, MaxFrames))
 		{
@@ -183,7 +221,6 @@ void CApplication::MainLoop()
 			}
 			Paused = true;
 		}
-		ImGui::Checkbox("Paused", &Paused);
 		ImGui::End();
 
 		if (! Paused)
