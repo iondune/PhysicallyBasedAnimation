@@ -13,7 +13,7 @@ public:
 	void SimulateStep(double const TimeDelta);
 
 	void AddSceneObjects(ion::Scene::CRenderPass * RenderPass);
-	void UpdateSceneObjects();
+	void UpdateSceneObjects(uint const CurrentFrame);
 
 	struct SParticle
 	{
@@ -52,6 +52,8 @@ protected:
 
 	vector<SParticle *> Particles;
 	vector<SSpring *> Springs;
+
+	mutex ParticlesMutex;
 
 	SParticle * GetParticle(vec2i const & Index);
 

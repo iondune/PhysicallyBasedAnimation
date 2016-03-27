@@ -2,7 +2,7 @@
 
 #define LIGHT_MAX 7
 
-struct SLight
+struct SDirectionalLight
 {
 	vec3 Position;
 	vec3 Color;
@@ -15,8 +15,8 @@ in vec3 vNormal;
 uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
-uniform int uPointLightsCount;
-uniform SLight uPointLights[LIGHT_MAX];
+uniform int uDirectionalLightsCount;
+uniform SLight uDirectionalLights[LIGHT_MAX];
 uniform vec3 uCameraPosition;
 
 out vec3 fLightVector[LIGHT_MAX];

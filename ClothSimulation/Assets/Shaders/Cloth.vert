@@ -7,16 +7,19 @@ uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform vec3 uCameraPosition;
+uniform int uFlipNormals;
 
 out vec3 fNormal;
 out vec3 fEye;
+out vec3 fWorldPosition;
 
 
 void main()
 {
-	vec4 WorldPosition = uModelMatrix * vec4(vPosition, 1.0);
+	vec4 Position = uModelMatrix * vec4(vPosition, 1.0);
 
-	gl_Position = uProjectionMatrix * uViewMatrix * WorldPosition;
-	fEye = normalize(uCameraPosition - WorldPosition.xyz);
-	fNormal = vNormal;
+	gl_Position = uProjectionMatrix * uViewMatrix * Position;
+	fEye = normalize(uCameraPosition - Position.xyz);
+	fNormal = uFlipNormals != 0 ? -vNormal : vNormal;
+	fWorldPosition = Position.xyz;
 }

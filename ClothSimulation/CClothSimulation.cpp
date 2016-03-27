@@ -12,8 +12,8 @@ using namespace ion::Graphics;
 
 void CClothSimulation::Setup()
 {
-	int rows = 2;
-	int cols = 2;
+	int rows = 10;
+	int cols = 10;
 	double mass = 0.1;
 	double stiffness = 1e2;
 	vec2d damping(0.0, 1.0);
@@ -133,6 +133,7 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 	v.setZero();
 	f.setZero();
 
+	ParticlesMutex.lock();
 	for (SParticle * particle : Particles)
 	{
 		if (! particle->IsFixed)
@@ -173,19 +174,16 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 			K.block<3, 3>(spring->Particle1->Index, spring->Particle0->Index) -= StiffnessMatrix;
 		}
 	}
+	ParticlesMutex.unlock();
 
 	Eigen::MatrixXd const D = Damping.X * TimeDelta * M + Damping.Y * Sq(TimeDelta) * K;
-
-	cout << M << endl;
-	cout << D << endl;
 
 	Eigen::MatrixXd const A = M + D;
 	Eigen::VectorXd const b = M * v + TimeDelta * f;
 
-	cout << A << endl;
-	cout << b << endl;
-	Eigen::VectorXd Result = A.ldlt().solve(b);
+	Eigen::VectorXd const Result = A.ldlt().solve(b);
 
+	ParticlesMutex.lock();
 	for (SParticle * particle : Particles)
 	{
 		if (! particle->IsFixed)
@@ -193,7 +191,13 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 			particle->VelocityFrames.push_back(ToIon(Result.segment(particle->Index, 3)));
 			particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
 		}
+		else
+		{
+			particle->VelocityFrames.push_back(0);
+			particle->PositionFrames.push_back(particle->PositionFrames.back());
+		}
 	}
+	ParticlesMutex.unlock();
 }
 
 void CClothSimulation::AddSceneObjects(ion::Scene::CRenderPass * RenderPass)
@@ -244,8 +248,9 @@ void CClothSimulation::AddSceneObjects(ion::Scene::CRenderPass * RenderPass)
 	RenderPass->AddSceneObject(ClothObjectBack);
 }
 
-void CClothSimulation::UpdateSceneObjects()
+void CClothSimulation::UpdateSceneObjects(uint const CurrentFrame)
 {
+	ParticlesMutex.lock();
 	for (int x = 0; x < Rows - 1; ++ x)
 	{
 		for (int y = 0; y < Columns - 1; ++ y)
@@ -262,11 +267,12 @@ void CClothSimulation::UpdateSceneObjects()
 					vec2i(1, 0),
 				};
 
-				ClothMesh->Vertices[Start + i].Position = GetParticle(vec2i(x, y) + Offsets[i])->PositionFrames.back();
+				ClothMesh->Vertices[Start + i].Position = GetParticle(vec2i(x, y) + Offsets[i])->PositionFrames[CurrentFrame];
 				ClothMesh->Vertices[Start + i].Normal = vec3f(0, 0, 1);
 			}
 		}
 	}
+	ParticlesMutex.unlock();
 
 	ClothObjectFront->SetMesh(ClothMesh);
 	ClothObjectBack->SetMesh(ClothMesh);

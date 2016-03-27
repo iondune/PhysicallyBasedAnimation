@@ -44,6 +44,10 @@ protected:
 
 	SharedPointer<ion::Graphics::IRenderTarget> RenderTarget = nullptr;
 	ion::Scene::CPerspectiveCamera * FreeCamera = nullptr;
+	ion::Scene::CPointLight * PointLight = nullptr;
+
+	int DisplayedFrame = 0;
+	std::atomic<int> SimulatedFrames = 1;
 
 private:
 

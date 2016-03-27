@@ -119,16 +119,35 @@ void CApplication::AddSceneObjects()
 	RenderPass->AddSceneObject(GroundObject);
 	
 	CDirectionalLight * Light = new CDirectionalLight();
-	Light->SetDirection(vec3f(1, -1, 1));
+	Light->SetDirection(vec3f(1, -2, -2));
 	RenderPass->AddLight(Light);
+
+	PointLight = new CPointLight();
+	RenderPass->AddLight(PointLight);
 
 	ClothSimulation.Setup();
 	ClothSimulation.AddSceneObjects(RenderPass);
+	ClothSimulation.UpdateSceneObjects(DisplayedFrame);
 }
 
 
 void CApplication::MainLoop()
 {
+	double const TimeStep = 1e-2;
+
+	bool Running = true;
+	std::thread SimulationThread([this, &Running, TimeStep]()
+	{
+		while (Running)
+		{
+			ClothSimulation.SimulateStep(TimeStep);
+			SimulatedFrames ++;
+		}
+	});
+
+	bool Paused = false;
+	double StepAccumulator = 0;
+
 	TimeManager->Init();
 	while (WindowManager->Run())
 	{
@@ -137,16 +156,52 @@ void CApplication::MainLoop()
 		// GUI
 		GUIManager->NewFrame();
 		ImGui::SetNextWindowPos(ImVec2(10, 10));
-		static bool OverlayOpen = true;
-		if (ImGui::Begin("Example: Fixed Overlay", &OverlayOpen, ImVec2(0, 0), 0.3f,
-			ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+		ImGui::Begin("Simulation");
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		int MaxFrames = SimulatedFrames - 1;
+		ImGui::Separator();
+		ImGui::Text("Simulated Frames: %d", MaxFrames);
+		if (ImGui::SliderInt("Current Frame", &DisplayedFrame, 0, MaxFrames))
 		{
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			ImGui::End();
+			ClothSimulation.UpdateSceneObjects(DisplayedFrame);
+			Paused = true;
+		}
+		if (ImGui::Button("<< Previous"))
+		{
+			if (DisplayedFrame > 0)
+			{
+				ClothSimulation.UpdateSceneObjects(DisplayedFrame--);
+			}
+			Paused = true;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Next >>"))
+		{
+			if (DisplayedFrame < MaxFrames)
+			{
+				ClothSimulation.UpdateSceneObjects(DisplayedFrame++);
+			}
+			Paused = true;
+		}
+		ImGui::Checkbox("Paused", &Paused);
+		ImGui::End();
+
+		if (! Paused)
+		{
+			StepAccumulator += TimeManager->GetElapsedTime();
+
+			if (StepAccumulator > TimeStep)
+			{
+				StepAccumulator = 0;
+
+				if (DisplayedFrame < MaxFrames)
+				{
+					ClothSimulation.UpdateSceneObjects(DisplayedFrame++);
+				}
+			}
 		}
 
-		ClothSimulation.SimulateStep(1e-2);
-		ClothSimulation.UpdateSceneObjects();
+		PointLight->SetPosition(FreeCamera->GetPosition());
 
 		// Draw
 		RenderTarget->ClearColorAndDepth();
@@ -154,4 +209,7 @@ void CApplication::MainLoop()
 		ImGui::Render();
 		Window->SwapBuffers();
 	}
+
+	Running = false;
+	SimulationThread.join();
 }
