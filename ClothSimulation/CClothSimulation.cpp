@@ -213,11 +213,11 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 
 			if (Distance <= Radius)
 			{
-				Offset.Normalize();
+				vec3d const Normal = Offset.Normalize();
 				Offset *= Radius;
 
 				particle->PositionFrames.back() = Sphere->GetPosition() + Offset;
-				particle->VelocityFrames.back() *= 0.0;
+				particle->VelocityFrames.back() -= Dot(particle->VelocityFrames.back(), Normal) * Normal;
 			}
 		}
 	}
