@@ -50,17 +50,18 @@ void CApplication::OnEvent(IEvent & Event)
 
 void CApplication::InitializeEngine()
 {
-	WindowManager->Init();
+	GraphicsAPI->Init(new Graphics::COpenGLImplementation());
+	WindowManager->Init(GraphicsAPI);
 	TimeManager->Init();
 
 	Window = WindowManager->CreateWindow(vec2i(1600, 900), "DemoApplication", EWindowType::Windowed);
 	Window->AddChild(this);
 
-	GraphicsAPI = new COpenGLAPI();
 	GraphicsContext = GraphicsAPI->GetWindowContext(Window);
 
-	SceneManager->Init(GraphicsAPI);
-	AssetManager->Init(GraphicsAPI);
+	SceneManager->Init();
+
+	AssetManager->Init();
 	AssetManager->SetAssetPath("Assets/");
 	AssetManager->SetShaderPath("Shaders/");
 	AssetManager->SetTexturePath("Textures/");
@@ -92,7 +93,7 @@ void CApplication::LoadAssets()
 
 void CApplication::SetupScene()
 {
-	RenderPass = new CRenderPass(GraphicsAPI, GraphicsContext);
+	RenderPass = new CRenderPass(GraphicsContext);
 	RenderPass->SetRenderTarget(RenderTarget);
 	SceneManager->AddRenderPass(RenderPass);
 

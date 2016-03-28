@@ -1,6 +1,8 @@
 
 #include "CSimulationSystem.h"
 
+using namespace ion;
+
 
 void CSimulationSystem::Start(ion::Scene::CRenderPass * RenderPass)
 {
