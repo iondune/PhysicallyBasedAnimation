@@ -57,18 +57,18 @@ int main()
 	Eigen::VectorXd const x = RandomVector(Size);
 	Eigen::VectorXd y;
 
-	for (int i = 0; i < 100; ++ i)
-	{
-		y = (A * (B * (C * (D * (E * x)))));
-		y = (((((A * B) * C) * D) * E) * x);
-	}
+	Eigen::VectorXd const a = A * x;
+	Eigen::MatrixXd const aT = a.transpose();
 
-	for (int a = 0; a < Attempts; ++ a)
+
+	double avgA = 0, avgB = 0;
+	for (int t = 0; t < Attempts; ++ t)
 	{
 		QueryPerformanceCounter(&start);
 		for (int i = 0; i < Trials; ++ i)
 		{
-			y = (A * (B * (C * (D * (E * x)))));
+			y = aT * B.ldlt().solve(a);
+			//y = (A * (B * (C * (D * (E * x)))));
 		}
 		QueryPerformanceCounter(&stop);
 		double TimeA = Elapsed(start, stop, frequency);
@@ -76,15 +76,21 @@ int main()
 		QueryPerformanceCounter(&start);
 		for (int i = 0; i < Trials; ++ i)
 		{
-			y = (((((A * B) * C) * D) * E) * x);
+			y = aT * B.inverse() * a;
+			//y = (((((A * B) * C) * D) * E) * x);
 		}
 		QueryPerformanceCounter(&stop);
 		double TimeB = Elapsed(start, stop, frequency);
 
-		printf("%.9f , ", TimeA);
-		printf("%.9f\n", TimeB);
-		printf("\n");
+		printf("%.9f & %.9f\n", TimeA, TimeB);
+
+		if (t)
+		{
+			avgA += TimeA / (Attempts - 1);
+			avgB += TimeB / (Attempts - 1);
+		}
 	}
+	printf("%.9f & %.9f\n", avgA, avgB);
 
 	WaitForUser();
 	return 0;
