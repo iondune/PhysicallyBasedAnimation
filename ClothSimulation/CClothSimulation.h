@@ -11,7 +11,7 @@ class CClothSimulation : public ISimulation
 
 public:
 
-	CClothSimulation(CSphereSlideSimulation * Sphere);
+	CClothSimulation();
 
 	void Setup();
 	void SimulateStep(double const TimeDelta);
@@ -60,8 +60,6 @@ protected:
 	mutex ParticlesMutex;
 
 	SParticle * GetParticle(vec2i const & Index);
-
-	CSphereSlideSimulation * Sphere = nullptr;
 
 	ion::Scene::CSimpleMesh * ClothMesh = nullptr;
 	ion::Scene::CSimpleMeshSceneObject * ClothObjectFront = nullptr;

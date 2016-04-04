@@ -16,7 +16,7 @@ public:
 
 	SingletonPointer<ion::CWindowManager> WindowManager;
 	SingletonPointer<ion::CTimeManager> TimeManager;
-	SingletonPointer<ion::Scene::CSceneManager> SceneManager;
+	SingletonPointer<ion::CSceneManager> SceneManager;
 	SingletonPointer<ion::CAssetManager> AssetManager;
 	SingletonPointer<ion::CGUIManager> GUIManager;
 	SingletonPointer<ion::CGraphicsAPI> GraphicsAPI;

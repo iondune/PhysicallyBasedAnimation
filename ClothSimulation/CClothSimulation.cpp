@@ -10,10 +10,8 @@ using namespace ion::Scene;
 using namespace ion::Graphics;
 
 
-CClothSimulation::CClothSimulation(CSphereSlideSimulation * Sphere)
-{
-	this->Sphere = Sphere;
-}
+CClothSimulation::CClothSimulation()
+{}
 
 void CClothSimulation::Setup()
 {
@@ -200,25 +198,6 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 		{
 			particle->VelocityFrames.push_back(0);
 			particle->PositionFrames.push_back(particle->PositionFrames.back());
-		}
-	}
-
-	for (auto particle : Particles)
-	{
-		if (! particle->IsFixed)
-		{
-			vec3d Offset = particle->PositionFrames.back() - Sphere->GetPosition();
-			double const Distance = Offset.Length();
-			double const Radius = Sphere->GetRadius();
-
-			if (Distance <= Radius)
-			{
-				vec3d const Normal = Offset.Normalize();
-				Offset *= Radius;
-
-				particle->PositionFrames.back() = Sphere->GetPosition() + Offset;
-				particle->VelocityFrames.back() -= Dot(particle->VelocityFrames.back(), Normal) * Normal;
-			}
 		}
 	}
 

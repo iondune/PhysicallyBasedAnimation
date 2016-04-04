@@ -52,16 +52,16 @@ void CApplication::InitializeEngine()
 {
 	GraphicsAPI->Init(new Graphics::COpenGLImplementation());
 	WindowManager->Init(GraphicsAPI);
-	TimeManager->Init();
+	TimeManager->Init(WindowManager);
 
 	Window = WindowManager->CreateWindow(vec2i(1600, 900), "DemoApplication", EWindowType::Windowed);
 	Window->AddChild(this);
 
 	GraphicsContext = GraphicsAPI->GetWindowContext(Window);
 
-	SceneManager->Init();
+	SceneManager->Init(GraphicsAPI);
 
-	AssetManager->Init();
+	AssetManager->Init(GraphicsAPI);
 	AssetManager->SetAssetPath("Assets/");
 	AssetManager->SetShaderPath("Shaders/");
 	AssetManager->SetTexturePath("Textures/");
@@ -132,14 +132,12 @@ void CApplication::AddSceneObjects()
 
 void CApplication::MainLoop()
 {
-	CSphereSlideSimulation * SphereSlideSimulation = new CSphereSlideSimulation();
-	CClothSimulation * ClothSimulation = new CClothSimulation(SphereSlideSimulation);
+	CClothSimulation * ClothSimulation = new CClothSimulation();
 
-	SimulationSystem.AddSimulation(SphereSlideSimulation);
 	SimulationSystem.AddSimulation(ClothSimulation);
 	SimulationSystem.Start(RenderPass);
 
-	TimeManager->Init();
+	TimeManager->Start();
 	while (WindowManager->Run())
 	{
 		TimeManager->Update();
