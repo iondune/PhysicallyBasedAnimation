@@ -44,7 +44,7 @@ protected:
 	bool Simulating = false;
 	bool Paused = false;
 
-	double const TimeStep = 1e-3;
+	double const TimeStep = 1e-2;
 	double StepAccumulator = 0;
 
 	int PlaybackSpeed = 0;

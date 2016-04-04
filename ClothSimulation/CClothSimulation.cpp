@@ -3,7 +3,7 @@
 #include "CApplication.h"
 
 #define EIGEN_DONT_ALIGN_STATICALLY
-#include <Eigen/Dense>
+#include <Eigen/Sparse>
 
 using namespace ion;
 using namespace ion::Scene;
@@ -117,23 +117,94 @@ vec3d ToIon(Eigen::Vector3d const & v)
 	return vec3d(v.x(), v.y(), v.z());
 }
 
+struct SSparseMatrix
+{
+	map<vec2i, double> Elements;
+
+	void Set(int const x, int const y, double const Value)
+	{
+		Elements[vec2i(x, y)] = Value;
+	}
+
+	void Add(int const x0, int const y0, Eigen::Matrix3d const & Mat)
+	{
+		for (int y = 0; y < 3; ++ y)
+		{
+			for (int x = 0; x < 3; ++ x)
+			{
+				Elements[vec2i(x + x0, y + y0)] += Mat(x, y);
+			}
+		}
+	}
+
+	void Subtract(int const x0, int const y0, Eigen::Matrix3d const & Mat)
+	{
+		for (int y = 0; y < 3; ++ y)
+		{
+			for (int x = 0; x < 3; ++ x)
+			{
+				Elements[vec2i(x + x0, y + y0)] -= Mat(x, y);
+			}
+		}
+	}
+
+	SSparseMatrix operator + (SSparseMatrix const & other) const
+	{
+		SSparseMatrix ret = *this;
+
+		for (auto & Element : other.Elements)
+		{
+			ret.Elements[Element.first] += Element.second;
+		}
+
+		return ret;
+	}
+
+	friend SSparseMatrix operator * (double const lhs, SSparseMatrix const & rhs)
+	{
+		SSparseMatrix ret = rhs;
+
+		for (auto & Element : ret.Elements)
+		{
+			Element.second *= lhs;
+		}
+
+		return ret;
+	}
+
+	Eigen::SparseMatrix<double> Get(int const Width, int const Height) const
+	{
+		std::vector<Eigen::Triplet<double>> Tuples;
+
+		for (auto const & Element : Elements)
+		{
+			Tuples.push_back(Eigen::Triplet<double>(Element.first.X, Element.first.Y, Element.second));
+
+			if (Element.first.X + 1 > Width || Element.first.Y + 1 > Height)
+			{
+				Log::Warn("Out-of-bounds element in sparse matrix.");
+			}
+		}
+
+		Eigen::SparseMatrix<double> A(Width, Height);
+		A.setFromTriplets(Tuples.begin(), Tuples.end());
+		return A;
+	}
+};
+
 void CClothSimulation::SimulateStep(double const TimeDelta)
 {
 	static vec3d const Gravity = vec3d(0, -9.8, 0);
 
+	SSparseMatrix M;
+	SSparseMatrix K;
+
 	Eigen::VectorXd v;
-	Eigen::VectorXd f;
-	Eigen::MatrixXd M;
-	Eigen::MatrixXd K;
-
-	M.resize(MatrixSize, MatrixSize);
-	K.resize(MatrixSize, MatrixSize);
 	v.resize(MatrixSize);
-	f.resize(MatrixSize);
-
-	M.setZero();
-	K.setZero();
 	v.setZero();
+
+	Eigen::VectorXd f;
+	f.resize(MatrixSize);
 	f.setZero();
 
 	ParticlesMutex.lock();
@@ -143,9 +214,9 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 		{
 			f.segment(particle->Index, 3) = ToEigen(Gravity * particle->Mass);
 			v.segment(particle->Index, 3) = ToEigen(particle->VelocityFrames.back());
-			M.block<1, 1>(particle->Index, particle->Index) = ToEigen(particle->Mass);
-			M.block<1, 1>(particle->Index + 1, particle->Index + 1) = ToEigen(particle->Mass);
-			M.block<1, 1>(particle->Index + 2, particle->Index + 2) = ToEigen(particle->Mass);
+			M.Set(particle->Index, particle->Index, particle->Mass);
+			M.Set(particle->Index + 1, particle->Index + 1, particle->Mass);
+			M.Set(particle->Index + 2, particle->Index + 2, particle->Mass);
 		}
 	}
 
@@ -164,27 +235,42 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 		if (! spring->Particle0->IsFixed)
 		{
 			f.segment(spring->Particle0->Index, 3) += ToEigen(SpringForce);
-			K.block<3, 3>(spring->Particle0->Index, spring->Particle0->Index) += StiffnessMatrix;
+			K.Add(spring->Particle0->Index, spring->Particle0->Index, StiffnessMatrix);
 		}
 		if (! spring->Particle1->IsFixed)
 		{
 			f.segment(spring->Particle1->Index, 3) -= ToEigen(SpringForce);
-			K.block<3, 3>(spring->Particle1->Index, spring->Particle1->Index) += StiffnessMatrix;
+			K.Add(spring->Particle1->Index, spring->Particle1->Index, StiffnessMatrix);
 		}
 		if (! spring->Particle0->IsFixed && ! spring->Particle1->IsFixed)
 		{
-			K.block<3, 3>(spring->Particle0->Index, spring->Particle1->Index) -= StiffnessMatrix;
-			K.block<3, 3>(spring->Particle1->Index, spring->Particle0->Index) -= StiffnessMatrix;
+			K.Subtract(spring->Particle0->Index, spring->Particle1->Index, StiffnessMatrix);
+			K.Subtract(spring->Particle1->Index, spring->Particle0->Index, StiffnessMatrix);
 		}
 	}
 	ParticlesMutex.unlock();
 
-	Eigen::MatrixXd const D = Damping.X * TimeDelta * M + Damping.Y * Sq(TimeDelta) * K;
+	SSparseMatrix const D = Damping.X * TimeDelta * M + Damping.Y * Sq(TimeDelta) * K;
 
-	Eigen::MatrixXd const A = M + D;
-	Eigen::VectorXd const b = M * v + TimeDelta * f;
+	SSparseMatrix const A = M + D;
+	Eigen::SparseMatrix<double> const ASparse = A.Get(MatrixSize, MatrixSize);
+	Eigen::VectorXd const b = M.Get(MatrixSize, MatrixSize) * v + TimeDelta * f;
+	
+	Eigen::ConjugateGradient< Eigen::SparseMatrix<double> > cg;
+	cg.setMaxIterations(25);
+	cg.setTolerance(1e-3);
+	cg.compute(ASparse);
 
-	Eigen::VectorXd const Result = A.ldlt().solve(b);
+	//cout << "A =" << endl;
+	//cout << ASparse << endl;
+	//cout << endl;
+	//cout << "b =" << endl;
+	//cout << b << endl;
+	//cout << endl;
+	Eigen::VectorXd Result = cg.solveWithGuess(b, v);
+	//cout << "x =" << endl;
+	//cout << Result << endl;
+	//cout << endl;
 
 	ParticlesMutex.lock();
 	for (SParticle * particle : Particles)
