@@ -5,16 +5,30 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClothSimulation", "ClothSimulation\ClothSimulation.vcxproj", "{65F8E847-791D-4E6A-AB6A-0AADC06F92C0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AssociativityTest", "AssociativityTest\AssociativityTest.vcxproj", "{F8E99E5F-571B-42B8-BCF2-AB6B260B2460}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{65F8E847-791D-4E6A-AB6A-0AADC06F92C0}.Debug|x64.ActiveCfg = Debug|x64
 		{65F8E847-791D-4E6A-AB6A-0AADC06F92C0}.Debug|x64.Build.0 = Debug|x64
+		{65F8E847-791D-4E6A-AB6A-0AADC06F92C0}.Debug|x86.ActiveCfg = Debug|x64
 		{65F8E847-791D-4E6A-AB6A-0AADC06F92C0}.Release|x64.ActiveCfg = Release|x64
 		{65F8E847-791D-4E6A-AB6A-0AADC06F92C0}.Release|x64.Build.0 = Release|x64
+		{65F8E847-791D-4E6A-AB6A-0AADC06F92C0}.Release|x86.ActiveCfg = Release|x64
+		{F8E99E5F-571B-42B8-BCF2-AB6B260B2460}.Debug|x64.ActiveCfg = Debug|x64
+		{F8E99E5F-571B-42B8-BCF2-AB6B260B2460}.Debug|x64.Build.0 = Debug|x64
+		{F8E99E5F-571B-42B8-BCF2-AB6B260B2460}.Debug|x86.ActiveCfg = Debug|Win32
+		{F8E99E5F-571B-42B8-BCF2-AB6B260B2460}.Debug|x86.Build.0 = Debug|Win32
+		{F8E99E5F-571B-42B8-BCF2-AB6B260B2460}.Release|x64.ActiveCfg = Release|x64
+		{F8E99E5F-571B-42B8-BCF2-AB6B260B2460}.Release|x64.Build.0 = Release|x64
+		{F8E99E5F-571B-42B8-BCF2-AB6B260B2460}.Release|x86.ActiveCfg = Release|Win32
+		{F8E99E5F-571B-42B8-BCF2-AB6B260B2460}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
