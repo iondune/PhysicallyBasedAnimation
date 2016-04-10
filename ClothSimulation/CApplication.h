@@ -3,7 +3,6 @@
 
 #include <ionEngine.h>
 #include "CSimulationSystem.h"
-#include "CSphereSlideSimulation.h"
 
 
 class CApplication : public Singleton<CApplication>, public IEventListener

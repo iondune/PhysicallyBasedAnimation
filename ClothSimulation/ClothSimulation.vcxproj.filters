@@ -5,12 +5,10 @@
     <ClCompile Include="CApplication.cpp" />
     <ClCompile Include="CSimulationSystem.cpp" />
     <ClCompile Include="CClothSimulation.cpp" />
-    <ClCompile Include="CSphereSlideSimulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
     <ClInclude Include="CSimulationSystem.h" />
     <ClInclude Include="CClothSimulation.h" />
-    <ClInclude Include="CSphereSlideSimulation.h" />
   </ItemGroup>
 </Project>
