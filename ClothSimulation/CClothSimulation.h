@@ -25,8 +25,8 @@ public:
 		int Index;
 		bool IsFixed;
 		
-		vector<vec3d> PositionFrames;
-		vector<vec3d> VelocityFrames;
+		vector<vec2d> PositionFrames;
+		vector<vec2d> VelocityFrames;
 	};
 
 	struct SSpring

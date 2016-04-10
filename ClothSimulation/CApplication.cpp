@@ -98,12 +98,12 @@ void CApplication::SetupScene()
 	SceneManager->AddRenderPass(RenderPass);
 
 	FreeCamera = new CPerspectiveCamera(Window->GetAspectRatio());
-	FreeCamera->SetPosition(vec3f(-1, 0.3f, 0));
+	FreeCamera->SetPosition(vec3f(0, 0.25f, 1));
 	FreeCamera->SetFocalLength(0.4f);
 	FreeCamera->SetFarPlane(10000.f);
 
 	CCameraController * Controller = new CCameraController(FreeCamera);
-	Controller->SetTheta(0);
+	Controller->SetTheta(-Constants32::Pi / 2);
 	Controller->SetPhi(0);
 	Window->AddListener(Controller);
 	TimeManager->MakeUpdateTick(0.02)->AddListener(Controller);
@@ -117,7 +117,7 @@ void CApplication::AddSceneObjects()
 	GroundObject->SetMesh(CubeMesh);
 	GroundObject->SetShader(GroundShader);
 	GroundObject->SetScale(vec3f(16, 1, 16));
-	GroundObject->SetPosition(vec3f(0, -1, 0));
+	GroundObject->SetPosition(vec3f(0, -6, 0));
 	GroundObject->SetTexture("uTexture", GroundTexture);
 	RenderPass->AddSceneObject(GroundObject);
 	

@@ -18,12 +18,13 @@ void CClothSimulation::Setup()
 	int rows = 10;
 	int cols = 10;
 	double mass = 0.1;
-	double stiffness = 1e2;
+	double stiffness = 1e1;
 	vec2d damping(0.0, 1.0);
-	vec3d x00(-0.25, 0.5, 0.0);
-	vec3d x01(0.25, 0.5, 0.0);
-	vec3d x10(-0.25, 0.5, -0.5);
-	vec3d x11(0.25, 0.5, -0.5);
+
+	vec2d x00(-0.25, 0.5);
+	vec2d x01(0.25, 0.5);
+	vec2d x10(-0.25, 0);
+	vec2d x11(0.25, 0);
 
 	assert(rows > 1);
 	assert(cols > 1);
@@ -40,8 +41,8 @@ void CClothSimulation::Setup()
 	for (int i = 0; i < rows; ++i)
 	{
 		double u = i / (rows - 1.0);
-		vec3d x0 = (1 - u)*x00 + u*x10;
-		vec3d x1 = (1 - u)*x01 + u*x11;
+		vec2d x0 = (1 - u)*x00 + u*x10;
+		vec2d x1 = (1 - u)*x01 + u*x11;
 		for (int j = 0; j < cols; ++j)
 		{
 			SParticle * p = new SParticle();
@@ -62,7 +63,7 @@ void CClothSimulation::Setup()
 			{
 				p->IsFixed = false;
 				p->Index = MatrixSize;
-				MatrixSize += 3;
+				MatrixSize += 2;
 			}
 		}
 	}
@@ -105,6 +106,13 @@ Eigen::Vector3d ToEigen(vec3d const & v)
 	return ret;
 }
 
+Eigen::Vector2d ToEigen(vec2d const & v)
+{
+	Eigen::Vector2d ret;
+	ret << v.X, v.Y;
+	return ret;
+}
+
 Eigen::Array<double, 1, 1> ToEigen(double const x)
 {
 	Eigen::Array<double, 1, 1> ret;
@@ -112,9 +120,14 @@ Eigen::Array<double, 1, 1> ToEigen(double const x)
 	return ret;
 }
 
-vec3d ToIon(Eigen::Vector3d const & v)
+vec3d ToIon3D(Eigen::Vector3d const & v)
 {
 	return vec3d(v.x(), v.y(), v.z());
+}
+
+vec2d ToIon2D(Eigen::Vector2d const & v)
+{
+	return vec2d(v.x(), v.y());
 }
 
 struct SSparseMatrix
@@ -126,22 +139,22 @@ struct SSparseMatrix
 		Elements[vec2i(x, y)] = Value;
 	}
 
-	void Add(int const x0, int const y0, Eigen::Matrix3d const & Mat)
+	void Add(int const x0, int const y0, Eigen::Matrix2d const & Mat)
 	{
-		for (int y = 0; y < 3; ++ y)
+		for (int y = 0; y < 2; ++ y)
 		{
-			for (int x = 0; x < 3; ++ x)
+			for (int x = 0; x < 2; ++ x)
 			{
 				Elements[vec2i(x + x0, y + y0)] += Mat(x, y);
 			}
 		}
 	}
 
-	void Subtract(int const x0, int const y0, Eigen::Matrix3d const & Mat)
+	void Subtract(int const x0, int const y0, Eigen::Matrix2d const & Mat)
 	{
-		for (int y = 0; y < 3; ++ y)
+		for (int y = 0; y < 2; ++ y)
 		{
-			for (int x = 0; x < 3; ++ x)
+			for (int x = 0; x < 2; ++ x)
 			{
 				Elements[vec2i(x + x0, y + y0)] -= Mat(x, y);
 			}
@@ -194,7 +207,7 @@ struct SSparseMatrix
 
 void CClothSimulation::SimulateStep(double const TimeDelta)
 {
-	static vec3d const Gravity = vec3d(0, -9.8, 0);
+	static vec2d const Gravity = vec2d(0, -9.8);
 
 	SSparseMatrix M;
 	SSparseMatrix K;
@@ -212,34 +225,33 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 	{
 		if (! particle->IsFixed)
 		{
-			f.segment(particle->Index, 3) = ToEigen(Gravity * particle->Mass);
-			v.segment(particle->Index, 3) = ToEigen(particle->VelocityFrames.back());
+			f.segment(particle->Index, 2) = ToEigen(Gravity * particle->Mass);
+			v.segment(particle->Index, 2) = ToEigen(particle->VelocityFrames.back());
 			M.Set(particle->Index, particle->Index, particle->Mass);
 			M.Set(particle->Index + 1, particle->Index + 1, particle->Mass);
-			M.Set(particle->Index + 2, particle->Index + 2, particle->Mass);
 		}
 	}
 
 	for (SSpring * spring : Springs)
 	{
-		vec3d const PositionDelta = spring->Particle1->PositionFrames.back() - spring->Particle0->PositionFrames.back();
+		vec2d const PositionDelta = spring->Particle1->PositionFrames.back() - spring->Particle0->PositionFrames.back();
 		double const CurrentLength = PositionDelta.Length();
-		vec3d const SpringForce = spring->Stiffness * (CurrentLength - spring->RestLength) * PositionDelta / CurrentLength;
+		vec2d const SpringForce = spring->Stiffness * (CurrentLength - spring->RestLength) * PositionDelta / CurrentLength;
 
-		Eigen::Matrix3d const I = Eigen::Matrix3d::Identity();
-		Eigen::Matrix3d const StiffnessMatrix = (spring->Stiffness / Sq(CurrentLength)) * (
+		Eigen::Matrix2d const I = Eigen::Matrix2d::Identity();
+		Eigen::Matrix2d const StiffnessMatrix = (spring->Stiffness / Sq(CurrentLength)) * (
 			(1 - (CurrentLength - spring->RestLength) / CurrentLength) * (ToEigen(PositionDelta) * ToEigen(PositionDelta).transpose()) +
 			((CurrentLength - spring->RestLength) / CurrentLength) * (Dot(PositionDelta, PositionDelta) * I)
 			);
 
 		if (! spring->Particle0->IsFixed)
 		{
-			f.segment(spring->Particle0->Index, 3) += ToEigen(SpringForce);
+			f.segment(spring->Particle0->Index, 2) += ToEigen(SpringForce);
 			K.Add(spring->Particle0->Index, spring->Particle0->Index, StiffnessMatrix);
 		}
 		if (! spring->Particle1->IsFixed)
 		{
-			f.segment(spring->Particle1->Index, 3) -= ToEigen(SpringForce);
+			f.segment(spring->Particle1->Index, 2) -= ToEigen(SpringForce);
 			K.Add(spring->Particle1->Index, spring->Particle1->Index, StiffnessMatrix);
 		}
 		if (! spring->Particle0->IsFixed && ! spring->Particle1->IsFixed)
@@ -277,7 +289,7 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 	{
 		if (! particle->IsFixed)
 		{
-			particle->VelocityFrames.push_back(ToIon(Result.segment(particle->Index, 3)));
+			particle->VelocityFrames.push_back(ToIon2D(Result.segment(particle->Index, 2)));
 			particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
 		}
 		else
@@ -327,6 +339,7 @@ void CClothSimulation::AddSceneObjects(ion::Scene::CRenderPass * RenderPass)
 	ClothObjectFront->SetUniform("uColor", CUniform<color3f>(Colors::Red));
 	ClothObjectFront->SetUniform("uFlipNormals", CUniform<int>(0));
 	ClothObjectFront->SetFeatureEnabled(EDrawFeature::CullBack, true);
+	ClothObjectFront->SetFeatureEnabled(EDrawFeature::Wireframe, true);
 	RenderPass->AddSceneObject(ClothObjectFront);
 
 	ClothObjectBack = new CSimpleMeshSceneObject();
@@ -335,6 +348,7 @@ void CClothSimulation::AddSceneObjects(ion::Scene::CRenderPass * RenderPass)
 	ClothObjectBack->SetUniform("uColor", CUniform<color3f>(Colors::Yellow));
 	ClothObjectBack->SetUniform("uFlipNormals", CUniform<int>(1));
 	ClothObjectBack->SetFeatureEnabled(EDrawFeature::CullFront, true);
+	ClothObjectBack->SetFeatureEnabled(EDrawFeature::Wireframe, true);
 	RenderPass->AddSceneObject(ClothObjectBack);
 }
 
