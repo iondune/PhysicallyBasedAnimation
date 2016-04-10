@@ -24,6 +24,8 @@ public:
 		double Mass;
 		int Index;
 		bool IsFixed;
+
+		bool IsConstrained = false;
 		
 		vector<vec2d> PositionFrames;
 		vector<vec2d> VelocityFrames;

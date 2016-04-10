@@ -18,7 +18,7 @@ void CClothSimulation::Setup()
 	int rows = 10;
 	int cols = 10;
 	double mass = 0.1;
-	double stiffness = 1e1;
+	double stiffness = 1e3;
 	vec2d damping(0.0, 1.0);
 
 	vec2d x00(-0.25, 0.5);
@@ -54,17 +54,14 @@ void CClothSimulation::Setup()
 			p->VelocityFrames.push_back(0.0);
 			p->Mass = mass / (nVerts);
 
-			if (i == 0 && (j == 0 || j == cols - 1))
+			if (i == 0 && j == 0)
 			{
-				p->IsFixed = true;
-				p->Index = -1;
+				p->IsConstrained = true;
 			}
-			else
-			{
-				p->IsFixed = false;
-				p->Index = MatrixSize;
-				MatrixSize += 2;
-			}
+
+			p->IsFixed = false;
+			p->Index = MatrixSize;
+			MatrixSize += 2;
 		}
 	}
 
@@ -290,6 +287,12 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 		if (! particle->IsFixed)
 		{
 			particle->VelocityFrames.push_back(ToIon2D(Result.segment(particle->Index, 2)));
+
+			if (particle->IsConstrained)
+			{
+				particle->VelocityFrames.back() *= vec2d(1, 0);
+			}
+
 			particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
 		}
 		else
