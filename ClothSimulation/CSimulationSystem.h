@@ -12,6 +12,7 @@ public:
 	virtual void Setup() = 0;
 	virtual void SimulateStep(double const TimeDelta) = 0;
 	virtual void GUI() = 0;
+	virtual void Reset() = 0;
 
 	virtual void UpdateSceneObjects(uint const CurrentFrame) = 0;
 
@@ -41,6 +42,7 @@ protected:
 	int MaxFrames = 1;
 
 	std::atomic<int> SimulatedFrames = 1;
+	std::mutex SimulationMutex;
 
 	bool Running = true;
 	bool Simulating = false;

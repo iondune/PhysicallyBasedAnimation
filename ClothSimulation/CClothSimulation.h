@@ -15,6 +15,7 @@ public:
 	void Setup();
 	void SimulateStep(double const TimeDelta);
 	void GUI();
+	void Reset();
 
 	void AddSceneObjects();
 	void UpdateSceneObjects(uint const CurrentFrame);

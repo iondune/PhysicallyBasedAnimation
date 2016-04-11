@@ -301,7 +301,6 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 			particle->PositionFrames.push_back(particle->PositionFrames.back());
 		}
 	}
-
 	ParticlesMutex.unlock();
 }
 
@@ -316,32 +315,32 @@ void CClothSimulation::GUI()
 		if (ImGui::SliderInt("Rows", &Rows, 2, 20))
 		{
 			Settings.rows = Rows;
-			Setup();
 			SimulationSystem->Reset();
+			Setup();
 		}
 
 		int Columns = Settings.cols;
 		if (ImGui::SliderInt("Columns", &Columns, 2, 20))
 		{
 			Settings.cols = Columns;
-			Setup();
 			SimulationSystem->Reset();
+			Setup();
 		}
 
 		float Mass = (float) Settings.mass;
-		if (ImGui::SliderFloat("Mass", &Mass, 0.00001, 100, "%.3f", 2.f))
+		if (ImGui::SliderFloat("Mass", &Mass, 0.00001f, 100, "%.3f", 2.f))
 		{
 			Settings.mass = (double) Mass;
-			Setup();
 			SimulationSystem->Reset();
+			Setup();
 		}
 
 		float Stiffness = (float) Settings.stiffness;
-		if (ImGui::SliderFloat("Stiffness", &Stiffness, 0.00001, 100, "%.3f", 2.f))
+		if (ImGui::SliderFloat("Stiffness", &Stiffness, 0.00001f, 100, "%.3f", 2.f))
 		{
 			Settings.stiffness = (double) Stiffness;
-			Setup();
 			SimulationSystem->Reset();
+			Setup();
 		}
 
 		vec2d damping = vec2d(0.0, 1.0);
@@ -352,6 +351,17 @@ void CClothSimulation::GUI()
 		}
 		ImGui::EndPopup();
 	}
+}
+
+void CClothSimulation::Reset()
+{
+	ParticlesMutex.lock();
+	for (SParticle * particle : Particles)
+	{
+		particle->VelocityFrames.resize(1);
+		particle->PositionFrames.resize(1);
+	}
+	ParticlesMutex.unlock();
 }
 
 void CClothSimulation::AddSceneObjects()

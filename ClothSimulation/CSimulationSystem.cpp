@@ -20,15 +20,18 @@ void CSimulationSystem::Start(ion::Scene::CRenderPass * RenderPass)
 		{
 			if (Simulating)
 			{
+				SimulationMutex.lock();
 				for (auto Simulation : Simulations)
 				{
 					Simulation->SimulateStep(TimeStep);
 				}
 				SimulatedFrames ++;
+				SimulationMutex.unlock();
 			}
 			else
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+				std::this_thread::yield();
 			}
 		}
 	});
@@ -104,6 +107,13 @@ void CSimulationSystem::GUI()
 		}
 	}
 	ImGui::SameLine();
+	if (ImGui::Button("Reset"))
+	{
+		Reset();
+		Simulating = false;
+		Paused = true;
+	}
+
 	if (ImGui::Button("Settings"))
 	{
 		ImGui::OpenPopup("Cloth Settings");
@@ -161,8 +171,18 @@ void CSimulationSystem::GUI()
 void CSimulationSystem::Reset()
 {
 	Simulating = false;
+	SimulationMutex.lock();
+
 	SimulatedFrames = 1;
 	DisplayedFrame = 0;
+
+	for (auto Simulation : Simulations)
+	{
+		Simulation->Reset();
+		Simulation->UpdateSceneObjects(DisplayedFrame);
+	}
+
+	SimulationMutex.unlock();
 }
 
 void CSimulationSystem::AddSimulation(ISimulation * Simulation)
