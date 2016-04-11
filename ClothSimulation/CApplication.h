@@ -45,7 +45,7 @@ protected:
 	ion::Scene::CPerspectiveCamera * FreeCamera = nullptr;
 	ion::Scene::CPointLight * PointLight = nullptr;
 
-	CSimulationSystem SimulationSystem;
+	SingletonPointer<CSimulationSystem> SimulationSystem;
 
 private:
 

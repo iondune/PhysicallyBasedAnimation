@@ -134,8 +134,8 @@ void CApplication::MainLoop()
 {
 	CClothSimulation * ClothSimulation = new CClothSimulation();
 
-	SimulationSystem.AddSimulation(ClothSimulation);
-	SimulationSystem.Start(RenderPass);
+	SimulationSystem->AddSimulation(ClothSimulation);
+	SimulationSystem->Start(RenderPass);
 
 	TimeManager->Start();
 	while (WindowManager->Run())
@@ -144,9 +144,9 @@ void CApplication::MainLoop()
 		
 		// GUI
 		GUIManager->NewFrame();
-		SimulationSystem.GUI();
+		SimulationSystem->GUI();
 
-		SimulationSystem.Update();
+		SimulationSystem->Update();
 		PointLight->SetPosition(FreeCamera->GetPosition());
 
 		// Draw
@@ -156,5 +156,5 @@ void CApplication::MainLoop()
 		Window->SwapBuffers();
 	}
 
-	SimulationSystem.Stop();
+	SimulationSystem->Stop();
 }

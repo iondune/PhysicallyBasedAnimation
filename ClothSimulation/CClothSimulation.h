@@ -14,8 +14,9 @@ public:
 
 	void Setup();
 	void SimulateStep(double const TimeDelta);
+	void GUI();
 
-	void AddSceneObjects(ion::Scene::CRenderPass * RenderPass);
+	void AddSceneObjects();
 	void UpdateSceneObjects(uint const CurrentFrame);
 
 	struct SParticle
@@ -48,7 +49,18 @@ public:
 		}
 	};
 
+	struct SSettings
+	{
+		int rows = 10;
+		int cols = 10;
+		double mass = 0.1;
+		double stiffness = 1e3;
+		vec2d damping = vec2d(0.0, 1.0);
+	};
+
 protected:
+
+	SSettings Settings;
 
 	int Rows = 0;
 	int Columns = 0;

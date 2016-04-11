@@ -1,5 +1,6 @@
 
 #include "CSimulationSystem.h"
+#include "CClothSimulation.h"
 
 using namespace ion;
 
@@ -11,8 +12,6 @@ void CSimulationSystem::Start(ion::Scene::CRenderPass * RenderPass)
 	for (auto Simulation : Simulations)
 	{
 		Simulation->Setup();
-		Simulation->AddSceneObjects(RenderPass);
-		Simulation->UpdateSceneObjects(DisplayedFrame);
 	}
 
 	SimulationThread = thread([this]()
@@ -104,6 +103,13 @@ void CSimulationSystem::GUI()
 			Paused = true;
 		}
 	}
+	ImGui::SameLine();
+	if (ImGui::Button("Settings"))
+	{
+		ImGui::OpenPopup("Cloth Settings");
+		Simulating = false;
+		Paused = true;
+	}
 
 	ImGui::Text("Playback Speed: 1e%d", PlaybackSpeed);
 	ImGui::SliderInt("Playback Speed", &PlaybackSpeed, -3, 0);
@@ -144,7 +150,19 @@ void CSimulationSystem::GUI()
 		}
 	}
 
+	for (auto Simulation : Simulations)
+	{
+		Simulation->GUI();
+	}
+
 	ImGui::End();
+}
+
+void CSimulationSystem::Reset()
+{
+	Simulating = false;
+	SimulatedFrames = 1;
+	DisplayedFrame = 0;
 }
 
 void CSimulationSystem::AddSimulation(ISimulation * Simulation)

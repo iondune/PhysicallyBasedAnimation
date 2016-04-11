@@ -15,44 +15,41 @@ CClothSimulation::CClothSimulation()
 
 void CClothSimulation::Setup()
 {
-	int rows = 10;
-	int cols = 10;
-	double mass = 0.1;
-	double stiffness = 1e3;
-	vec2d damping(0.0, 1.0);
+	Particles.clear();
+	Springs.clear();
 
 	vec2d x00(-0.25, 0.5);
 	vec2d x01(0.25, 0.5);
 	vec2d x10(-0.25, 0);
 	vec2d x11(0.25, 0);
 
-	assert(rows > 1);
-	assert(cols > 1);
-	assert(mass > 0.0);
-	assert(stiffness > 0.0);
+	assert(Settings.rows > 1);
+	assert(Settings.cols > 1);
+	assert(Settings.mass > 0.0);
+	assert(Settings.stiffness > 0.0);
 
-	Rows = rows;
-	Columns = cols;
-	Damping = damping;
+	Rows = Settings.rows;
+	Columns = Settings.cols;
+	Damping = Settings.damping;
 
 	// Create particles
 	double r = 0.02; // Used for collisions
-	int nVerts = rows*cols;
-	for (int i = 0; i < rows; ++i)
+	int nVerts = Rows*Columns;
+	for (int i = 0; i < Rows; ++i)
 	{
-		double u = i / (rows - 1.0);
+		double u = i / (Rows - 1.0);
 		vec2d x0 = (1 - u)*x00 + u*x10;
 		vec2d x1 = (1 - u)*x01 + u*x11;
-		for (int j = 0; j < cols; ++j)
+		for (int j = 0; j < Columns; ++j)
 		{
 			SParticle * p = new SParticle();
 			Particles.push_back(p);
 
 			p->Radius = r;
-			double v = j / (cols - 1.0);
+			double v = j / (Columns - 1.0);
 			p->PositionFrames.push_back((1 - v)*x0 + v*x1);
 			p->VelocityFrames.push_back(0.0);
-			p->Mass = mass / (nVerts);
+			p->Mass = Settings.mass / (nVerts);
 
 			if (i == 0 && j == 0)
 			{
@@ -66,34 +63,37 @@ void CClothSimulation::Setup()
 	}
 
 	// Create x springs
-	for (int i = 0; i < rows; ++i) {
-		for (int j = 0; j < cols - 1; ++j) {
-			int k0 = i*cols + j;
+	for (int i = 0; i < Rows; ++i) {
+		for (int j = 0; j < Columns - 1; ++j) {
+			int k0 = i*Columns + j;
 			int k1 = k0 + 1;
-			Springs.push_back(new SSpring(Particles[k0], Particles[k1], stiffness));
+			Springs.push_back(new SSpring(Particles[k0], Particles[k1], Settings.stiffness));
 		}
 	}
 
 	// Create y springs
-	for (int j = 0; j < cols; ++j) {
-		for (int i = 0; i < rows - 1; ++i) {
-			int k0 = i*cols + j;
-			int k1 = k0 + cols;
-			Springs.push_back(new SSpring(Particles[k0], Particles[k1], stiffness));
+	for (int j = 0; j < Columns; ++j) {
+		for (int i = 0; i < Rows - 1; ++i) {
+			int k0 = i*Columns + j;
+			int k1 = k0 + Columns;
+			Springs.push_back(new SSpring(Particles[k0], Particles[k1], Settings.stiffness));
 		}
 	}
 
 	// Create shear springs
-	for (int i = 0; i < rows - 1; ++i) {
-		for (int j = 0; j < cols - 1; ++j) {
-			int k00 = i*cols + j;
+	for (int i = 0; i < Rows - 1; ++i) {
+		for (int j = 0; j < Columns - 1; ++j) {
+			int k00 = i*Columns + j;
 			int k10 = k00 + 1;
-			int k01 = k00 + cols;
+			int k01 = k00 + Columns;
 			int k11 = k01 + 1;
-			Springs.push_back(new SSpring(Particles[k00], Particles[k11], stiffness));
-			Springs.push_back(new SSpring(Particles[k10], Particles[k01], stiffness));
+			Springs.push_back(new SSpring(Particles[k00], Particles[k11], Settings.stiffness));
+			Springs.push_back(new SSpring(Particles[k10], Particles[k01], Settings.stiffness));
 		}
 	}
+
+	AddSceneObjects();
+	UpdateSceneObjects(0);
 }
 
 Eigen::Vector3d ToEigen(vec3d const & v)
@@ -305,11 +305,67 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 	ParticlesMutex.unlock();
 }
 
-void CClothSimulation::AddSceneObjects(ion::Scene::CRenderPass * RenderPass)
+void CClothSimulation::GUI()
+{
+	SingletonPointer<CSimulationSystem> SimulationSystem;
+
+	if (ImGui::BeginPopupModal("Cloth Settings"))
+	{
+		ImGui::SetWindowSize(ImVec2(500, 350));
+		int Rows = Settings.rows;
+		if (ImGui::SliderInt("Rows", &Rows, 2, 20))
+		{
+			Settings.rows = Rows;
+			Setup();
+			SimulationSystem->Reset();
+		}
+
+		int Columns = Settings.cols;
+		if (ImGui::SliderInt("Columns", &Columns, 2, 20))
+		{
+			Settings.cols = Columns;
+			Setup();
+			SimulationSystem->Reset();
+		}
+
+		float Mass = (float) Settings.mass;
+		if (ImGui::InputFloat("Mass", &Mass))
+		{
+			Settings.mass = (double) Mass;
+			Setup();
+			SimulationSystem->Reset();
+		}
+
+		float Stiffness = (float) Settings.stiffness;
+		if (ImGui::InputFloat("Stiffness", &Mass))
+		{
+			Settings.stiffness = (double) Stiffness;
+			Setup();
+			SimulationSystem->Reset();
+		}
+
+		vec2d damping = vec2d(0.0, 1.0);
+
+		if (ImGui::Button("Apply"))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+}
+
+void CClothSimulation::AddSceneObjects()
 {
 	SingletonPointer<CApplication> Application;
 
-	ClothMesh = new CSimpleMesh();
+	if (ClothMesh)
+	{
+		ClothMesh->Clear();
+	}
+	else
+	{
+		ClothMesh = new CSimpleMesh();
+	}
 
 	for (int x = 0; x < Rows - 1; ++ x)
 	{
@@ -336,23 +392,29 @@ void CClothSimulation::AddSceneObjects(ion::Scene::CRenderPass * RenderPass)
 		}
 	}
 
-	ClothObjectFront = new CSimpleMeshSceneObject();
+	if (! ClothObjectFront)
+	{
+		ClothObjectFront = new CSimpleMeshSceneObject();
+		ClothObjectFront->SetShader(Application->ClothShader);
+		ClothObjectFront->SetUniform("uColor", CUniform<color3f>(Colors::Red));
+		ClothObjectFront->SetUniform("uFlipNormals", CUniform<int>(0));
+		ClothObjectFront->SetFeatureEnabled(EDrawFeature::CullBack, true);
+		ClothObjectFront->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+		Application->RenderPass->AddSceneObject(ClothObjectFront);
+	}
 	ClothObjectFront->SetMesh(ClothMesh);
-	ClothObjectFront->SetShader(Application->ClothShader);
-	ClothObjectFront->SetUniform("uColor", CUniform<color3f>(Colors::Red));
-	ClothObjectFront->SetUniform("uFlipNormals", CUniform<int>(0));
-	ClothObjectFront->SetFeatureEnabled(EDrawFeature::CullBack, true);
-	ClothObjectFront->SetFeatureEnabled(EDrawFeature::Wireframe, true);
-	RenderPass->AddSceneObject(ClothObjectFront);
 
-	ClothObjectBack = new CSimpleMeshSceneObject();
+	if (! ClothObjectBack)
+	{
+		ClothObjectBack = new CSimpleMeshSceneObject();
+		ClothObjectBack->SetShader(Application->ClothShader);
+		ClothObjectBack->SetUniform("uColor", CUniform<color3f>(Colors::Yellow));
+		ClothObjectBack->SetUniform("uFlipNormals", CUniform<int>(1));
+		ClothObjectBack->SetFeatureEnabled(EDrawFeature::CullFront, true);
+		ClothObjectBack->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+		Application->RenderPass->AddSceneObject(ClothObjectBack);
+	}
 	ClothObjectBack->SetMesh(ClothMesh);
-	ClothObjectBack->SetShader(Application->ClothShader);
-	ClothObjectBack->SetUniform("uColor", CUniform<color3f>(Colors::Yellow));
-	ClothObjectBack->SetUniform("uFlipNormals", CUniform<int>(1));
-	ClothObjectBack->SetFeatureEnabled(EDrawFeature::CullFront, true);
-	ClothObjectBack->SetFeatureEnabled(EDrawFeature::Wireframe, true);
-	RenderPass->AddSceneObject(ClothObjectBack);
 }
 
 void CClothSimulation::UpdateSceneObjects(uint const CurrentFrame)

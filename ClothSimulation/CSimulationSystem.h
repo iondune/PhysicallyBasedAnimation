@@ -11,13 +11,13 @@ public:
 
 	virtual void Setup() = 0;
 	virtual void SimulateStep(double const TimeDelta) = 0;
+	virtual void GUI() = 0;
 
-	virtual void AddSceneObjects(ion::Scene::CRenderPass * RenderPass) = 0;
 	virtual void UpdateSceneObjects(uint const CurrentFrame) = 0;
 
 };
 
-class CSimulationSystem
+class CSimulationSystem : public Singleton<CSimulationSystem>
 {
 
 public:
@@ -27,6 +27,8 @@ public:
 
 	void Update();
 	void GUI();
+
+	void Reset();
 
 	void AddSimulation(ISimulation * Simulation);
 
@@ -50,5 +52,11 @@ protected:
 	int PlaybackSpeed = 0;
 
 	ion::Scene::CRenderPass * RenderPass = nullptr;
+
+private:
+
+	friend class Singleton<CSimulationSystem>;
+	CSimulationSystem()
+	{}
 
 };
