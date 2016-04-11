@@ -33,8 +33,8 @@ public:
 
 	void AddSimulation(ISimulation * Simulation);
 
-	double TimeStep = 1e-2;
-	int TimeStepPower = -2;
+	double TimeStep = 1e-3;
+	int TimeStepPower = -3;
 
 protected:
 
