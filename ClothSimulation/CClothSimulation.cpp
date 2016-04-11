@@ -453,6 +453,16 @@ void CClothSimulation::AddSceneObjects()
 			Triangle.Indices[1] = Start + 3;
 			Triangle.Indices[2] = Start + 2;
 			ClothMesh->Triangles.push_back(Triangle);
+
+			Triangle.Indices[0] = Start + 0;
+			Triangle.Indices[1] = Start + 1;
+			Triangle.Indices[2] = Start + 3;
+			ClothMesh->Triangles.push_back(Triangle);
+
+			Triangle.Indices[0] = Start + 3;
+			Triangle.Indices[1] = Start + 1;
+			Triangle.Indices[2] = Start + 2;
+			ClothMesh->Triangles.push_back(Triangle);
 		}
 	}
 
