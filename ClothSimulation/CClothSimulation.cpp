@@ -67,11 +67,6 @@ void CClothSimulation::Setup()
 			p->VelocityFrames.push_back(0.0);
 			p->Mass = Settings.mass / (nVerts);
 
-			if (i == 0 && j == 0)
-			{
-				p->IsConstrained = true;
-			}
-
 			p->IsFixed = false;
 			p->Index = MatrixSize;
 			MatrixSize += 2;
@@ -304,9 +299,13 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 		{
 			particle->VelocityFrames.push_back(ToIon2D(Result.segment(particle->Index, 2)));
 
-			if (particle->IsConstrained)
+			if (particle->ConstraintType == EConstraintType::XAxis)
 			{
 				particle->VelocityFrames.back() *= vec2d(1, 0);
+			}
+			else if (particle->ConstraintType == EConstraintType::YAxis)
+			{
+				particle->VelocityFrames.back() *= vec2d(0, 1);
 			}
 
 			particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
@@ -377,22 +376,12 @@ void CClothSimulation::GUI()
 			ImGui::Text("Position: %.3f %.3f", SelectedParticle->PositionFrames[VisibleFrame].X, SelectedParticle->PositionFrames[VisibleFrame].Y);
 			ImGui::Text("Velocity: %.3f %.3f", SelectedParticle->VelocityFrames[VisibleFrame].X, SelectedParticle->VelocityFrames[VisibleFrame].Y);
 
-			const char* Items[] = { "None", "X Axis" };
-			int Selected = 0;
-			if (SelectedParticle->IsConstrained)
-			{
-				Selected = 1;
-			}
+			const char* Items[] = { "None", "X Axis", "Y Axis" };
+			int Selected = (int) SelectedParticle->ConstraintType;
+
 			if (ImGui::Combo("Constraint", &Selected, Items, ION_ARRAYSIZE(Items)))
 			{
-				if (Selected == 0)
-				{
-					SelectedParticle->IsConstrained = false;
-				}
-				else if (Selected == 1)
-				{
-					SelectedParticle->IsConstrained = true;
-				}
+				SelectedParticle->ConstraintType = (EConstraintType) Selected;
 			}
 
 			ImGui::End();

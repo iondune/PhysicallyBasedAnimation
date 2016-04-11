@@ -22,6 +22,13 @@ public:
 
 	void PickParticle(ray3f const & Ray);
 
+	enum class EConstraintType
+	{
+		None = 0,
+		XAxis = 1,
+		YAxis = 2
+	};
+
 	struct SParticle
 	{
 		double Radius;
@@ -29,7 +36,7 @@ public:
 		int Index;
 		bool IsFixed;
 
-		bool IsConstrained = false;
+		EConstraintType ConstraintType = EConstraintType::None;
 
 		ion::Scene::CSimpleMeshSceneObject * DebugObject = nullptr;
 		
