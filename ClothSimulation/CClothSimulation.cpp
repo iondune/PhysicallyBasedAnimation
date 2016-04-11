@@ -307,6 +307,16 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 			{
 				particle->VelocityFrames.back() *= vec2d(0, 1);
 			}
+			else if (particle->ConstraintType == EConstraintType::DownDiagonal)
+			{
+				vec2d const Vector = vec2d(1, -1);
+				particle->VelocityFrames.back() = Dot(particle->VelocityFrames.back(), Vector) * Vector.GetNormalized();
+			}
+			else if (particle->ConstraintType == EConstraintType::UpDiagonal)
+			{
+				vec2d const Vector = vec2d(1, 1);
+				particle->VelocityFrames.back() = Dot(particle->VelocityFrames.back(), Vector) * Vector.GetNormalized();
+			}
 
 			particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
 		}
@@ -376,7 +386,7 @@ void CClothSimulation::GUI()
 			ImGui::Text("Position: %.3f %.3f", SelectedParticle->PositionFrames[VisibleFrame].X, SelectedParticle->PositionFrames[VisibleFrame].Y);
 			ImGui::Text("Velocity: %.3f %.3f", SelectedParticle->VelocityFrames[VisibleFrame].X, SelectedParticle->VelocityFrames[VisibleFrame].Y);
 
-			const char* Items[] = { "None", "X Axis", "Y Axis" };
+			const char* Items[] = { "None", "X Axis", "Y Axis", "y=-x", "y=x"};
 			int Selected = (int) SelectedParticle->ConstraintType;
 
 			if (ImGui::Combo("Constraint", &Selected, Items, ION_ARRAYSIZE(Items)))

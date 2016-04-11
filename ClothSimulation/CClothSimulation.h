@@ -26,7 +26,9 @@ public:
 	{
 		None = 0,
 		XAxis = 1,
-		YAxis = 2
+		YAxis = 2,
+		DownDiagonal = 3,
+		UpDiagonal = 4
 	};
 
 	struct SParticle
