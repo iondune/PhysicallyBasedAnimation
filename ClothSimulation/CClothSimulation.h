@@ -20,6 +20,8 @@ public:
 	void AddSceneObjects();
 	void UpdateSceneObjects(uint const CurrentFrame);
 
+	void PickParticle(ray3f const & Ray);
+
 	struct SParticle
 	{
 		double Radius;
@@ -76,6 +78,9 @@ protected:
 	mutex ParticlesMutex;
 
 	SParticle * GetParticle(vec2i const & Index);
+
+	int VisibleFrame = 0;
+	SParticle * SelectedParticle = nullptr;
 
 	ion::Scene::CSimpleMesh * ClothMesh = nullptr;
 	ion::Scene::CSimpleMeshSceneObject * ClothObjectFront = nullptr;

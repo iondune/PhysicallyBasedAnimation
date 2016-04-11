@@ -17,6 +17,7 @@ void CClothSimulation::Setup()
 {
 	SingletonPointer<CApplication> Application;
 
+	SelectedParticle = nullptr;
 	for (auto Particle : Particles)
 	{
 		if (Particle->DebugObject)
@@ -325,7 +326,7 @@ void CClothSimulation::GUI()
 
 	if (ImGui::BeginPopupModal("Cloth Settings"))
 	{
-		ImGui::SetWindowSize(ImVec2(500, 350));
+		ImGui::SetWindowSize(ImVec2(500, 350), ImGuiSetCond_Once);
 		int Rows = Settings.rows;
 		if (ImGui::SliderInt("Rows", &Rows, 2, 20))
 		{
@@ -365,6 +366,17 @@ void CClothSimulation::GUI()
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
+	}
+
+	if (SelectedParticle)
+	{
+		if (ImGui::Begin("Edit Cloth Node"))
+		{
+			ImGui::SetWindowPos(ImVec2(1000, 350), ImGuiSetCond_Once);
+			ImGui::Text("Position: %.3f %.3f", SelectedParticle->PositionFrames[VisibleFrame].X, SelectedParticle->PositionFrames[VisibleFrame].Y);
+			ImGui::Text("Velocity: %.3f %.3f", SelectedParticle->VelocityFrames[VisibleFrame].X, SelectedParticle->VelocityFrames[VisibleFrame].Y);
+			ImGui::End();
+		}
 	}
 }
 
@@ -454,6 +466,8 @@ void CClothSimulation::AddSceneObjects()
 
 void CClothSimulation::UpdateSceneObjects(uint const CurrentFrame)
 {
+	VisibleFrame = CurrentFrame;
+
 	ParticlesMutex.lock();
 	for (int x = 0; x < Rows - 1; ++ x)
 	{
@@ -485,6 +499,27 @@ void CClothSimulation::UpdateSceneObjects(uint const CurrentFrame)
 
 	ClothObjectFront->SetMesh(ClothMesh);
 	ClothObjectBack->SetMesh(ClothMesh);
+}
+
+void CClothSimulation::PickParticle(ray3f const & Ray)
+{
+	SelectedParticle = nullptr;
+	for (auto Particle : Particles)
+	{
+		Particle->DebugObject->SetUniform("uColor", CUniform<color3f>(Colors::Red));
+	}
+	for (auto Particle : Particles)
+	{
+		vec3f const Center = Particle->PositionFrames[VisibleFrame];
+		float const Radius = 0.025f;
+
+		if (Ray.IntersectsSphere(Center, Radius))
+		{
+			SelectedParticle = Particle;
+			Particle->DebugObject->SetUniform("uColor", CUniform<color3f>(Colors::Yellow));
+			break;
+		}
+	}
 }
 
 CClothSimulation::SParticle * CClothSimulation::GetParticle(vec2i const & Index)

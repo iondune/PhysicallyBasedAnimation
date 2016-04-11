@@ -45,6 +45,25 @@ void CApplication::OnEvent(IEvent & Event)
 			}
 		}
 	}
+	else if (InstanceOf<SMouseEvent>(Event))
+	{
+		SMouseEvent MouseEvent = As<SMouseEvent>(Event);
+
+		switch (MouseEvent.Type)
+		{
+		case SMouseEvent::EType::Click:
+			if (MouseEvent.Button == SMouseEvent::EButton::Left)
+			{
+				if (! MouseEvent.Pressed)
+				{
+					ray3f const Ray = FreeCamera->GetPickingRay(MouseEvent.Location, Window->GetSize());
+					ClothSimulation->PickParticle(Ray);
+				}
+			}
+
+			break;
+		}
+	}
 }
 
 
@@ -55,7 +74,6 @@ void CApplication::InitializeEngine()
 	TimeManager->Init(WindowManager);
 
 	Window = WindowManager->CreateWindow(vec2i(1600, 900), "DemoApplication", EWindowType::Windowed);
-	Window->AddChild(this);
 
 	GraphicsContext = GraphicsAPI->GetWindowContext(Window);
 
@@ -72,6 +90,7 @@ void CApplication::InitializeEngine()
 	GUIManager->Init(Window);
 	GUIManager->AddFontFromFile("Assets/GUI/OpenSans.ttf", 18.f);
 	Window->AddListener(GUIManager);
+	GUIManager->AddListener(this);
 }
 
 void CApplication::LoadAssets()
