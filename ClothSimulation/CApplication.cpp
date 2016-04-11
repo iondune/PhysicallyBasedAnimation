@@ -132,7 +132,7 @@ void CApplication::AddSceneObjects()
 
 void CApplication::MainLoop()
 {
-	CClothSimulation * ClothSimulation = new CClothSimulation();
+	ClothSimulation = new CClothSimulation();
 
 	SimulationSystem->AddSimulation(ClothSimulation);
 	SimulationSystem->Start(RenderPass);

@@ -21,6 +21,7 @@ in vec3 fNormal;
 uniform int uPointLightsCount;
 uniform SLight uPointLights[LIGHT_MAX];
 uniform SMaterial uMaterial;
+uniform vec3 uColor;
 
 out vec4 outColor;
 
@@ -47,5 +48,5 @@ void main()
 		Diffuse += uMaterial.DiffuseColor * Shading * Attenuation * uPointLights[i].Color;
 	}
 
-	outColor = vec4(Diffuse + uMaterial.AmbientColor, 1);
+	outColor = vec4((Diffuse + uMaterial.AmbientColor) * uColor, 1);
 }

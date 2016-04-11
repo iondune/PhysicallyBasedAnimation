@@ -15,7 +15,22 @@ CClothSimulation::CClothSimulation()
 
 void CClothSimulation::Setup()
 {
+	SingletonPointer<CApplication> Application;
+
+	for (auto Particle : Particles)
+	{
+		if (Particle->DebugObject)
+		{
+			Application->RenderPass->RemoveSceneObject(Particle->DebugObject);
+		}
+		delete Particle;
+	}
 	Particles.clear();
+
+	for (auto Spring : Springs)
+	{
+		delete Spring;
+	}
 	Springs.clear();
 
 	vec2d x00(-0.25, 0.5);
@@ -402,6 +417,16 @@ void CClothSimulation::AddSceneObjects()
 		}
 	}
 
+	for (auto Particle : Particles)
+	{
+		Particle->DebugObject = new CSimpleMeshSceneObject();
+		Particle->DebugObject->SetMesh(Application->SphereMesh);
+		Particle->DebugObject->SetScale(0.02f);
+		Particle->DebugObject->SetShader(Application->DiffuseShader);
+		Particle->DebugObject->SetUniform("uColor", CUniform<color3f>(Colors::Red));
+		Application->RenderPass->AddSceneObject(Particle->DebugObject);
+	}
+
 	if (! ClothObjectFront)
 	{
 		ClothObjectFront = new CSimpleMeshSceneObject();
@@ -450,6 +475,11 @@ void CClothSimulation::UpdateSceneObjects(uint const CurrentFrame)
 				ClothMesh->Vertices[Start + i].Normal = vec3f(0, 0, 1);
 			}
 		}
+	}
+
+	for (auto Particle : Particles)
+	{
+		Particle->DebugObject->SetPosition(Particle->PositionFrames[CurrentFrame]);
 	}
 	ParticlesMutex.unlock();
 

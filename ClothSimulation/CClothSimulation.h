@@ -28,6 +28,8 @@ public:
 		bool IsFixed;
 
 		bool IsConstrained = false;
+
+		ion::Scene::CSimpleMeshSceneObject * DebugObject = nullptr;
 		
 		vector<vec2d> PositionFrames;
 		vector<vec2d> VelocityFrames;
