@@ -25,8 +25,8 @@ void CClothSimulation::Setup()
 
 	assert(Settings.rows > 1);
 	assert(Settings.cols > 1);
-	assert(Settings.mass > 0.0);
-	assert(Settings.stiffness > 0.0);
+	Settings.mass = Max(Settings.mass, 0.00001);
+	Settings.stiffness = Max(Settings.stiffness, 0.00001);
 
 	Rows = Settings.rows;
 	Columns = Settings.cols;
@@ -329,7 +329,7 @@ void CClothSimulation::GUI()
 		}
 
 		float Mass = (float) Settings.mass;
-		if (ImGui::InputFloat("Mass", &Mass))
+		if (ImGui::SliderFloat("Mass", &Mass, 0.00001, 100, "%.3f", 2.f))
 		{
 			Settings.mass = (double) Mass;
 			Setup();
@@ -337,7 +337,7 @@ void CClothSimulation::GUI()
 		}
 
 		float Stiffness = (float) Settings.stiffness;
-		if (ImGui::InputFloat("Stiffness", &Mass))
+		if (ImGui::SliderFloat("Stiffness", &Stiffness, 0.00001, 100, "%.3f", 2.f))
 		{
 			Settings.stiffness = (double) Stiffness;
 			Setup();
