@@ -361,7 +361,7 @@ void CClothSimulation::GUI()
 		}
 
 		float Stiffness = (float) Settings.stiffness;
-		if (ImGui::SliderFloat("Stiffness", &Stiffness, 0.00001f, 100, "%.3f", 2.f))
+		if (ImGui::SliderFloat("Stiffness", &Stiffness, 0.00001f, 10000, "%.3f", 3.f))
 		{
 			Settings.stiffness = (double) Stiffness;
 			SimulationSystem->Reset();
