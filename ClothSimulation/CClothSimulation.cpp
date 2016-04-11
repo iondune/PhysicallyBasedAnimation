@@ -372,9 +372,29 @@ void CClothSimulation::GUI()
 	{
 		if (ImGui::Begin("Edit Cloth Node"))
 		{
+			ImGui::SetWindowSize(ImVec2(350, 150), ImGuiSetCond_Once);
 			ImGui::SetWindowPos(ImVec2(1000, 350), ImGuiSetCond_Once);
 			ImGui::Text("Position: %.3f %.3f", SelectedParticle->PositionFrames[VisibleFrame].X, SelectedParticle->PositionFrames[VisibleFrame].Y);
 			ImGui::Text("Velocity: %.3f %.3f", SelectedParticle->VelocityFrames[VisibleFrame].X, SelectedParticle->VelocityFrames[VisibleFrame].Y);
+
+			const char* Items[] = { "None", "X Axis" };
+			int Selected = 0;
+			if (SelectedParticle->IsConstrained)
+			{
+				Selected = 1;
+			}
+			if (ImGui::Combo("Constraint", &Selected, Items, ION_ARRAYSIZE(Items)))
+			{
+				if (Selected == 0)
+				{
+					SelectedParticle->IsConstrained = false;
+				}
+				else if (Selected == 1)
+				{
+					SelectedParticle->IsConstrained = true;
+				}
+			}
+
 			ImGui::End();
 		}
 	}
