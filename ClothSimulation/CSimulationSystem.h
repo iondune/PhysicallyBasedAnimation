@@ -33,6 +33,9 @@ public:
 
 	void AddSimulation(ISimulation * Simulation);
 
+	double TimeStep = 1e-2;
+	int TimeStepPower = -2;
+
 protected:
 
 	vector<ISimulation *> Simulations;
@@ -48,7 +51,6 @@ protected:
 	bool Simulating = false;
 	bool Paused = false;
 
-	double const TimeStep = 1e-2;
 	double StepAccumulator = 0;
 
 	int PlaybackSpeed = 0;

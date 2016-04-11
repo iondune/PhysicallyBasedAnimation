@@ -368,6 +368,14 @@ void CClothSimulation::GUI()
 			Setup();
 		}
 
+		ImGui::Text("Time Step: 1e%d", SimulationSystem->TimeStepPower);
+		if (ImGui::SliderInt("Time Step Exponent", &SimulationSystem->TimeStepPower, -4, -1))
+		{
+			SimulationSystem->TimeStep = pow(10, SimulationSystem->TimeStepPower);
+			SimulationSystem->Reset();
+			Setup();
+		}
+
 		vec2d damping = vec2d(0.0, 1.0);
 
 		if (ImGui::Button("Apply"))
