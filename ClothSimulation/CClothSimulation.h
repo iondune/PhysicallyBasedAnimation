@@ -76,6 +76,9 @@ public:
 		double mass = 0.1;
 		double stiffness = 1e2;
 		vec2d damping = vec2d(0.0, 1.0);
+
+		vec2d Center = vec2d(0, 0.25);
+		vec2d Size = vec2d(0.5, 0.5);
 	};
 
 protected:
@@ -101,5 +104,7 @@ protected:
 	ion::Scene::CSimpleMesh * ClothMesh = nullptr;
 	ion::Scene::CSimpleMeshSceneObject * ClothObjectFront = nullptr;
 	ion::Scene::CSimpleMeshSceneObject * ClothObjectBack = nullptr;
+
+	bool PlaneObjectsCreated = false;
 
 };

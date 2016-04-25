@@ -37,10 +37,13 @@ void CClothSimulation::Setup()
 	}
 	Springs.clear();
 
-	vec2d x00(1-0.25, 0.5);
-	vec2d x01(1+0.25, 0.5);
-	vec2d x10(1-0.25, 0);
-	vec2d x11(1+0.25, 0);
+	vec2d Center = Settings.Center;
+	vec2d Size = Settings.Size;
+
+	vec2d x00(Center.X - Size.X / 2.0, Center.Y + Size.Y / 2.0);
+	vec2d x01(Center.X + Size.X / 2.0, Center.Y + Size.Y / 2.0);
+	vec2d x10(Center.X - Size.X / 2.0, Center.Y - Size.Y / 2.0);
+	vec2d x11(Center.X + Size.X / 2.0, Center.Y - Size.Y / 2.0);
 
 	assert(Settings.rows > 1);
 	assert(Settings.cols > 1);
@@ -305,6 +308,24 @@ void CClothSimulation::GUI()
 			Setup();
 		}
 
+		float Size[2] = { (float) Settings.Size.X, (float) Settings.Size.Y };
+		if (ImGui::SliderFloat2("Size", Size, 0.1f, 2.5f))
+		{
+			Settings.Size.X = Size[0];
+			Settings.Size.Y = Size[1];
+			SimulationSystem->Reset();
+			Setup();
+		}
+
+		float Center[2] = { (float) Settings.Center.X, (float) Settings.Center.Y };
+		if (ImGui::SliderFloat2("Center", Center, -2.f, 2.f))
+		{
+			Settings.Center.X = Center[0];
+			Settings.Center.Y = Center[1];
+			SimulationSystem->Reset();
+			Setup();
+		}
+
 		float Mass = (float) Settings.mass;
 		if (ImGui::SliderFloat("Mass", &Mass, 0.00001f, 100, "%.3f", 2.f))
 		{
@@ -453,19 +474,24 @@ void CClothSimulation::AddSceneObjects()
 	}
 	ClothObjectBack->SetMesh(ClothMesh);
 
-	for (size_t i = 0; i < Planes.size(); ++ i)
+	if (! PlaneObjectsCreated)
 	{
-		SPlane const & Plane = Planes[i];
+		for (size_t i = 0; i < Planes.size(); ++ i)
+		{
+			SPlane const & Plane = Planes[i];
 
-		CSimpleMeshSceneObject * PlaneObject = new CSimpleMeshSceneObject();
-		PlaneObject->SetMesh(Application->CubeMesh);
-		PlaneObject->SetShader(Application->DiffuseShader);
-		PlaneObject->SetUniform("uColor", CUniform<color3f>(i ? Colors::Blue : Colors::Green));
-		PlaneObject->SetScale(vec3f(2.5f, 0.05f, 1.f + 0.1f * i));
-		double const Rotation = -atan2(Plane.Normal.X, Plane.Normal.Y);
-		PlaneObject->SetRotation(vec3f(0, 0, (float) Rotation));
-		PlaneObject->SetPosition(Plane.Normal * (Plane.Distance - 0.025f));
-		Application->RenderPass->AddSceneObject(PlaneObject);
+			CSimpleMeshSceneObject * PlaneObject = new CSimpleMeshSceneObject();
+			PlaneObject->SetMesh(Application->CubeMesh);
+			PlaneObject->SetShader(Application->DiffuseShader);
+			PlaneObject->SetUniform("uColor", CUniform<color3f>(i ? Colors::Blue : Colors::Green));
+			PlaneObject->SetScale(vec3f(2.5f, 0.05f, 1.f + 0.1f * i));
+			double const Rotation = -atan2(Plane.Normal.X, Plane.Normal.Y);
+			PlaneObject->SetRotation(vec3f(0, 0, (float) Rotation));
+			PlaneObject->SetPosition(Plane.Normal * (Plane.Distance - 0.025f));
+			Application->RenderPass->AddSceneObject(PlaneObject);
+		}
+
+		PlaneObjectsCreated = true;
 	}
 }
 
