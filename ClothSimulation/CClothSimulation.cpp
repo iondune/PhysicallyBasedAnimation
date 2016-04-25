@@ -37,10 +37,10 @@ void CClothSimulation::Setup()
 	}
 	Springs.clear();
 
-	vec2d x00(-0.25, 0.5);
-	vec2d x01(0.25, 0.5);
-	vec2d x10(-0.25, 0);
-	vec2d x11(0.25, 0);
+	vec2d x00(1-0.25, 0.5);
+	vec2d x01(1+0.25, 0.5);
+	vec2d x10(1-0.25, 0);
+	vec2d x11(1+0.25, 0);
 
 	assert(Settings.rows > 1);
 	assert(Settings.cols > 1);
@@ -105,6 +105,14 @@ void CClothSimulation::Setup()
 			Springs.push_back(new SSpring(Particles[k10], Particles[k01], Settings.stiffness));
 		}
 	}
+
+	// Create planes
+	SPlane Plane;
+	Plane.Normal = vec2f(0.25f, 1.f).GetNormalized();
+	Plane.Distance = -1.f;
+	Planes.push_back(Plane);
+	Plane.Normal = vec2f(-0.25f, 1.f).GetNormalized();
+	Planes.push_back(Plane);
 
 	AddSceneObjects();
 	UpdateSceneObjects(0);
@@ -251,11 +259,19 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 
 			particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
 
-			if (particle->PositionFrames.back().Y < -0.5)
+			for (size_t i = 0; i < Planes.size(); ++ i)
 			{
-				particle->PositionFrames.back().Y = -0.5;
-				particle->VelocityFrames.back().Y = 0;
+				SPlane const & Plane = Planes[i];
+
+				double const Distance = Dot(particle->PositionFrames.back(), Plane.Normal);
+
+				if (Distance < Plane.Distance)
+				{
+					particle->PositionFrames.back() += Plane.Normal * (Plane.Distance - Distance);
+					particle->VelocityFrames.back() -= Plane.Normal * Dot(particle->VelocityFrames.back().GetNormalized(), Plane.Normal);
+				}
 			}
+
 		}
 		else
 		{
@@ -436,6 +452,21 @@ void CClothSimulation::AddSceneObjects()
 		Application->RenderPass->AddSceneObject(ClothObjectBack);
 	}
 	ClothObjectBack->SetMesh(ClothMesh);
+
+	for (size_t i = 0; i < Planes.size(); ++ i)
+	{
+		SPlane const & Plane = Planes[i];
+
+		CSimpleMeshSceneObject * PlaneObject = new CSimpleMeshSceneObject();
+		PlaneObject->SetMesh(Application->CubeMesh);
+		PlaneObject->SetShader(Application->DiffuseShader);
+		PlaneObject->SetUniform("uColor", CUniform<color3f>(i ? Colors::Blue : Colors::Green));
+		PlaneObject->SetScale(vec3f(2.5f, 0.05f, 1.f + 0.1f * i));
+		double const Rotation = -atan2(Plane.Normal.X, Plane.Normal.Y);
+		PlaneObject->SetRotation(vec3f(0, 0, (float) Rotation));
+		PlaneObject->SetPosition(Plane.Normal * (Plane.Distance - 0.025f));
+		Application->RenderPass->AddSceneObject(PlaneObject);
+	}
 }
 
 void CClothSimulation::UpdateSceneObjects(uint const CurrentFrame)

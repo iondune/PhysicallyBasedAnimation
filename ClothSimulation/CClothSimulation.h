@@ -63,6 +63,12 @@ public:
 		}
 	};
 
+	struct SPlane
+	{
+		vec2d Normal;
+		double Distance;
+	};
+
 	struct SSettings
 	{
 		int rows = 2;
@@ -83,7 +89,7 @@ protected:
 
 	vector<SParticle *> Particles;
 	vector<SSpring *> Springs;
-	vector<SPlane *> Planes;
+	vector<SPlane> Planes;
 
 	mutex ParticlesMutex;
 
