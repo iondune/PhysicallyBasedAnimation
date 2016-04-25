@@ -10,49 +10,44 @@ static void MSKAPI printstr(void *handle, MSKCONST char str[])
 	printf("%s", str);
 }
 
-void MosekSolver::Solve()
+Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd const & c, vector<vector<double>> const & A)
 {
+	Eigen::VectorXd ReturnValue;
+
 	if (! Environment)
 	{
 		Init();
 	}
 
-	uint const NUMCON = 1;
-	uint const NUMVAR = 3;
-	uint const NUMANZ = 3;
-	uint const NUMQNZ = 4;
+	assert(Q0.Size == c.size());
 
-	double        c[] = { 0.0,-1.0,0.0 };
+	int const NUMCON = (int) A.size();
+	int const NUMVAR = Q0.Size;
+	int const NUMQNZ = Q0.CountNonZeroSymmetric();
 
-	MSKboundkeye  bkc[] = { MSK_BK_LO };
-	double        blc[] = { 1.0 };
-	double        buc[] = { +MSK_INFINITY };
+	ReturnValue.resize(NUMVAR);
 
-	MSKboundkeye  bkx[] = { MSK_BK_LO,
-		MSK_BK_LO,
-		MSK_BK_LO };
-	double        blx[] = { 0.0,
-		0.0,
-		0.0 };
-	double        bux[] = { +MSK_INFINITY,
-		+MSK_INFINITY,
-		+MSK_INFINITY };
+	//MSKint32t 
+	//	aptrb[] = { 0,   1,   2 },
+	//	aptre[] = { 1,   2,   3 },
+	//	asub[] = { 0,   0,   0 };
+	//double        aval[] = { 1.0, 1.0, 1.0 };
 
-	MSKint32t     aptrb[] = { 0,   1,   2 },
-		aptre[] = { 1,   2,   3 },
-		asub[] = { 0,   0,   0 };
-	double        aval[] = { 1.0, 1.0, 1.0 };
-
-	MSKint32t     qsubi[NUMQNZ];
-	MSKint32t     qsubj[NUMQNZ];
-	double        qval[NUMQNZ];
+	MSKint32t * qsubi = new MSKint32t[NUMQNZ];
+	MSKint32t * qsubj = new MSKint32t[NUMQNZ];
+	double * qval = new double[NUMQNZ];
 
 	MSKint32t     i, j;
-	double        xx[NUMVAR];
+	double * xx = new double[NUMVAR];
 
 	MSKenv_t      env = NULL;
 	MSKtask_t     task = NULL;
 	MSKrescodee   r;
+
+	for (i = 0; i < NUMCON; ++ i)
+	{
+		assert(A[i].size() == NUMVAR);
+	}
 
 	/* Create the optimization task. */
 	r = MSK_maketask(env, NUMCON, NUMVAR, &task);
@@ -78,24 +73,49 @@ void MosekSolver::Solve()
 		{
 			/* Set the linear term c_j in the objective.*/
 			if (r == MSK_RES_OK)
-				r = MSK_putcj(task, j, c[j]);
+				r = MSK_putcj(task, j, c(j));
 
 			/* Set the bounds on variable j.
 			blx[j] <= x_j <= bux[j] */
 			if (r == MSK_RES_OK)
 				r = MSK_putvarbound(task,
 					j,           /* Index of variable.*/
-					bkx[j],      /* Bound key.*/
-					blx[j],      /* Numerical value of lower bound.*/
-					bux[j]);     /* Numerical value of upper bound.*/
+					MSK_BK_LO,      /* Bound key.*/
+					0.0,      /* Numerical value of lower bound.*/
+					+MSK_INFINITY);     /* Numerical value of upper bound.*/
+
+			MSKint32t NumNonZeroA = 0;
+
+			for (i = 0; i < NUMCON; ++ i)
+			{
+				if (A[i][j] != 0)
+				{
+					NumNonZeroA ++;
+				}
+			}
+
+			MSKint32t * RowIndicesA = new MSKint32t[NumNonZeroA];
+			MSKrealt * RowValuesA = new MSKrealt[NumNonZeroA];
+
+			uint Index = 0;
+			for (i = 0; i < NUMCON; ++ i)
+			{
+				if (A[i][j] != 0)
+				{
+					RowIndicesA[Index] = i;
+					RowValuesA[Index] = A[i][j];
+					Index ++;
+				}
+			}
+			assert(Index == NumNonZeroA);
 
 								 /* Input column j of A */
 			if (r == MSK_RES_OK)
 				r = MSK_putacol(task,
 					j,                 /* Variable (column) index.*/
-					aptre[j] - aptrb[j], /* Number of non-zeros in column j.*/
-					asub + aptrb[j],     /* Pointer to row indexes of column j.*/
-					aval + aptrb[j]);    /* Pointer to Values of column j.*/
+					NumNonZeroA, /* Number of non-zeros in column j.*/
+					RowIndicesA,     /* Pointer to row indexes of column j.*/
+					RowValuesA);    /* Pointer to Values of column j.*/
 
 		}
 
@@ -104,9 +124,9 @@ void MosekSolver::Solve()
 		for (i = 0; i < NUMCON && r == MSK_RES_OK; ++i)
 			r = MSK_putconbound(task,
 				i,           /* Index of constraint.*/
-				bkc[i],      /* Bound key.*/
-				blc[i],      /* Numerical value of lower bound.*/
-				buc[i]);     /* Numerical value of upper bound.*/
+				MSK_BK_LO,      /* Bound key.*/
+				0.0,      /* Numerical value of lower bound.*/
+				+MSK_INFINITY);     /* Numerical value of upper bound.*/
 
 		if (r == MSK_RES_OK)
 		{
@@ -115,13 +135,23 @@ void MosekSolver::Solve()
 			* matrix in the objective is specified.
 			*/
 
-			qsubi[0] = 0;   qsubj[0] = 0;  qval[0] = 2.0;
-			qsubi[1] = 1;   qsubj[1] = 1;  qval[1] = 0.2;
-			qsubi[2] = 2;   qsubj[2] = 0;  qval[2] = -1.0;
-			qsubi[3] = 2;   qsubj[3] = 2;  qval[3] = 2.0;
+			uint NonZeroIndexInQ0 = 0;
+			for (int i = 0; i < Q0.Size; ++ i)
+			{
+				double ProductSum = 0;
+				for (int j = 0; j <= i; ++ j)
+				{
+					double Value = Q0.Get(i, j);
+					if (Value != 0)
+					{
+						qsubi[NonZeroIndexInQ0] = i;   qsubj[NonZeroIndexInQ0] = j;  qval[NonZeroIndexInQ0] = Value;
+						NonZeroIndexInQ0 ++;
+					}
+				}
+			}
+			assert(NonZeroIndexInQ0 == NUMQNZ);
 
 			/* Input the Q for the objective. */
-
 			r = MSK_putqobj(task, NUMQNZ, qsubi, qsubj, qval);
 		}
 
@@ -153,7 +183,10 @@ void MosekSolver::Solve()
 
 					printf("Optimal primal solution\n");
 					for (j = 0; j < NUMVAR; ++j)
+					{
 						printf("x[%d]: %e\n", j, xx[j]);
+						ReturnValue(j) = xx[j];
+					}
 
 					break;
 				case MSK_SOL_STA_DUAL_INFEAS_CER:
@@ -190,10 +223,31 @@ void MosekSolver::Solve()
 			printf("Error %s - '%s'\n", symname, desc);
 		}
 	}
+
 	MSK_deletetask(&task);
+
+	delete[] qsubi;
+	delete[] qsubj;
+	delete[] qval;
+	delete[] xx;
+
+	return ReturnValue;
 }
 
 void MosekSolver::Init()
 {
-	MSK_makeenv(&Environment, nullptr);
+	MSKrescodee r = MSK_makeenv(&Environment, nullptr);
+
+	if (r != MSK_RES_OK)
+	{
+		/* In case of an error print error code and description. */
+		char symname[MSK_MAX_STR_LEN];
+		char desc[MSK_MAX_STR_LEN];
+
+		printf("An error occurred while optimizing.\n");
+		MSK_getcodedesc(r,
+			symname,
+			desc);
+		printf("Error %s - '%s'\n", symname, desc);
+	}
 }

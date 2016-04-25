@@ -161,6 +161,25 @@ struct SSparseMatrix
 		return true;
 	}
 
+	uint CountNonZeroSymmetric() const
+	{
+		uint NonZero = 0;
+
+		assert(IsSymmetric());
+
+		for (int i = 0; i < Size; ++ i)
+		{
+			double ProductSum = 0;
+			for (int j = 0; j <= i; ++ j)
+			{
+				if (Get(i, j) != 0)
+					NonZero ++;
+			}
+		}
+
+		return NonZero;
+	}
+
 	friend std::ostream & operator << (std::ostream & stream, SSparseMatrix const & rhs)
 	{
 		for (int i = 0; i < rhs.Size; ++ i)

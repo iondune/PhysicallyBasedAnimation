@@ -3,6 +3,7 @@
 #include "CApplication.h"
 #include "Util.h"
 #include "SSparseMatrix.h"
+#include "MosekSolver.h"
 
 #define EIGEN_DONT_ALIGN_STATICALLY
 #include <Eigen/Sparse>
@@ -164,29 +165,60 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 			K.Subtract(spring->Particle1->Index, spring->Particle0->Index, StiffnessMatrix);
 		}
 	}
+
+	uint NumCollisions = 0;
+	vector<vector<double>> CollisionMatrix;
+
+	//for (SParticle * particle : Particles)
+	//{
+	//	if (! particle->IsFixed)
+	//	{
+	//		if (particle->PositionFrames.back().Y < -0.5)
+	//		{
+	//			CollisionMatrix.push_back(vector<double>());
+	//			CollisionMatrix.back().resize(MatrixSize, 0.0);
+
+	//			// Collision Normal
+	//			CollisionMatrix[NumCollisions][particle->Index + 0] = 0.0;
+	//			CollisionMatrix[NumCollisions][particle->Index + 1] = 1.0;
+
+	//			NumCollisions ++;
+	//		}
+	//	}
+	//}
 	ParticlesMutex.unlock();
 
 	SSparseMatrix const D = Damping.X * TimeDelta * M + Damping.Y * Sq(TimeDelta) * K;
 
-	SSparseMatrix const Mtilde = M + Sq(TimeDelta) * K + TimeDelta * D;
-	Eigen::VectorXd const fTilde = M * v + TimeDelta * f;
+	Eigen::VectorXd Result;
+	if (NumCollisions == 0)
+	{
+		SSparseMatrix const A = M + D;
+		Eigen::VectorXd const b = M.ToEigen() * v + TimeDelta * f;
+		Eigen::SparseMatrix<double> const AEigen = A.ToEigen();
 
-	SSparseMatrix const A = M + D;
-	Eigen::SparseMatrix<double> const ASparse = A.ToEigen();
-	Eigen::VectorXd const b = M.ToEigen() * v + TimeDelta * f;
-	
-	Eigen::ConjugateGradient< Eigen::SparseMatrix<double> > cg;
-	cg.setMaxIterations(25);
-	cg.setTolerance(1e-3);
-	cg.compute(ASparse);
+		Eigen::ConjugateGradient< Eigen::SparseMatrix<double> > cg;
+		cg.setMaxIterations(25);
+		cg.setTolerance(1e-3);
+		cg.compute(AEigen);
 
-	//cout << "A =" << endl;
-	//cout << ASparse << endl;
-	//cout << endl;
-	//cout << "b =" << endl;
-	//cout << b << endl;
-	//cout << endl;
-	Eigen::VectorXd Result = cg.solveWithGuess(b, v);
+		//cout << "A =" << endl;
+		//cout << ASparse << endl;
+		//cout << endl;
+		//cout << "b =" << endl;
+		//cout << b << endl;
+		//cout << endl;
+
+		Result = cg.solveWithGuess(b, v);
+	}
+	else
+	{
+		//SSparseMatrix const Mtilde = M + Sq(TimeDelta) * K + TimeDelta * D;
+		//Eigen::VectorXd const fTilde = M * v + TimeDelta * f;
+
+		//Result = MosekSolver::Solve(Mtilde, fTilde, CollisionMatrix);
+	}
+
 	//cout << "x =" << endl;
 	//cout << Result << endl;
 	//cout << endl;
@@ -198,26 +230,32 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 		{
 			particle->VelocityFrames.push_back(ToIon2D(Result.segment(particle->Index, 2)));
 
-			if (particle->ConstraintType == EConstraintType::XAxis)
-			{
-				particle->VelocityFrames.back() *= vec2d(1, 0);
-			}
-			else if (particle->ConstraintType == EConstraintType::YAxis)
-			{
-				particle->VelocityFrames.back() *= vec2d(0, 1);
-			}
-			else if (particle->ConstraintType == EConstraintType::DownDiagonal)
-			{
-				vec2d const Vector = vec2d(1, -1);
-				particle->VelocityFrames.back() = Dot(particle->VelocityFrames.back(), Vector) * Vector.GetNormalized();
-			}
-			else if (particle->ConstraintType == EConstraintType::UpDiagonal)
-			{
-				vec2d const Vector = vec2d(1, 1);
-				particle->VelocityFrames.back() = Dot(particle->VelocityFrames.back(), Vector) * Vector.GetNormalized();
-			}
+			//if (particle->ConstraintType == EConstraintType::XAxis)
+			//{
+			//	particle->VelocityFrames.back() *= vec2d(1, 0);
+			//}
+			//else if (particle->ConstraintType == EConstraintType::YAxis)
+			//{
+			//	particle->VelocityFrames.back() *= vec2d(0, 1);
+			//}
+			//else if (particle->ConstraintType == EConstraintType::DownDiagonal)
+			//{
+			//	vec2d const Vector = vec2d(1, -1);
+			//	particle->VelocityFrames.back() = Dot(particle->VelocityFrames.back(), Vector) * Vector.GetNormalized();
+			//}
+			//else if (particle->ConstraintType == EConstraintType::UpDiagonal)
+			//{
+			//	vec2d const Vector = vec2d(1, 1);
+			//	particle->VelocityFrames.back() = Dot(particle->VelocityFrames.back(), Vector) * Vector.GetNormalized();
+			//}
 
 			particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
+
+			if (particle->PositionFrames.back().Y < -0.5)
+			{
+				particle->PositionFrames.back().Y = -0.5;
+				particle->VelocityFrames.back().Y = 0;
+			}
 		}
 		else
 		{
