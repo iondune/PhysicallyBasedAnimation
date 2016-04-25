@@ -5,10 +5,16 @@
     <ClCompile Include="CApplication.cpp" />
     <ClCompile Include="CSimulationSystem.cpp" />
     <ClCompile Include="CClothSimulation.cpp" />
+    <ClCompile Include="MosekSolver.cpp" />
+    <ClCompile Include="Util.cpp" />
+    <ClCompile Include="SSparseMatrix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
     <ClInclude Include="CSimulationSystem.h" />
     <ClInclude Include="CClothSimulation.h" />
+    <ClInclude Include="MosekSolver.h" />
+    <ClInclude Include="Util.h" />
+    <ClInclude Include="SSparseMatrix.h" />
   </ItemGroup>
 </Project>

@@ -18,18 +18,30 @@
     <Import Project="$(VisualStudioDir)\Projects\ionEngine\Properties\Application.props" />
   </ImportGroup>
   <PropertyGroup>
-    <IncludePath>$(VisualStudioDir)\SDKs\eigen;$(IncludePath)</IncludePath>
+    <IncludePath>C:\mosektoolswin64x86\mosek\7\tools\platform\win64x86\h;$(VisualStudioDir)\SDKs\eigen;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\mosektoolswin64x86\mosek\7\tools\platform\win64x86\bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>mosek64_7_1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CApplication.cpp" />
     <ClCompile Include="CClothSimulation.cpp" />
     <ClCompile Include="CSimulationSystem.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MosekSolver.cpp" />
+    <ClCompile Include="SSparseMatrix.cpp" />
+    <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
     <ClInclude Include="CClothSimulation.h" />
     <ClInclude Include="CSimulationSystem.h" />
+    <ClInclude Include="MosekSolver.h" />
+    <ClInclude Include="SSparseMatrix.h" />
+    <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
