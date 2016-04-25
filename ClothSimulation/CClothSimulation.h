@@ -65,8 +65,8 @@ public:
 
 	struct SSettings
 	{
-		int rows = 10;
-		int cols = 10;
+		int rows = 2;
+		int cols = 2;
 		double mass = 0.1;
 		double stiffness = 1e2;
 		vec2d damping = vec2d(0.0, 1.0);
