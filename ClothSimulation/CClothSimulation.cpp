@@ -277,6 +277,39 @@ struct SSparseMatrix
 		A.setFromTriplets(Tuples.begin(), Tuples.end());
 		return A;
 	}
+
+	bool IsSymmetric() const
+	{
+		for (int i = 0; i < Size; ++ i)
+		{
+			double ProductSum = 0;
+			for (int j = 0; j < i; ++ j)
+			{
+				if (Get(i, j) != Get(j, i))
+					return false;
+			}
+		}
+
+		return true;
+	}
+
+	friend std::ostream & operator << (std::ostream & stream, SSparseMatrix const & rhs)
+	{
+		for (int i = 0; i < rhs.Size; ++ i)
+		{
+			for (int j = 0; j < rhs.Size; ++ j)
+			{
+				if (0 != j)
+				{
+					stream << " ";
+				}
+				stream << rhs.Get(i, j);
+			}
+			stream << endl;
+		}
+
+		return stream;
+	}
 };
 
 void CClothSimulation::SimulateStep(double const TimeDelta)
