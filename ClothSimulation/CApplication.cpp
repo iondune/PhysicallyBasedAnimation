@@ -98,7 +98,6 @@ void CApplication::LoadAssets()
 {
 	CubeMesh = CGeometryCreator::CreateCube();
 	SphereMesh = CGeometryCreator::CreateSphere();
-	TorusMesh = CGeometryCreator::CreateTorus();
 
 	ClothShader = AssetManager->LoadShader("Cloth");
 	GroundShader = AssetManager->LoadShader("Ground");

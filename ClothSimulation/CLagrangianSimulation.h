@@ -48,6 +48,11 @@ protected:
 	int VisibleFrame = 0;
 	SParticle * SelectedParticle = nullptr;
 
+	double RingRadius = 2.0;
+	double TubeRadius = 0.25;
+
+	vec3f QToCartesian(vec2f const & Angles);
+
 	ion::Scene::CSimpleMeshSceneObject * BoundaryMesh = nullptr;
 
 };
