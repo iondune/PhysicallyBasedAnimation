@@ -1,6 +1,7 @@
 
 #include "CApplication.h"
 #include "CClothSimulation.h"
+#include "CLagrangianSimulation.h"
 
 using namespace ion;
 using namespace ion::Scene;
@@ -97,6 +98,7 @@ void CApplication::LoadAssets()
 {
 	CubeMesh = CGeometryCreator::CreateCube();
 	SphereMesh = CGeometryCreator::CreateSphere();
+	TorusMesh = CGeometryCreator::CreateTorus();
 
 	ClothShader = AssetManager->LoadShader("Cloth");
 	GroundShader = AssetManager->LoadShader("Ground");
@@ -152,8 +154,9 @@ void CApplication::AddSceneObjects()
 void CApplication::MainLoop()
 {
 	ClothSimulation = new CClothSimulation();
+	CLagrangianSimulation * LagrangianSimulation = new CLagrangianSimulation();
 
-	SimulationSystem->AddSimulation(ClothSimulation);
+	SimulationSystem->AddSimulation(LagrangianSimulation);
 	SimulationSystem->Start(RenderPass);
 
 	TimeManager->Start();

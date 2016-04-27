@@ -31,6 +31,7 @@ public:
 
 	ion::Scene::CSimpleMesh * CubeMesh = nullptr;
 	ion::Scene::CSimpleMesh * SphereMesh = nullptr;
+	ion::Scene::CSimpleMesh * TorusMesh = nullptr;
 	
 	SharedPointer<ion::Graphics::ITexture> GroundTexture;
 
