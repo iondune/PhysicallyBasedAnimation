@@ -38,6 +38,7 @@ void CLagrangianSimulation::AddSceneObjects()
 	CSimpleMeshSceneObject * TorusObject = new CSimpleMeshSceneObject();
 	TorusObject->SetMesh(Application->TorusMesh);
 	TorusObject->SetShader(Application->DiffuseShader);
+
 	Application->RenderPass->AddSceneObject(TorusObject);
 }
 
