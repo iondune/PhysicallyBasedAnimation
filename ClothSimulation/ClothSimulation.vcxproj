@@ -29,6 +29,7 @@
   <ItemGroup>
     <ClCompile Include="CApplication.cpp" />
     <ClCompile Include="CClothSimulation.cpp" />
+    <ClCompile Include="CLagrangianSimulation.cpp" />
     <ClCompile Include="CSimulationSystem.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MosekSolver.cpp" />
@@ -38,6 +39,7 @@
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
     <ClInclude Include="CClothSimulation.h" />
+    <ClInclude Include="CLagrangianSimulation.h" />
     <ClInclude Include="CSimulationSystem.h" />
     <ClInclude Include="MosekSolver.h" />
     <ClInclude Include="SSparseMatrix.h" />
