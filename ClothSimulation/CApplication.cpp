@@ -4,6 +4,7 @@
 using namespace ion;
 using namespace ion::Scene;
 using namespace ion::Graphics;
+using namespace ion::Animation;
 
 
 void CApplication::Run()
@@ -32,6 +33,7 @@ void CApplication::OnEvent(IEvent & Event)
 				RenderPass->SetActiveCamera(FreeCamera);
 				break;
 			case EKey::G:
+				RenderPass->SetActiveCamera(PlayerCamera);
 				break;
 			case EKey::LeftBracket:
 				break;
@@ -120,6 +122,11 @@ void CApplication::SetupScene()
 	FreeCamera->SetFocalLength(0.4f);
 	FreeCamera->SetFarPlane(10000.f);
 
+	PlayerCamera = new CPerspectiveCamera(Window->GetAspectRatio());
+	PlayerCamera->SetFocalLength(0.4f);
+	PlayerCamera->SetNearPlane(0.01f);
+	PlayerCamera->SetFarPlane(100.f);
+
 	CCameraController * Controller = new CCameraController(FreeCamera);
 	Controller->SetTheta(-Constants32::Pi / 2);
 	Controller->SetPhi(0);
@@ -178,7 +185,7 @@ void CApplication::MainLoop()
 			Simulation->Player->EngineForce = vec3d(0, 0, 0);
 		}
 
-		double const TimeStep = 0.02;
+		double const TimeStep = 0.01;
 		if (Accumulator > TimeStep)
 		{
 			Accumulator -= TimeStep;
@@ -186,9 +193,35 @@ void CApplication::MainLoop()
 			if (Accumulator > TimeStep * 2)
 				Accumulator = TimeStep * 2;
 
-			Simulation->SimulateStep(0.05);
+			Simulation->SimulateStep(TimeStep);
 			Simulation->UpdateSceneObjects();
+
+			vec3f const PlayerPosition = Simulation->QToCartesian(Simulation->Player->Position);
+			vec3f PlayerDirection = (PlayerPosition - Simulation->QToCartesian(Simulation->Player->LastPosition));
+			if (PlayerDirection.LengthSq())
+			{
+				PlayerDirection.Normalize();
+			}
+			else
+			{
+				PlayerDirection = vec3f(1, 0, 0);
+			}
+			vec3f const TowardsCenter = (Simulation->ClosestCenter(Simulation->Player->Position) - PlayerPosition).GetNormalized();
+
+			vec3f const GoalPosition = PlayerPosition - PlayerDirection * 0.2f + TowardsCenter * 0.16f;
+			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.08f) - GoalPosition;
+
+			float const CameraSpringTension = 60.4f;
+
+			PlayerCamera->SetLookDirection(
+				GoalLookDirection);
+				//Move::Cubic(PlayerCamera->GetLookDirecton(), GoalLookDirection, (float) TimeStep, CameraSpringTension, 0.00005f));
+			PlayerCamera->SetPosition(
+				GoalPosition);
+				//Move::Cubic(PlayerCamera->GetPosition(), PlayerPosition, (float) TimeStep, CameraSpringTension, 0.00005f));
+			PlayerCamera->SetUpVector(TowardsCenter);
 		}
+
 
 		// GUI
 		GUIManager->NewFrame();
@@ -201,6 +234,7 @@ void CApplication::MainLoop()
 
 			ImGui::Separator();
 
+			ImGui::Text("Player position %.3f %.3f", Simulation->Player->Position.X, Simulation->Player->Position.Y);
 
 			ImGui::End();
 		}

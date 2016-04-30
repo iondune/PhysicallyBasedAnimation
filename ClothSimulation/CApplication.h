@@ -43,6 +43,7 @@ protected:
 
 	SharedPointer<ion::Graphics::IRenderTarget> RenderTarget = nullptr;
 	ion::Scene::CPerspectiveCamera * FreeCamera = nullptr;
+	ion::Scene::CPerspectiveCamera * PlayerCamera = nullptr;
 	ion::Scene::CPointLight * PointLight = nullptr;
 
 	CLagrangianSimulation * Simulation = nullptr;

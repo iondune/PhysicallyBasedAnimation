@@ -54,6 +54,7 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 		Eigen::Vector2d const Result = A.ldlt().solve(b);
 
 		particle->Velocity = ToIon2D(Result);
+		particle->LastPosition = particle->Position;
 		particle->Position += TimeDelta * particle->Velocity;
 	}
 }
@@ -94,5 +95,14 @@ vec3f CLagrangianSimulation::QToCartesian(vec2f const & Angles)
 		(float) ((RingRadius + TubeRadius * Cos(Angles.X)) * Cos(Angles.Y)),
 		-(float) (TubeRadius * Sin(Angles.X)),
 		(float) ((RingRadius + TubeRadius * Cos(Angles.X)) * Sin(Angles.Y))
+	);
+}
+
+vec3f CLagrangianSimulation::ClosestCenter(vec2f const & Angles)
+{
+	return vec3f(
+		(float) ((RingRadius) * Cos(Angles.Y)),
+		0,
+		(float) ((RingRadius) * Sin(Angles.Y))
 	);
 }
