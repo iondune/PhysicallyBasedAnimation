@@ -1,6 +1,10 @@
 
 #include "CLagrangianSimulation.h"
 #include "CApplication.h"
+#include "Util.h"
+
+#define EIGEN_DONT_ALIGN_STATICALLY
+#include <Eigen/Dense>
 
 using namespace ion;
 using namespace ion::Scene;
@@ -25,14 +29,39 @@ void CLagrangianSimulation::Setup()
 
 void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 {
-
-	ParticlesMutex.lock();
 	for (SParticle * particle : Particles)
 	{
-		particle->VelocityFrames.push_back(particle->VelocityFrames.back() + TimeDelta * 0.01);
+		double const r = TubeRadius;
+		double const R = RingRadius;
+		double const theta = particle->PositionFrames.back().X;
+		double const phi = particle->PositionFrames.back().Y;
+
+		Eigen::Matrix3Xd J;
+		J.resize(Eigen::NoChange, 2);
+		J(0, 0) = -r * sin(theta) * cos(phi);
+		J(1, 0) = -r * sin(theta) * sin(phi);
+		J(2, 0) = -r * cos(theta);
+		J(0, 1) = -(R + r * cos(theta)) * sin(phi);
+		J(1, 1) = (R + r * cos(theta)) * cos(phi);
+		J(2, 1) = 0;
+
+		Eigen::Matrix3d const M = Eigen::Matrix3d::Identity() * particle->Mass;
+
+		Eigen::Matrix2Xd J_Transpose;
+		J_Transpose.resize(Eigen::NoChange, 3);
+		J_Transpose = J.transpose();
+
+		Eigen::Matrix2d const A = J_Transpose * M * J;
+		Eigen::Vector2d const b = J_Transpose * M * J * ToEigen(particle->VelocityFrames.back()) +
+			TimeDelta * J_Transpose * (particle->Mass * ToEigen(vec3d(0, 0, 9.8)));
+
+		Eigen::Vector2d const Result = A.ldlt().solve(b);
+
+		ParticlesMutex.lock();
+		particle->VelocityFrames.push_back(ToIon2D(Result));
 		particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
+		ParticlesMutex.unlock();
 	}
-	ParticlesMutex.unlock();
 }
 
 void CLagrangianSimulation::GUI()
