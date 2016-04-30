@@ -21,6 +21,14 @@ CLagrangianSimulation::CLagrangianSimulation()
 	UpdateSceneObjects();
 }
 
+vec2d SquareWithSign(vec2d const & Input)
+{
+	return vec2d(
+		Sq(Input.X) * Sign(Input.X),
+		Sq(Input.Y) * Sign(Input.Y)
+	);
+}
+
 void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 {
 	for (SParticle * particle : Particles)
@@ -46,10 +54,14 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 		J_Transpose = J.transpose();
 
 		double const Gravity = -0.098;
+		double const Friction = 0.01;
 
 		Eigen::Matrix2d const A = J_Transpose * M * J;
 		Eigen::Vector2d const b = J_Transpose * M * J * ToEigen(particle->Velocity) +
-			TimeDelta * J_Transpose * ToEigen(particle->Mass * vec3d(0, 0, Gravity) + particle->EngineForce);
+			TimeDelta * (
+				J_Transpose * ToEigen(particle->Mass * vec3d(0, 0, Gravity) + particle->EngineForce) +
+				ToEigen(vec2d(-(SquareWithSign(particle->Velocity)) * Friction))
+			);
 
 		Eigen::Vector2d const Result = A.ldlt().solve(b);
 
