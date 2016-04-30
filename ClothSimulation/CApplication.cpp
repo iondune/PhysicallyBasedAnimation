@@ -81,7 +81,7 @@ void CApplication::InitializeEngine()
 	SceneManager->Init(GraphicsAPI);
 
 	AssetManager->Init(GraphicsAPI);
-	AssetManager->SetAssetPath("Assets/");
+	AssetManager->AddAssetPath("Assets/");
 	AssetManager->SetShaderPath("Shaders/");
 	AssetManager->SetTexturePath("Textures/");
 
