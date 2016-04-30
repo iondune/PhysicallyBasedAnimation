@@ -2,8 +2,7 @@
 #pragma once
 
 #include <ionEngine.h>
-#include "CSimulationSystem.h"
-#include "CClothSimulation.h"
+#include "CLagrangianSimulation.h"
 
 
 class CApplication : public Singleton<CApplication>, public IEventListener
@@ -46,8 +45,7 @@ protected:
 	ion::Scene::CPerspectiveCamera * FreeCamera = nullptr;
 	ion::Scene::CPointLight * PointLight = nullptr;
 
-	SingletonPointer<CSimulationSystem> SimulationSystem;
-	CClothSimulation * ClothSimulation = nullptr;
+	CLagrangianSimulation * Simulation = nullptr;
 
 private:
 

@@ -2,25 +2,19 @@
 #pragma once
 
 #include <ionEngine.h>
-#include "CSimulationSystem.h"
 
 
-class CLagrangianSimulation : public ISimulation
+class CLagrangianSimulation
 {
 
 public:
 
 	CLagrangianSimulation();
 
-	void Setup();
 	void SimulateStep(double const TimeDelta);
-	void GUI();
-	void Reset();
 
 	void AddSceneObjects();
-	void UpdateSceneObjects(uint const CurrentFrame);
-
-	void PickParticle(ray3f const & Ray);
+	void UpdateSceneObjects();
 
 	struct SParticle
 	{
@@ -28,8 +22,8 @@ public:
 
 		ion::Scene::CSimpleMeshSceneObject * DebugObject = nullptr;
 
-		vector<vec2d> PositionFrames;
-		vector<vec2d> VelocityFrames;
+		vec2d Position;
+		vec2d Velocity;
 	};
 
 	struct SSettings
@@ -42,11 +36,6 @@ protected:
 	SSettings Settings;
 
 	vector<SParticle *> Particles;
-
-	mutex ParticlesMutex;
-
-	int VisibleFrame = 0;
-	SParticle * SelectedParticle = nullptr;
 
 	double RingRadius = 2.0;
 	double TubeRadius = 0.25;

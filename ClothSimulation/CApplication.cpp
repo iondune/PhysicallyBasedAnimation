@@ -1,7 +1,5 @@
 
 #include "CApplication.h"
-#include "CClothSimulation.h"
-#include "CLagrangianSimulation.h"
 
 using namespace ion;
 using namespace ion::Scene;
@@ -58,7 +56,7 @@ void CApplication::OnEvent(IEvent & Event)
 				if (! MouseEvent.Pressed)
 				{
 					ray3f const Ray = FreeCamera->GetPickingRay(MouseEvent.Location, Window->GetSize());
-					ClothSimulation->PickParticle(Ray);
+					//ClothSimulation->PickParticle(Ray);
 				}
 			}
 
@@ -152,22 +150,43 @@ void CApplication::AddSceneObjects()
 
 void CApplication::MainLoop()
 {
-	ClothSimulation = new CClothSimulation();
-	CLagrangianSimulation * LagrangianSimulation = new CLagrangianSimulation();
+	Simulation = new CLagrangianSimulation();
 
-	SimulationSystem->AddSimulation(LagrangianSimulation);
-	SimulationSystem->Start(RenderPass);
+	double Accumulator = 0;
 
 	TimeManager->Start();
 	while (WindowManager->Run())
 	{
 		TimeManager->Update();
-		
+
+		Accumulator += TimeManager->GetElapsedTime();
+
+		double const TimeStep = 0.02;
+		if (Accumulator > TimeStep)
+		{
+			Accumulator -= TimeStep;
+
+			if (Accumulator > TimeStep * 2)
+				Accumulator = TimeStep * 2;
+
+			Simulation->SimulateStep(0.05);
+			Simulation->UpdateSceneObjects();
+		}
+
 		// GUI
 		GUIManager->NewFrame();
-		SimulationSystem->GUI();
 
-		SimulationSystem->Update();
+		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiSetCond_Once);
+		if (ImGui::Begin("Settings"))
+		{
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::Text("Camera position: %.3f %.3f %.3f", FreeCamera->GetPosition().X, FreeCamera->GetPosition().Y, FreeCamera->GetPosition().Z);
+
+			ImGui::Separator();
+
+
+			ImGui::End();
+		}
 		PointLight->SetPosition(FreeCamera->GetPosition());
 
 		// Draw
@@ -176,6 +195,4 @@ void CApplication::MainLoop()
 		ImGui::Render();
 		Window->SwapBuffers();
 	}
-
-	SimulationSystem->Stop();
 }

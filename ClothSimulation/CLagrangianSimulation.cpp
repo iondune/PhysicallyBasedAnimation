@@ -15,16 +15,12 @@ CLagrangianSimulation::CLagrangianSimulation()
 {
 	SParticle * Particle = new SParticle();
 	Particle->Mass = Settings.mass;
-	Particle->PositionFrames.push_back(0.0);
-	Particle->VelocityFrames.push_back(0.0);
+	Particle->Position = (0.0);
+	Particle->Velocity = (0.0);
 	Particles.push_back(Particle);
 
 	AddSceneObjects();
-	UpdateSceneObjects(0);
-}
-
-void CLagrangianSimulation::Setup()
-{
+	UpdateSceneObjects();
 }
 
 void CLagrangianSimulation::SimulateStep(double const TimeDelta)
@@ -33,8 +29,8 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 	{
 		double const r = TubeRadius;
 		double const R = RingRadius;
-		double const theta = particle->PositionFrames.back().X;
-		double const phi = particle->PositionFrames.back().Y;
+		double const theta = particle->Position.X;
+		double const phi = particle->Position.Y;
 
 		Eigen::Matrix3Xd J;
 		J.resize(Eigen::NoChange, 2);
@@ -51,32 +47,17 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 		J_Transpose.resize(Eigen::NoChange, 3);
 		J_Transpose = J.transpose();
 
+		double const Gravity = 0.98;
+
 		Eigen::Matrix2d const A = J_Transpose * M * J;
-		Eigen::Vector2d const b = J_Transpose * M * J * ToEigen(particle->VelocityFrames.back()) +
-			TimeDelta * J_Transpose * (particle->Mass * ToEigen(vec3d(0, 0, 9.8)));
+		Eigen::Vector2d const b = J_Transpose * M * J * ToEigen(particle->Velocity) +
+			TimeDelta * J_Transpose * (particle->Mass * ToEigen(vec3d(0, 0, Gravity)));
 
 		Eigen::Vector2d const Result = A.ldlt().solve(b);
 
-		ParticlesMutex.lock();
-		particle->VelocityFrames.push_back(ToIon2D(Result));
-		particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
-		ParticlesMutex.unlock();
+		particle->Velocity = ToIon2D(Result);
+		particle->Position += TimeDelta * particle->Velocity;
 	}
-}
-
-void CLagrangianSimulation::GUI()
-{
-}
-
-void CLagrangianSimulation::Reset()
-{
-	ParticlesMutex.lock();
-	for (SParticle * particle : Particles)
-	{
-		particle->VelocityFrames.resize(1);
-		particle->PositionFrames.resize(1);
-	}
-	ParticlesMutex.unlock();
 }
 
 void CLagrangianSimulation::AddSceneObjects()
@@ -101,20 +82,12 @@ void CLagrangianSimulation::AddSceneObjects()
 	}
 }
 
-void CLagrangianSimulation::UpdateSceneObjects(uint const CurrentFrame)
+void CLagrangianSimulation::UpdateSceneObjects()
 {
-	VisibleFrame = CurrentFrame;
-
-	ParticlesMutex.lock();
 	for (auto Particle : Particles)
 	{
-		Particle->DebugObject->SetPosition(QToCartesian(Particle->PositionFrames[CurrentFrame]));
+		Particle->DebugObject->SetPosition(QToCartesian(Particle->Position));
 	}
-	ParticlesMutex.unlock();
-}
-
-void CLagrangianSimulation::PickParticle(ray3f const & Ray)
-{
 }
 
 vec3f CLagrangianSimulation::QToCartesian(vec2f const & Angles)
