@@ -45,7 +45,7 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 		J_Transpose.resize(Eigen::NoChange, 3);
 		J_Transpose = J.transpose();
 
-		double const Gravity = 0.98;
+		double const Gravity = -0.098;
 
 		Eigen::Matrix2d const A = J_Transpose * M * J;
 		Eigen::Vector2d const b = J_Transpose * M * J * ToEigen(particle->Velocity) +
@@ -92,7 +92,7 @@ vec3f CLagrangianSimulation::QToCartesian(vec2f const & Angles)
 {
 	return vec3f(
 		(float) ((RingRadius + TubeRadius * Cos(Angles.X)) * Cos(Angles.Y)),
-		(float) (TubeRadius * Sin(Angles.X)),
+		-(float) (TubeRadius * Sin(Angles.X)),
 		(float) ((RingRadius + TubeRadius * Cos(Angles.X)) * Sin(Angles.Y))
 	);
 }

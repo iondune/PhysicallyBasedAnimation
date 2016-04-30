@@ -163,11 +163,15 @@ void CApplication::MainLoop()
 
 		if (Window->IsKeyDown(EKey::Space))
 		{
-			Simulation->Player->EngineForce = vec3d(0.2, 0, 0);
+			Simulation->Player->EngineForce = vec3d(0.02, 0, 0);
 		}
 		else if (Window->IsKeyDown(EKey::LeftControl))
 		{
-			Simulation->Player->EngineForce = vec3d(0, 0.2, 0);
+			Simulation->Player->EngineForce = vec3d(0, 0.02, 0);
+		}
+		else if (Window->IsKeyDown(EKey::LeftShift))
+		{
+			Simulation->Player->EngineForce = vec3d(0, 0, 0.02);
 		}
 		else
 		{
