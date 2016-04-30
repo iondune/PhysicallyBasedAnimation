@@ -161,6 +161,19 @@ void CApplication::MainLoop()
 
 		Accumulator += TimeManager->GetElapsedTime();
 
+		if (Window->IsKeyDown(EKey::Space))
+		{
+			Simulation->Player->EngineForce = vec3d(0.2, 0, 0);
+		}
+		else if (Window->IsKeyDown(EKey::LeftControl))
+		{
+			Simulation->Player->EngineForce = vec3d(0, 0.2, 0);
+		}
+		else
+		{
+			Simulation->Player->EngineForce = vec3d(0, 0, 0);
+		}
+
 		double const TimeStep = 0.02;
 		if (Accumulator > TimeStep)
 		{

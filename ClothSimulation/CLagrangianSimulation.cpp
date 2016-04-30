@@ -13,11 +13,9 @@ using namespace ion::Graphics;
 
 CLagrangianSimulation::CLagrangianSimulation()
 {
-	SParticle * Particle = new SParticle();
-	Particle->Mass = Settings.mass;
-	Particle->Position = (0.0);
-	Particle->Velocity = (0.0);
-	Particles.push_back(Particle);
+	Player = new SParticle();
+	Player->Mass = Settings.mass;
+	Particles.push_back(Player);
 
 	AddSceneObjects();
 	UpdateSceneObjects();
@@ -51,7 +49,7 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 
 		Eigen::Matrix2d const A = J_Transpose * M * J;
 		Eigen::Vector2d const b = J_Transpose * M * J * ToEigen(particle->Velocity) +
-			TimeDelta * J_Transpose * (particle->Mass * ToEigen(vec3d(0, 0, Gravity)));
+			TimeDelta * J_Transpose * ToEigen(particle->Mass * vec3d(0, 0, Gravity) + particle->EngineForce);
 
 		Eigen::Vector2d const Result = A.ldlt().solve(b);
 

@@ -24,12 +24,15 @@ public:
 
 		vec2d Position;
 		vec2d Velocity;
+		vec3d EngineForce;
 	};
 
 	struct SSettings
 	{
 		double mass = 0.1;
 	};
+
+	SParticle * Player = nullptr;
 
 protected:
 
