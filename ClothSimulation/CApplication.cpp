@@ -208,7 +208,7 @@ void CApplication::MainLoop()
 			}
 			vec3f const TowardsCenter = (Simulation->ClosestCenter(Simulation->Player->Position) - PlayerPosition).GetNormalized();
 
-			vec3f const GoalPosition = PlayerPosition - PlayerDirection * 0.2f + TowardsCenter * 0.16f;
+			vec3f const GoalPosition = PlayerPosition - PlayerDirection * 0.2f + TowardsCenter * 0.16f * (-Cos(Simulation->Player->Position.X) * 0.5 + 1.0);
 			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.08f) - GoalPosition;
 
 			float const CameraSpringTension = 60.4f;
@@ -235,6 +235,7 @@ void CApplication::MainLoop()
 			ImGui::Separator();
 
 			ImGui::Text("Player position %.3f %.3f", Simulation->Player->Position.X, Simulation->Player->Position.Y);
+			ImGui::Text("Player interior %.3f", Cos(Simulation->Player->Position.X));
 
 			ImGui::End();
 		}

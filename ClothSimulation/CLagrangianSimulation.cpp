@@ -56,6 +56,8 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 		particle->Velocity = ToIon2D(Result);
 		particle->LastPosition = particle->Position;
 		particle->Position += TimeDelta * particle->Velocity;
+		particle->Position.X = fmod(particle->Position.X, 2 * Constants64::Pi);
+		particle->Position.Y = fmod(particle->Position.Y, 2 * Constants64::Pi);
 	}
 }
 
