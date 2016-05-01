@@ -151,7 +151,7 @@ void CApplication::LoadAssets()
 	BlurHShader = AssetManager->LoadShader("PPBlurH");
 	BlendShader = AssetManager->LoadShader("PPBlend");
 
-	GroundTexture = AssetManager->LoadTexture("Ground.png");
+	GroundTexture = AssetManager->LoadTexture("GroundDark.png");
 	if (GroundTexture)
 	{
 		GroundTexture->SetMagFilter(ITexture::EFilter::Nearest);
