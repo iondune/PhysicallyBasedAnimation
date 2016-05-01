@@ -26,6 +26,8 @@ public:
 		vec2d LastPosition;
 		vec2d Velocity;
 		vec3d EngineForce;
+
+		float Heading = 0;
 	};
 
 	struct SSettings

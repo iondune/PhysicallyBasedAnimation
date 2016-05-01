@@ -172,6 +172,7 @@ void CApplication::MainLoop()
 		TimeManager->Update();
 
 		Accumulator += TimeManager->GetElapsedTime();
+		float const Elapsed = (float) TimeManager->GetElapsedTime();
 
 		if (Window->IsKeyDown(EKey::Space))
 		{
@@ -189,6 +190,14 @@ void CApplication::MainLoop()
 		{
 			Simulation->Player->EngineForce = vec3d(0, 0, 0);
 		}
+		if (Window->IsKeyDown(EKey::A))
+		{
+			Simulation->Player->Heading += Elapsed * 1.f;
+		}
+		if (Window->IsKeyDown(EKey::D))
+		{
+			Simulation->Player->Heading -= Elapsed * 1.f;
+		}
 
 		double const TimeStep = 0.01;
 		if (Accumulator > TimeStep)
@@ -204,6 +213,7 @@ void CApplication::MainLoop()
 			vec3f const PlayerPosition = Simulation->QToCartesian(Simulation->Player->Position);
 			vec3f const TowardsCenter = (Simulation->ClosestCenter(Simulation->Player->Position) - PlayerPosition).GetNormalized();
 			vec3f const Forward = vec3f(1, 0, 0)
+				.RotateAround(vec3f(0, 1, 0), Simulation->Player->Heading)
 				.RotateAround(vec3f(0, 0, 1), Constants32::Pi / 2 - Simulation->Player->Position.X)
 				.RotateAround(vec3f(0, 1, 0), -Simulation->Player->Position.Y)
 				;

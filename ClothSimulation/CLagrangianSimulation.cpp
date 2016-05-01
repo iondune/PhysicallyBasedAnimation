@@ -97,7 +97,17 @@ void CLagrangianSimulation::UpdateSceneObjects()
 	for (auto Particle : Particles)
 	{
 		Particle->DebugObject->SetPosition(QToCartesian(Particle->Position));
-		Particle->DebugObject->SetRotation(vec3f(0, (float) -Particle->Position.Y, Constants32::Pi / 2 - (float) Particle->Position.X));
+
+		static glm::vec3 const X = glm::vec3(1, 0, 0);
+		static glm::vec3 const Y = glm::vec3(0, 1, 0);
+		static glm::vec3 const Z = glm::vec3(0, 0, 1);
+
+		glm::mat4 Rotation = glm::mat4(1.f);
+		Rotation = glm::rotate(Rotation, (float) -Particle->Position.Y, Y);
+		Rotation = glm::rotate(Rotation, Constants32::Pi / 2 - (float) Particle->Position.X, Z);
+		Rotation = glm::rotate(Rotation, Particle->Heading, Y);
+
+		Particle->DebugObject->SetRotation(Rotation);
 	}
 }
 
