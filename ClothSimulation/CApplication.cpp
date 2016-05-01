@@ -243,6 +243,7 @@ void CApplication::MainLoop()
 			ImGui::Separator();
 
 			ImGui::Text("Player position %.3f %.3f", Simulation->Player->Position.X, Simulation->Player->Position.Y);
+			ImGui::Text("Player velocity %.3f %.3f", Simulation->Player->Velocity.X, Simulation->Player->Velocity.Y);
 			ImGui::Text("Player interior %.3f", Cos(Simulation->Player->Position.X));
 
 			ImGui::End();
