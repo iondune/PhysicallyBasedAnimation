@@ -31,11 +31,11 @@ public:
 		float UpwardsMin = 0.5f;
 		float UpwardsMax = 3.5f;
 		float OutwardsMin = 0.f;
-		float OutwardsMax = 1.25f;
-		float MinSize = 0.8f * 0.01f;
-		float MaxSize = 3.2f * 0.01f;
-		float MinLife = 2.f;
-		float MaxLife = 4.f;
+		float OutwardsMax = 0.4f;
+		float MinSize = 0.8f * 0.006f;
+		float MaxSize = 3.2f * 0.006f;
+		float MinLife = 1.f;
+		float MaxLife = 2.f;
 		float DeleteInterval = 0.2f;
 		float RotationSpeed = 0.5f;
 		float FadeInTime = 0.2f;

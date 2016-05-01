@@ -24,6 +24,7 @@ uniform vec3 uCameraPosition;
 out vec3 fLight[LIGHT_MAX];
 out vec3 fNormal;
 out vec2 fTexCoords;
+out vec3 fFireDirection;
 
 
 void main()
@@ -35,6 +36,8 @@ void main()
 
 	fNormal = (uNormalMatrix * vec4(vNormal, 0.0)).xyz;
 	fTexCoords = vTexCoords;
+
+	fFireDirection = (uNormalMatrix * vec4(-1.0, 0.0, 0.0, 0.0)).xyz;
 
 	gl_Position = uProjectionMatrix * uViewMatrix * Position;
 }

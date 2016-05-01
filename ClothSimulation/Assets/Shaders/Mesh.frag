@@ -20,6 +20,8 @@ in vec3 fLight[LIGHT_MAX];
 in vec3 fNormal;
 in vec2 fTexCoords;
 
+in vec3 fFireDirection;
+
 uniform int uPointLightsCount;
 uniform SLight uPointLights[LIGHT_MAX];
 uniform SMaterial uMaterial;
@@ -35,19 +37,23 @@ float sq(float v)
 void main()
 {
 	vec3 Diffuse = vec3(0);
+	vec3 nNormal = normalize(fNormal);
 
 
 	for (int i = 0; i < LIGHT_MAX && i < uPointLightsCount; ++ i)
 	{
 		vec3 nLight = normalize(fLight[i]);
-		vec3 nNormal = normalize(fNormal);
-		vec3 Reflection = reflect(-nLight, nNormal);
 
 		float Shading = clamp(dot(nNormal, nLight), 0.0, 1.0);
 		float Distance = length(fLight[i]);
 		float Attenuation = 1.0 / sq(Distance / uPointLights[i].Radius + 1);
-		Diffuse += uMaterial.DiffuseColor * Shading * Attenuation * uPointLights[i].Color;
+		Diffuse += Shading * Attenuation * uPointLights[i].Color;
+	}
+	{
+		vec3 nLight = fFireDirection;
+		float Shading = clamp(dot(nNormal, nLight), 0.0, 1.0);
+		Diffuse += Shading * vec3(255.0/255.0, 106/255.0, 0.0);
 	}
 
-	outColor = vec4((Diffuse + uMaterial.AmbientColor) * texture(uMaterial.DiffuseTexture, fTexCoords).rgb, 1);
+	outColor = vec4((uMaterial.DiffuseColor * Diffuse + uMaterial.AmbientColor) * texture(uMaterial.DiffuseTexture, fTexCoords).rgb, 1);
 }
