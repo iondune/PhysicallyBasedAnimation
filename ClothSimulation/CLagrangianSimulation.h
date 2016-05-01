@@ -50,8 +50,8 @@ protected:
 
 	vector<SParticle *> Particles;
 
-	double RingRadius = 2.0;
-	double TubeRadius = 0.25;
+	double RingRadius = 3.5;
+	double TubeRadius = 0.75;
 
 	ion::Scene::CSimpleMeshSceneObject * BoundaryMesh = nullptr;
 
