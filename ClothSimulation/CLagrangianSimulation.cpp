@@ -103,6 +103,11 @@ void CLagrangianSimulation::AddSceneObjects()
 			Particle->ExhaustObject->Shader = Application->ParticleShader;
 			Particle->ExhaustObject->Texture = Application->FireTexture1;
 			Particle->ExhaustObject->SetScale(0.02f);
+			if (! Particle->IsShip)
+			{
+				Particle->ExhaustObject->Settings.UpwardsMax *= 9.f;
+				Particle->ExhaustObject->Settings.UpwardsMin *= 9.f;
+			}
 			Application->RenderPass->AddSceneObject(Particle->ExhaustObject);
 		}
 	}
