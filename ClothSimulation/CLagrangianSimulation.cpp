@@ -68,6 +68,16 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 		particle->Position += TimeDelta * particle->Velocity;
 		particle->Position.X = fmod(particle->Position.X, 2 * Constants64::Pi);
 		particle->Position.Y = fmod(particle->Position.Y, 2 * Constants64::Pi);
+
+
+		vec3f Forward = vec3f(1, 0, 0)
+			.RotateAround(vec3f(0, 1, 0), (float) particle->Heading)
+			.RotateAround(vec3f(0, 0, 1), Constants32::Pi / 2 - (float) particle->Position.X)
+			.RotateAround(vec3f(0, 1, 0), (float) -particle->Position.Y);
+
+		std::swap(Forward.Y, Forward.Z);
+		particle->ForwardVector = Forward;
+		particle->EngineForce = vec3d(particle->ForwardVector) * particle->Thrust;
 	}
 }
 

@@ -29,7 +29,9 @@ public:
 		vec2d Velocity;
 		vec3d EngineForce;
 
+		double Thrust = 0;
 		float Heading = 0;
+		vec3f ForwardVector;
 
 		bool IsShip = false;
 	};

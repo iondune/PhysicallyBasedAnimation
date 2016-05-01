@@ -49,7 +49,8 @@ void CApplication::OnEvent(IEvent & Event)
 				Missile->Mass = 0.1;
 				Missile->Position = Simulation->Player->Position;
 				Missile->Heading = Simulation->Player->Heading;
-				Missile->Velocity = Simulation->Player->Velocity * 2.f;
+				Missile->Velocity = Simulation->Player->Velocity;
+				Missile->Thrust = 0.1;
 				Simulation->Particles.push_back(Missile);
 				Simulation->AddSceneObjects();
 				break;
@@ -308,21 +309,14 @@ void CApplication::MainLoop()
 
 			vec3f const PlayerPosition = Simulation->QToCartesian(Simulation->Player->Position);
 			vec3f const TowardsCenter = (Simulation->ClosestCenter(Simulation->Player->Position) - PlayerPosition).GetNormalized();
-			vec3f const Forward = vec3f(1, 0, 0)
-				.RotateAround(vec3f(0, 1, 0), (float) Simulation->Player->Heading)
-				.RotateAround(vec3f(0, 0, 1), Constants32::Pi / 2 - (float) Simulation->Player->Position.X)
-				.RotateAround(vec3f(0, 1, 0), (float) -Simulation->Player->Position.Y);
-
-			vec3f PhysicsForward = Forward;
-			std::swap(PhysicsForward.Y, PhysicsForward.Z);
-
+			
 			if (Window->IsKeyDown(EKey::Space))
 			{
-				Simulation->Player->EngineForce = vec3d(PhysicsForward) * 0.3;
+				Simulation->Player->Thrust = 0.3;
 			}
 			else
 			{
-				Simulation->Player->EngineForce = vec3d(0, 0, 0);
+				Simulation->Player->Thrust = 0.0;
 			}
 
 			if (Window->IsKeyDown(EKey::A))
@@ -333,6 +327,9 @@ void CApplication::MainLoop()
 			{
 				Simulation->Player->Heading -= (float) TimeStep * 1.f;
 			}
+
+			vec3f Forward = Simulation->Player->ForwardVector;
+			std::swap(Forward.Y, Forward.Z);
 
 			vec3f const GoalPosition = -Forward * 0.2f + TowardsCenter * 0.16f * (-(float) Cos(Simulation->Player->Position.X) * 0.5f + 0.5f);
 			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.1f) - (GoalPosition + PlayerPosition);
