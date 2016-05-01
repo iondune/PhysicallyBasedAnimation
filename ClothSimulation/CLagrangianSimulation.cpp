@@ -127,6 +127,13 @@ void CLagrangianSimulation::UpdateSceneObjects()
 {
 	for (auto Particle : Particles)
 	{
+		if (Particle->IsShip)
+		{
+			Particle->ExhaustObject->Settings.EmitCount = (int) (1.f + 7.f / 0.3f * Particle->Thrust);
+			Particle->ExhaustObject->Settings.MinSize = (0.6f + 0.3f / 0.3f * Particle->Thrust) * 0.8f * 0.006f;
+			Particle->ExhaustObject->Settings.MaxSize = (0.6f + 0.3f / 0.3f * Particle->Thrust) * 3.2f * 0.006f;
+		}
+
 		Particle->MeshObject->SetPosition(QToCartesian(Particle->Position));
 		Particle->ExhaustObject->SetPosition(QToCartesian(Particle->Position));
 
