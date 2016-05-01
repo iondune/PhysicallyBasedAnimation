@@ -272,7 +272,7 @@ void CApplication::AddSceneObjects()
 
 		CSimpleMeshSceneObject * PostProcessObjectBlurH = new CSimpleMeshSceneObject();
 		PostProcessObjectBlurH->SetMesh(CGeometryCreator::CreateScreenTriangle());
-		PostProcessObjectBlurH->SetShader(BlurVShader);
+		PostProcessObjectBlurH->SetShader(BlurHShader);
 		PostProcessObjectBlurH->SetTexture("uTexture", SwapColor2);
 		PostProcessObjectBlurH->SetFeatureEnabled(EDrawFeature::DisableDepthTest, true);
 		PostProcessObjectBlurH->SetFeatureEnabled(EDrawFeature::DisableDepthWrite, true);
