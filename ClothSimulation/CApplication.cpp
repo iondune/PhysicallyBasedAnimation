@@ -27,13 +27,13 @@ void CApplication::OnEvent(IEvent & Event)
 		{
 			switch (KeyboardEvent.Key)
 			{
-			case EKey::F1:
+			case EKey::LeftBracket:
 				RenderPass->SetActiveCamera(FreeCamera);
 				break;
 			case EKey::F:
 				ToggleBool(Simulation->Settings.Friction);
 				break;
-			case EKey::F2:
+			case EKey::RightBracket:
 				RenderPass->SetActiveCamera(PlayerCamera);
 				break;
 			case EKey::LeftAlt:
@@ -45,8 +45,6 @@ void CApplication::OnEvent(IEvent & Event)
 						Particle->DeleteMe = true;
 					}
 				}
-				break;
-			case EKey::RightBracket:
 				break;
 			case EKey::P:
 				break;
@@ -210,7 +208,7 @@ void CApplication::SetupScene()
 	SceneManager->AddRenderPass(PostProcessPassBlend);
 
 	FreeCamera = new CPerspectiveCamera(Window->GetAspectRatio());
-	FreeCamera->SetPosition(vec3f(0, 0.25f, 1));
+	FreeCamera->SetPosition(vec3f(3.5f, 0.f, 1.f));
 	FreeCamera->SetFocalLength(0.4f);
 	FreeCamera->SetFarPlane(10000.f);
 
