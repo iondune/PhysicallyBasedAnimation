@@ -161,7 +161,7 @@ void CParticleSystemSceneObject::Draw(CRenderPass * RenderPass)
 		if (Settings.VectorField)
 		{
 			vec3f Acceleration;
-			Acceleration.Y -= 9.8 * Elapsed;
+			Acceleration.Y -= 9.8f * Elapsed;
 			Acceleration += fixedrand3(Particle.Position * 8.f);
 
 			Particle.Velocity += Acceleration * Elapsed * 1.f;
