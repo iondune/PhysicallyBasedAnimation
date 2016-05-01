@@ -86,7 +86,7 @@ void CApplication::InitializeEngine()
 	AssetManager->SetTexturePath("Textures/");
 
 	RenderTarget = GraphicsContext->GetBackBuffer();
-	RenderTarget->SetClearColor(color3f(0.9f));
+	RenderTarget->SetClearColor(color3f(0.05f));
 
 	GUIManager->Init(Window);
 	GUIManager->AddFontFromFile("Assets/GUI/OpenSans.ttf", 18.f);
