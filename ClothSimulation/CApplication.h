@@ -3,6 +3,7 @@
 
 #include <ionEngine.h>
 #include "CLagrangianSimulation.h"
+#include "CParticleSystemSceneObject.h"
 
 
 class CApplication : public Singleton<CApplication>, public IEventListener
@@ -54,6 +55,8 @@ public:
 	
 	SharedPointer<ion::Graphics::ITexture2D> GroundTexture;
 	SharedPointer<ion::Graphics::ITexture2D> FireTexture1;
+
+	CParticleSystemSceneObject * ExplosionSystem = nullptr;
 
 protected:
 

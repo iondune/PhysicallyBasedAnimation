@@ -36,6 +36,7 @@ void CApplication::OnEvent(IEvent & Event)
 				RenderPass->SetActiveCamera(PlayerCamera);
 				break;
 			case EKey::LeftBracket:
+				ExplosionSystem->MakeExplosion(Simulation->QToCartesian(Simulation->Player->Position));
 				break;
 			case EKey::RightBracket:
 				break;
@@ -234,6 +235,14 @@ void CApplication::AddSceneObjects()
 
 	PointLight = new CPointLight();
 	RenderPass->AddLight(PointLight);
+
+	ExplosionSystem = new CParticleSystemSceneObject();
+	ExplosionSystem->Shader = ParticleShader;
+	ExplosionSystem->Texture = FireTexture1;
+	ExplosionSystem->Settings.EmitCount = 0;
+	ExplosionSystem->Settings.VectorField = true;
+	//ExplosionSystem->SetScale(0.02f);
+	RenderPass->AddSceneObject(ExplosionSystem);
 
 
 	CSimpleMeshSceneObject * PostProcessObjectFilter = new CSimpleMeshSceneObject();

@@ -40,12 +40,15 @@ public:
 		float RotationSpeed = 0.5f;
 		float FadeInTime = 0.2f;
 		bool FadeOutParticles = true;
+		bool VectorField = false;
 	};
 
 	CParticleSystemSceneObject();
 
 	void Load(ion::Scene::CRenderPass * RenderPass);
 	void Draw(ion::Scene::CRenderPass * RenderPass);
+
+	void MakeExplosion(vec3f const & Position);
 
 	SingletonPointer<ion::CTimeManager> TimeManager;
 

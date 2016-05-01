@@ -62,6 +62,43 @@ void CParticleSystemSceneObject::Load(CRenderPass * RenderPass)
 	Loaded[RenderPass] = true;
 }
 
+vec3f fixedrand3(vec3i const & i)
+{
+	static uint const table[] =
+	{
+		7536, 971, 56113, 33383, 21942,
+		51540, 10084, 26259, 26232, 58179,
+		2964, 16259, 41571, 5579, 28817,
+		25963, 32354, 49605, 16521, 20221,
+		28907, 13484, 19780, 30340, 52550,
+		64848, 55225, 45402, 37892, 7268,
+		50588, 7972, 48330, 32418, 5455,
+		62714, 24843, 28885, 9639, 24088,
+		14415, 44207, 31727, 44828, 24005,
+		6979, 52024, 55444, 37575, 38039,
+		21595, 10362, 35156, 13057, 33871,
+		2868, 929, 45303, 55104, 33692,
+		46744, 37682, 52964, 55892, 2244,
+		9360, 49240, 31171, 4921, 12733,
+		45965, 27227, 7252, 63045, 8768,
+		33095, 13437, 48783, 45894, 12307,
+		22081, 43735, 54065, 47338, 32245,
+		51933, 50783, 9603, 27412, 9642,
+		9282, 16623, 31479, 15997, 54287,
+		56635, 43307, 35930, 47939, 52740,
+	};
+	static uint const tablesize = 100;
+	uint lookup = i.X + i.Y * 67 + i.Z * 313;
+
+	uint ran = table[lookup % tablesize];
+	vec3f ret = vec3f(
+		(float) (ran % 16) / 8.f - 1.f,
+		(float) ((ran >> 4) % 16) / 8.f - 1.f,
+		(float) ((ran >> 8) % 16) / 8.f - 1.f
+	);
+	return ret;
+}
+
 void CParticleSystemSceneObject::Draw(CRenderPass * RenderPass)
 {
 	//////////////////////
@@ -121,6 +158,16 @@ void CParticleSystemSceneObject::Draw(CRenderPass * RenderPass)
 			ActiveParticles ++;
 		}
 
+		if (Settings.VectorField)
+		{
+			vec3f Acceleration;
+			Acceleration.Y -= 9.8 * Elapsed;
+			Acceleration += fixedrand3(Particle.Position * 8.f);
+
+			Particle.Velocity += Acceleration * Elapsed * 1.f;
+			Particle.Size += Elapsed * 0.2f;
+		}
+
 		Particle.Position += Elapsed * Particle.Velocity;
 		Particle.Rotation += Elapsed * Settings.RotationSpeed * 3.14f;
 	}
@@ -160,6 +207,26 @@ void CParticleSystemSceneObject::Draw(CRenderPass * RenderPass)
 
 
 	RenderPass->SubmitPipelineStateForRendering(PipelineState, this, ActiveParticles, 1);
+}
+
+void CParticleSystemSceneObject::MakeExplosion(vec3f const & Position)
+{
+	int const NumParticles = 300;
+
+	Particles.reserve(Particles.size() + NumParticles);
+	for (int i = 0; i < NumParticles; ++ i)
+	{
+		Particles.push_back(SParticle());
+		float const OutwardAngle = frand() * 2 * 3.14159f;
+		float const OutwardMagnitude = Random::Between(-2.f, 2.f);
+		float const UpwardMagnitude = Random::Between(-2.f, 2.f);
+		Particles.back().Velocity = vec3f(UpwardMagnitude, Sin(OutwardAngle) * OutwardMagnitude, Cos(OutwardAngle) * OutwardMagnitude) * 0.1f;
+		Particles.back().Position = Position;
+		Particles.back().Size = Random::Between(Settings.MinSize, Settings.MaxSize) * 3.f;
+		Particles.back().Rotation = frand() * 2 * 3.14159f;
+		Particles.back().Life = Particles.back().StartLife = Random::Between(Settings.MinLife, Settings.MaxLife);
+	}
+	std::sort(Particles.begin(), Particles.end());
 }
 
 /*
