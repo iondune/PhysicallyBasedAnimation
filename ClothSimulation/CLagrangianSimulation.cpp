@@ -85,9 +85,8 @@ void CLagrangianSimulation::AddSceneObjects()
 	{
 		Particle->DebugObject = new CSimpleMeshSceneObject();
 		Particle->DebugObject->SetMesh(PlayerMesh);
-		Particle->DebugObject->SetScale(0.02f);
-		Particle->DebugObject->SetShader(Application->DiffuseShader);
-		Particle->DebugObject->SetUniform("uColor", CUniform<color3f>(Colors::Red));
+		Particle->DebugObject->SetScale(0.04f);
+		Particle->DebugObject->SetShader(Application->MeshShader);
 		Application->RenderPass->AddSceneObject(Particle->DebugObject);
 	}
 }

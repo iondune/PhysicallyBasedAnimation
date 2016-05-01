@@ -102,6 +102,7 @@ void CApplication::LoadAssets()
 	ClothShader = AssetManager->LoadShader("Cloth");
 	GroundShader = AssetManager->LoadShader("Ground");
 	DiffuseShader = AssetManager->LoadShader("Diffuse");
+	MeshShader = AssetManager->LoadShader("Mesh");
 
 	GroundTexture = AssetManager->LoadTexture("Ground.png");
 	if (GroundTexture)
@@ -159,6 +160,7 @@ void CApplication::MainLoop()
 {
 	Simulation = new CLagrangianSimulation();
 	Simulation->PlayerMesh = AssetManager->LoadMesh("SpaceShip.obj");
+	Simulation->PlayerMesh->Material.LoadTextures();
 	Simulation->AddSceneObjects();
 	Simulation->UpdateSceneObjects();
 
