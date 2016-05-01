@@ -28,11 +28,12 @@ void CApplication::OnEvent(IEvent & Event)
 			switch (KeyboardEvent.Key)
 			{
 			case EKey::F1:
-				break;
-			case EKey::F:
 				RenderPass->SetActiveCamera(FreeCamera);
 				break;
-			case EKey::G:
+			case EKey::F:
+				ToggleBool(Simulation->Settings.Friction);
+				break;
+			case EKey::F2:
 				RenderPass->SetActiveCamera(PlayerCamera);
 				break;
 			case EKey::LeftAlt:
