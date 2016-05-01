@@ -89,6 +89,13 @@ void CLagrangianSimulation::AddSceneObjects()
 		Particle->DebugObject->SetShader(Application->MeshShader);
 		Particle->DebugObject->SetRotationOrder(ERotationOrder::XYZ);
 		Application->RenderPass->AddSceneObject(Particle->DebugObject);
+
+
+		Particle->ExhaustObject = new CParticleSystemSceneObject();
+		Particle->ExhaustObject->Shader = Application->ParticleShader;
+		Particle->ExhaustObject->Texture = Application->FireTexture1;
+		Particle->ExhaustObject->SetScale(0.02f);
+		Application->RenderPass->AddSceneObject(Particle->ExhaustObject);
 	}
 }
 
@@ -108,6 +115,8 @@ void CLagrangianSimulation::UpdateSceneObjects()
 		Rotation = glm::rotate(Rotation, Particle->Heading, Y);
 
 		Particle->DebugObject->SetRotation(Rotation);
+		Particle->ExhaustObject->SetPosition(QToCartesian(Particle->Position));
+		Particle->ExhaustObject->SetRotation(Rotation);
 	}
 }
 

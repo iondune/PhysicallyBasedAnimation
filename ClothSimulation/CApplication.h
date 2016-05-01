@@ -34,6 +34,7 @@ public:
 	SharedPointer<ion::Graphics::IShaderProgram> GroundShader;
 	SharedPointer<ion::Graphics::IShaderProgram> DiffuseShader;
 	SharedPointer<ion::Graphics::IShaderProgram> MeshShader;
+	SharedPointer<ion::Graphics::IShaderProgram> ParticleShader;
 
 	SharedPointer<ion::Graphics::IShaderProgram> FilterShader;
 	SharedPointer<ion::Graphics::IShaderProgram> BlurVShader;
@@ -51,7 +52,8 @@ public:
 	ion::Scene::CSimpleMesh * CubeMesh = nullptr;
 	ion::Scene::CSimpleMesh * SphereMesh = nullptr;
 	
-	SharedPointer<ion::Graphics::ITexture> GroundTexture;
+	SharedPointer<ion::Graphics::ITexture2D> GroundTexture;
+	SharedPointer<ion::Graphics::ITexture2D> FireTexture1;
 
 protected:
 

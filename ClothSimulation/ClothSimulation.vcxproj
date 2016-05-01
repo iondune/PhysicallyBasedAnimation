@@ -29,12 +29,14 @@
   <ItemGroup>
     <ClCompile Include="CApplication.cpp" />
     <ClCompile Include="CLagrangianSimulation.cpp" />
+    <ClCompile Include="CParticleSystemSceneObject.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
     <ClInclude Include="CLagrangianSimulation.h" />
+    <ClInclude Include="CParticleSystemSceneObject.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

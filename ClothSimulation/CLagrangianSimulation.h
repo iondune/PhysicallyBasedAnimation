@@ -2,6 +2,7 @@
 #pragma once
 
 #include <ionEngine.h>
+#include "CParticleSystemSceneObject.h"
 
 
 class CLagrangianSimulation
@@ -21,6 +22,7 @@ public:
 		double Mass;
 
 		ion::Scene::CSimpleMeshSceneObject * DebugObject = nullptr;
+		CParticleSystemSceneObject * ExhaustObject = nullptr;
 
 		vec2d Position;
 		vec2d LastPosition;

@@ -5,10 +5,12 @@
     <ClCompile Include="CApplication.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="CLagrangianSimulation.cpp" />
+    <ClCompile Include="CParticleSystemSceneObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="CLagrangianSimulation.h" />
+    <ClInclude Include="CParticleSystemSceneObject.h" />
   </ItemGroup>
 </Project>

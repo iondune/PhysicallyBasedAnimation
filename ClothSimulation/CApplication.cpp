@@ -145,6 +145,7 @@ void CApplication::LoadAssets()
 	GroundShader = AssetManager->LoadShader("Ground");
 	DiffuseShader = AssetManager->LoadShader("Diffuse");
 	MeshShader = AssetManager->LoadShader("Mesh");
+	ParticleShader = AssetManager->LoadShader("Particle");
 
 	FilterShader = AssetManager->LoadShader("PPFilter");
 	BlurVShader = AssetManager->LoadShader("PPBlurV");
@@ -157,6 +158,8 @@ void CApplication::LoadAssets()
 		GroundTexture->SetMagFilter(ITexture::EFilter::Nearest);
 		GroundTexture->SetWrapMode(ITexture::EWrapMode::Clamp);
 	}
+
+	FireTexture1 = AssetManager->LoadTexture("FireParticle1.png");
 }
 
 void CApplication::SetupScene()
