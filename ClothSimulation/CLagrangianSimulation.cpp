@@ -29,6 +29,25 @@ vec2d SquareWithSign(vec2d const & Input)
 
 void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 {
+	SingletonPointer<CApplication> Application;
+
+	for (auto it = Particles.begin(); it != Particles.end();)
+	{
+		if ((*it)->DeleteMe)
+		{
+			Application->RenderPass->RemoveSceneObject((*it)->MeshObject);
+			Application->RenderPass->RemoveSceneObject((*it)->ExhaustObject);
+			delete (*it)->MeshObject;
+			delete (*it)->ExhaustObject;
+			delete (*it);
+			it = Particles.erase(it);
+		}
+		else
+		{
+			it ++;
+		}
+	}
+
 	for (SParticle * particle : Particles)
 	{
 		double const r = TubeRadius;

@@ -34,6 +34,8 @@ public:
 		vec3f ForwardVector;
 
 		bool IsShip = false;
+		SParticle * Owner = nullptr;
+		bool DeleteMe = false;
 	};
 
 	struct SSettings

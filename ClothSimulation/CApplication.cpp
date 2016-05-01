@@ -35,8 +35,15 @@ void CApplication::OnEvent(IEvent & Event)
 			case EKey::G:
 				RenderPass->SetActiveCamera(PlayerCamera);
 				break;
-			case EKey::LeftBracket:
-				ExplosionSystem->MakeExplosion(Simulation->QToCartesian(Simulation->Player->Position));
+			case EKey::LeftAlt:
+				for (auto Particle : Simulation->Particles)
+				{
+					if (! Particle->IsShip && Particle->Owner == Simulation->Player)
+					{
+						ExplosionSystem->MakeExplosion(Simulation->QToCartesian(Particle->Position));
+						Particle->DeleteMe = true;
+					}
+				}
 				break;
 			case EKey::RightBracket:
 				break;
@@ -52,6 +59,7 @@ void CApplication::OnEvent(IEvent & Event)
 				Missile->Heading = Simulation->Player->Heading;
 				Missile->Velocity = Simulation->Player->Velocity;
 				Missile->Thrust = 6.0;
+				Missile->Owner = Simulation->Player;
 				Simulation->Particles.push_back(Missile);
 				Simulation->AddSceneObjects();
 				break;
