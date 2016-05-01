@@ -86,7 +86,49 @@ void CApplication::InitializeEngine()
 	AssetManager->SetTexturePath("Textures/");
 
 	RenderTarget = GraphicsContext->GetBackBuffer();
-	RenderTarget->SetClearColor(color3f(0.05f));
+
+	SceneBuffer = GraphicsContext->CreateFrameBuffer();
+	SceneBuffer->SetClearColor(color3f(0.05f));
+
+	SceneColor = GraphicsAPI->CreateTexture2D(Window->GetSize(), ITexture::EMipMaps::False, ITexture::EFormatComponents::RGB, ITexture::EInternalFormatType::Fix8);
+	SceneColor->SetMinFilter(ITexture::EFilter::Nearest);
+	SceneColor->SetMagFilter(ITexture::EFilter::Nearest);
+	SceneColor->SetWrapMode(ITexture::EWrapMode::Clamp);
+	SharedPointer<IDepthBuffer> SceneDepth = GraphicsAPI->CreateDepthBuffer(Window->GetSize());
+	SceneBuffer->AttachColorTexture(SceneColor, 0);
+	SceneBuffer->AttachDepthBuffer(SceneDepth);
+	if (! SceneBuffer->CheckCorrectness())
+	{
+		Log::Error("Frame buffer scene not valid!");
+	}
+
+	SwapBuffer1 = GraphicsContext->CreateFrameBuffer();
+
+	SwapColor1 = GraphicsAPI->CreateTexture2D(Window->GetSize(), ITexture::EMipMaps::False, ITexture::EFormatComponents::RGB, ITexture::EInternalFormatType::Fix8);
+	SwapColor1->SetMinFilter(ITexture::EFilter::Nearest);
+	SwapColor1->SetMagFilter(ITexture::EFilter::Nearest);
+	SwapColor1->SetWrapMode(ITexture::EWrapMode::Clamp);
+	SharedPointer<IDepthBuffer> SwapDepth1 = GraphicsAPI->CreateDepthBuffer(Window->GetSize());
+	SwapBuffer1->AttachColorTexture(SwapColor1, 0);
+	SwapBuffer1->AttachDepthBuffer(SwapDepth1);
+	if (! SwapBuffer1->CheckCorrectness())
+	{
+		Log::Error("Frame buffer swap 1 not valid!");
+	}
+
+	SwapBuffer2 = GraphicsContext->CreateFrameBuffer();
+
+	SwapColor2 = GraphicsAPI->CreateTexture2D(Window->GetSize(), ITexture::EMipMaps::False, ITexture::EFormatComponents::RGB, ITexture::EInternalFormatType::Fix8);
+	SwapColor2->SetMinFilter(ITexture::EFilter::Nearest);
+	SwapColor2->SetMagFilter(ITexture::EFilter::Nearest);
+	SwapColor2->SetWrapMode(ITexture::EWrapMode::Clamp);
+	SharedPointer<IDepthBuffer> SwapDepth2 = GraphicsAPI->CreateDepthBuffer(Window->GetSize());
+	SwapBuffer2->AttachColorTexture(SwapColor2, 0);
+	SwapBuffer2->AttachDepthBuffer(SwapDepth2);
+	if (! SwapBuffer2->CheckCorrectness())
+	{
+		Log::Error("Frame buffer swap 2 not valid!");
+	}
 
 	GUIManager->Init(Window);
 	GUIManager->AddFontFromFile("Assets/GUI/OpenSans.ttf", 18.f);
@@ -104,6 +146,11 @@ void CApplication::LoadAssets()
 	DiffuseShader = AssetManager->LoadShader("Diffuse");
 	MeshShader = AssetManager->LoadShader("Mesh");
 
+	FilterShader = AssetManager->LoadShader("PPFilter");
+	BlurVShader = AssetManager->LoadShader("PPBlurV");
+	BlurHShader = AssetManager->LoadShader("PPBlurH");
+	BlendShader = AssetManager->LoadShader("PPBlend");
+
 	GroundTexture = AssetManager->LoadTexture("Ground.png");
 	if (GroundTexture)
 	{
@@ -115,8 +162,27 @@ void CApplication::LoadAssets()
 void CApplication::SetupScene()
 {
 	RenderPass = new CRenderPass(GraphicsContext);
-	RenderPass->SetRenderTarget(RenderTarget);
+	RenderPass->SetRenderTarget(SceneBuffer);
 	SceneManager->AddRenderPass(RenderPass);
+
+	PostProcessPassFilter = new CRenderPass(GraphicsContext);
+	PostProcessPassFilter->SetRenderTarget(SwapBuffer1);
+	SceneManager->AddRenderPass(PostProcessPassFilter);
+
+	for (int i = 0; i < NumBlurPasses; ++ i)
+	{
+		PostProcessPassBlurV[i] = new CRenderPass(GraphicsContext);
+		PostProcessPassBlurV[i]->SetRenderTarget(SwapBuffer2);
+		SceneManager->AddRenderPass(PostProcessPassBlurV[i]);
+
+		PostProcessPassBlurH[i] = new CRenderPass(GraphicsContext);
+		PostProcessPassBlurH[i]->SetRenderTarget(SwapBuffer1);
+		SceneManager->AddRenderPass(PostProcessPassBlurH[i]);
+	}
+
+	PostProcessPassBlend = new CRenderPass(GraphicsContext);
+	PostProcessPassBlend->SetRenderTarget(RenderTarget);
+	SceneManager->AddRenderPass(PostProcessPassBlend);
 
 	FreeCamera = new CPerspectiveCamera(Window->GetAspectRatio());
 	FreeCamera->SetPosition(vec3f(0, 0.25f, 1));
@@ -153,6 +219,43 @@ void CApplication::AddSceneObjects()
 
 	PointLight = new CPointLight();
 	RenderPass->AddLight(PointLight);
+
+
+	CSimpleMeshSceneObject * PostProcessObjectFilter = new CSimpleMeshSceneObject();
+	PostProcessObjectFilter->SetMesh(CGeometryCreator::CreateScreenTriangle());
+	PostProcessObjectFilter->SetShader(FilterShader);
+	PostProcessObjectFilter->SetTexture("uTexture", SceneColor);
+	PostProcessObjectFilter->SetFeatureEnabled(EDrawFeature::DisableDepthTest, true);
+	PostProcessObjectFilter->SetFeatureEnabled(EDrawFeature::DisableDepthWrite, true);
+	PostProcessPassFilter->AddSceneObject(PostProcessObjectFilter);
+
+	for (int i = 0; i < NumBlurPasses; ++ i)
+	{
+		CSimpleMeshSceneObject * PostProcessObjectBlurV = new CSimpleMeshSceneObject();
+		PostProcessObjectBlurV->SetMesh(CGeometryCreator::CreateScreenTriangle());
+		PostProcessObjectBlurV->SetShader(BlurVShader);
+		PostProcessObjectBlurV->SetTexture("uTexture", SwapColor1);
+		PostProcessObjectBlurV->SetFeatureEnabled(EDrawFeature::DisableDepthTest, true);
+		PostProcessObjectBlurV->SetFeatureEnabled(EDrawFeature::DisableDepthWrite, true);
+		PostProcessPassBlurV[i]->AddSceneObject(PostProcessObjectBlurV);
+
+		CSimpleMeshSceneObject * PostProcessObjectBlurH = new CSimpleMeshSceneObject();
+		PostProcessObjectBlurH->SetMesh(CGeometryCreator::CreateScreenTriangle());
+		PostProcessObjectBlurH->SetShader(BlurVShader);
+		PostProcessObjectBlurH->SetTexture("uTexture", SwapColor2);
+		PostProcessObjectBlurH->SetFeatureEnabled(EDrawFeature::DisableDepthTest, true);
+		PostProcessObjectBlurH->SetFeatureEnabled(EDrawFeature::DisableDepthWrite, true);
+		PostProcessPassBlurH[i]->AddSceneObject(PostProcessObjectBlurH);
+	}
+
+	CSimpleMeshSceneObject * PostProcessObjectBlend = new CSimpleMeshSceneObject();
+	PostProcessObjectBlend->SetMesh(CGeometryCreator::CreateScreenTriangle());
+	PostProcessObjectBlend->SetShader(BlendShader);
+	PostProcessObjectBlend->SetTexture("uScene", SceneColor);
+	PostProcessObjectBlend->SetTexture("uHighPass", SwapColor1);
+	PostProcessObjectBlend->SetFeatureEnabled(EDrawFeature::DisableDepthTest, true);
+	PostProcessObjectBlend->SetFeatureEnabled(EDrawFeature::DisableDepthWrite, true);
+	PostProcessPassBlend->AddSceneObject(PostProcessObjectBlend);
 }
 
 
@@ -188,10 +291,9 @@ void CApplication::MainLoop()
 			vec3f const PlayerPosition = Simulation->QToCartesian(Simulation->Player->Position);
 			vec3f const TowardsCenter = (Simulation->ClosestCenter(Simulation->Player->Position) - PlayerPosition).GetNormalized();
 			vec3f const Forward = vec3f(1, 0, 0)
-				.RotateAround(vec3f(0, 1, 0), Simulation->Player->Heading)
-				.RotateAround(vec3f(0, 0, 1), Constants32::Pi / 2 - Simulation->Player->Position.X)
-				.RotateAround(vec3f(0, 1, 0), -Simulation->Player->Position.Y)
-				;
+				.RotateAround(vec3f(0, 1, 0), (float) Simulation->Player->Heading)
+				.RotateAround(vec3f(0, 0, 1), Constants32::Pi / 2 - (float) Simulation->Player->Position.X)
+				.RotateAround(vec3f(0, 1, 0), (float) -Simulation->Player->Position.Y);
 
 			vec3f PhysicsForward = Forward;
 			std::swap(PhysicsForward.Y, PhysicsForward.Z);
@@ -207,11 +309,11 @@ void CApplication::MainLoop()
 
 			if (Window->IsKeyDown(EKey::A))
 			{
-				Simulation->Player->Heading += TimeStep * 1.f;
+				Simulation->Player->Heading += (float) TimeStep * 1.f;
 			}
 			if (Window->IsKeyDown(EKey::D))
 			{
-				Simulation->Player->Heading -= TimeStep * 1.f;
+				Simulation->Player->Heading -= (float) TimeStep * 1.f;
 			}
 
 			vec3f const GoalPosition = -Forward * 0.2f + TowardsCenter * 0.16f * (-(float) Cos(Simulation->Player->Position.X) * 0.5f + 0.5f);
@@ -252,6 +354,10 @@ void CApplication::MainLoop()
 
 		// Draw
 		RenderTarget->ClearColorAndDepth();
+		SceneBuffer->ClearColorAndDepth();
+		SwapBuffer1->ClearColorAndDepth();
+		SwapBuffer2->ClearColorAndDepth();
+
 		SceneManager->DrawAll();
 		ImGui::Render();
 		Window->SwapBuffers();
