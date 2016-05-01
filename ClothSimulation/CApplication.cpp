@@ -158,6 +158,9 @@ void CApplication::AddSceneObjects()
 void CApplication::MainLoop()
 {
 	Simulation = new CLagrangianSimulation();
+	Simulation->PlayerMesh = AssetManager->LoadMesh("SpaceShip.obj");
+	Simulation->AddSceneObjects();
+	Simulation->UpdateSceneObjects();
 
 	double Accumulator = 0;
 
@@ -208,7 +211,7 @@ void CApplication::MainLoop()
 			}
 			vec3f const TowardsCenter = (Simulation->ClosestCenter(Simulation->Player->Position) - PlayerPosition).GetNormalized();
 
-			vec3f const GoalPosition = PlayerPosition - PlayerDirection * 0.2f + TowardsCenter * 0.16f * (-Cos(Simulation->Player->Position.X) * 0.5 + 0.5);
+			vec3f const GoalPosition = PlayerPosition - PlayerDirection * 0.2f + TowardsCenter * 0.16f * (-(float) Cos(Simulation->Player->Position.X) * 0.5f + 0.5f);
 			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.08f) - GoalPosition;
 
 			float const CameraSpringTension = 60.4f;

@@ -38,6 +38,8 @@ public:
 	vec3f QToCartesian(vec2f const & Angles);
 	vec3f ClosestCenter(vec2f const & Angles);
 
+	ion::Scene::CSimpleMesh * PlayerMesh = nullptr;
+
 protected:
 
 	SSettings Settings;

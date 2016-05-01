@@ -16,9 +16,6 @@ CLagrangianSimulation::CLagrangianSimulation()
 	Player = new SParticle();
 	Player->Mass = Settings.mass;
 	Particles.push_back(Player);
-
-	AddSceneObjects();
-	UpdateSceneObjects();
 }
 
 vec2d SquareWithSign(vec2d const & Input)
@@ -87,7 +84,7 @@ void CLagrangianSimulation::AddSceneObjects()
 	for (auto Particle : Particles)
 	{
 		Particle->DebugObject = new CSimpleMeshSceneObject();
-		Particle->DebugObject->SetMesh(Application->SphereMesh);
+		Particle->DebugObject->SetMesh(PlayerMesh);
 		Particle->DebugObject->SetScale(0.02f);
 		Particle->DebugObject->SetShader(Application->DiffuseShader);
 		Particle->DebugObject->SetUniform("uColor", CUniform<color3f>(Colors::Red));
