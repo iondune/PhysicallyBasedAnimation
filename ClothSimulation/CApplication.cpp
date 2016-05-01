@@ -174,30 +174,6 @@ void CApplication::MainLoop()
 		Accumulator += TimeManager->GetElapsedTime();
 		float const Elapsed = (float) TimeManager->GetElapsedTime();
 
-		if (Window->IsKeyDown(EKey::Space))
-		{
-			Simulation->Player->EngineForce = vec3d(0.02, 0, 0);
-		}
-		else if (Window->IsKeyDown(EKey::LeftControl))
-		{
-			Simulation->Player->EngineForce = vec3d(0, 0.02, 0);
-		}
-		else if (Window->IsKeyDown(EKey::LeftShift))
-		{
-			Simulation->Player->EngineForce = vec3d(0, 0, 0.02);
-		}
-		else
-		{
-			Simulation->Player->EngineForce = vec3d(0, 0, 0);
-		}
-		if (Window->IsKeyDown(EKey::A))
-		{
-			Simulation->Player->Heading += Elapsed * 1.f;
-		}
-		if (Window->IsKeyDown(EKey::D))
-		{
-			Simulation->Player->Heading -= Elapsed * 1.f;
-		}
 
 		double const TimeStep = 0.01;
 		if (Accumulator > TimeStep)
@@ -208,7 +184,6 @@ void CApplication::MainLoop()
 				Accumulator = TimeStep * 2;
 
 			Simulation->SimulateStep(TimeStep);
-			Simulation->UpdateSceneObjects();
 
 			vec3f const PlayerPosition = Simulation->QToCartesian(Simulation->Player->Position);
 			vec3f const TowardsCenter = (Simulation->ClosestCenter(Simulation->Player->Position) - PlayerPosition).GetNormalized();
@@ -217,6 +192,28 @@ void CApplication::MainLoop()
 				.RotateAround(vec3f(0, 0, 1), Constants32::Pi / 2 - Simulation->Player->Position.X)
 				.RotateAround(vec3f(0, 1, 0), -Simulation->Player->Position.Y)
 				;
+
+			vec3f PhysicsForward = Forward;
+			std::swap(PhysicsForward.Y, PhysicsForward.Z);
+
+			if (Window->IsKeyDown(EKey::Space))
+			{
+				Simulation->Player->EngineForce = vec3d(PhysicsForward) * 0.3;
+			}
+			else
+			{
+				Simulation->Player->EngineForce = vec3d(0, 0, 0);
+			}
+
+			if (Window->IsKeyDown(EKey::A))
+			{
+				Simulation->Player->Heading += TimeStep * 1.f;
+			}
+			if (Window->IsKeyDown(EKey::D))
+			{
+				Simulation->Player->Heading -= TimeStep * 1.f;
+			}
+
 			vec3f const GoalPosition = PlayerPosition - Forward * 0.2f + TowardsCenter * 0.16f;// * (-(float) Cos(Simulation->Player->Position.X) * 0.0f + 1.f);
 			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.1f) - GoalPosition;
 
@@ -229,6 +226,8 @@ void CApplication::MainLoop()
 				GoalPosition);
 				//Move::Cubic(PlayerCamera->GetPosition(), PlayerPosition, (float) TimeStep, CameraSpringTension, 0.00005f));
 			PlayerCamera->SetUpVector(TowardsCenter);
+
+			Simulation->UpdateSceneObjects();
 		}
 
 
