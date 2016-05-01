@@ -48,5 +48,5 @@ void main()
 		Diffuse += uMaterial.DiffuseColor * Shading * Attenuation * uPointLights[i].Color;
 	}
 
-	outColor = vec4((Diffuse + uMaterial.AmbientColor) * uColor, 1);
+	outColor = vec4(uColor, 1);
 }
