@@ -202,19 +202,13 @@ void CApplication::MainLoop()
 			Simulation->UpdateSceneObjects();
 
 			vec3f const PlayerPosition = Simulation->QToCartesian(Simulation->Player->Position);
-			vec3f PlayerDirection = (PlayerPosition - Simulation->QToCartesian(Simulation->Player->LastPosition));
-			if (PlayerDirection.LengthSq())
-			{
-				PlayerDirection.Normalize();
-			}
-			else
-			{
-				PlayerDirection = vec3f(1, 0, 0);
-			}
 			vec3f const TowardsCenter = (Simulation->ClosestCenter(Simulation->Player->Position) - PlayerPosition).GetNormalized();
-
-			vec3f const GoalPosition = PlayerPosition - PlayerDirection * 0.2f + TowardsCenter * 0.16f * (-(float) Cos(Simulation->Player->Position.X) * 0.5f + 0.5f);
-			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.08f) - GoalPosition;
+			vec3f const Forward = vec3f(1, 0, 0)
+				.RotateAround(vec3f(0, 0, 1), Constants32::Pi / 2 - Simulation->Player->Position.X)
+				.RotateAround(vec3f(0, 1, 0), -Simulation->Player->Position.Y)
+				;
+			vec3f const GoalPosition = PlayerPosition - Forward * 0.2f + TowardsCenter * 0.16f;// * (-(float) Cos(Simulation->Player->Position.X) * 0.0f + 1.f);
+			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.1f) - GoalPosition;
 
 			float const CameraSpringTension = 60.4f;
 

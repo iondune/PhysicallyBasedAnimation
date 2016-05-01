@@ -87,6 +87,7 @@ void CLagrangianSimulation::AddSceneObjects()
 		Particle->DebugObject->SetMesh(PlayerMesh);
 		Particle->DebugObject->SetScale(0.04f);
 		Particle->DebugObject->SetShader(Application->MeshShader);
+		Particle->DebugObject->SetRotationOrder(ERotationOrder::XYZ);
 		Application->RenderPass->AddSceneObject(Particle->DebugObject);
 	}
 }
@@ -96,6 +97,7 @@ void CLagrangianSimulation::UpdateSceneObjects()
 	for (auto Particle : Particles)
 	{
 		Particle->DebugObject->SetPosition(QToCartesian(Particle->Position));
+		Particle->DebugObject->SetRotation(vec3f(0, (float) -Particle->Position.Y, Constants32::Pi / 2 - (float) Particle->Position.X));
 	}
 }
 
