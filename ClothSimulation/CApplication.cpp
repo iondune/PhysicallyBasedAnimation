@@ -214,7 +214,7 @@ void CApplication::MainLoop()
 				Simulation->Player->Heading -= TimeStep * 1.f;
 			}
 
-			vec3f const GoalPosition = PlayerPosition - Forward * 0.2f + TowardsCenter * 0.16f;// * (-(float) Cos(Simulation->Player->Position.X) * 0.0f + 1.f);
+			vec3f const GoalPosition = PlayerPosition - Forward * 0.2f + TowardsCenter * 0.16f * (-(float) Cos(Simulation->Player->Position.X) * 0.5f + 0.5f);
 			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.1f) - GoalPosition;
 
 			float const CameraSpringTension = 60.4f;
