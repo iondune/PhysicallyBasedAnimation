@@ -15,6 +15,7 @@ CLagrangianSimulation::CLagrangianSimulation()
 {
 	Player = new SParticle();
 	Player->Mass = Settings.mass;
+	Player->IsShip = true;
 	Particles.push_back(Player);
 }
 
@@ -74,28 +75,36 @@ void CLagrangianSimulation::AddSceneObjects()
 {
 	SingletonPointer<CApplication> Application;
 
-	BoundaryMesh = new CSimpleMeshSceneObject();
-	BoundaryMesh->SetMesh(CGeometryCreator::CreateTorus((float) RingRadius, (float) TubeRadius, 64, 16));
-	BoundaryMesh->SetShader(Application->DiffuseShader);
-	BoundaryMesh->SetUniform("uColor", CUniform<color3f>(Colors::Cyan));
-	BoundaryMesh->SetFeatureEnabled(EDrawFeature::Wireframe, true);
-	Application->RenderPass->AddSceneObject(BoundaryMesh);
+	if (! BoundaryMesh)
+	{
+		BoundaryMesh = new CSimpleMeshSceneObject();
+		BoundaryMesh->SetMesh(CGeometryCreator::CreateTorus((float) RingRadius, (float) TubeRadius, 64, 16));
+		BoundaryMesh->SetShader(Application->DiffuseShader);
+		BoundaryMesh->SetUniform("uColor", CUniform<color3f>(Colors::Cyan));
+		BoundaryMesh->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+		Application->RenderPass->AddSceneObject(BoundaryMesh);
+	}
 
 	for (auto Particle : Particles)
 	{
-		Particle->DebugObject = new CSimpleMeshSceneObject();
-		Particle->DebugObject->SetMesh(PlayerMesh);
-		Particle->DebugObject->SetScale(0.04f);
-		Particle->DebugObject->SetShader(Application->MeshShader);
-		Particle->DebugObject->SetRotationOrder(ERotationOrder::XYZ);
-		Application->RenderPass->AddSceneObject(Particle->DebugObject);
+		if (! Particle->MeshObject)
+		{
+			Particle->MeshObject = new CSimpleMeshSceneObject();
+			Particle->MeshObject->SetMesh(Particle->IsShip ? PlayerMesh : MissileMesh);
+			Particle->MeshObject->SetScale(0.04f);
+			Particle->MeshObject->SetShader(Application->MeshShader);
+			Particle->MeshObject->SetRotationOrder(ERotationOrder::XYZ);
+			Application->RenderPass->AddSceneObject(Particle->MeshObject);
+		}
 
-
-		Particle->ExhaustObject = new CParticleSystemSceneObject();
-		Particle->ExhaustObject->Shader = Application->ParticleShader;
-		Particle->ExhaustObject->Texture = Application->FireTexture1;
-		Particle->ExhaustObject->SetScale(0.02f);
-		Application->RenderPass->AddSceneObject(Particle->ExhaustObject);
+		if (! Particle->ExhaustObject)
+		{
+			Particle->ExhaustObject = new CParticleSystemSceneObject();
+			Particle->ExhaustObject->Shader = Application->ParticleShader;
+			Particle->ExhaustObject->Texture = Application->FireTexture1;
+			Particle->ExhaustObject->SetScale(0.02f);
+			Application->RenderPass->AddSceneObject(Particle->ExhaustObject);
+		}
 	}
 }
 
@@ -103,7 +112,8 @@ void CLagrangianSimulation::UpdateSceneObjects()
 {
 	for (auto Particle : Particles)
 	{
-		Particle->DebugObject->SetPosition(QToCartesian(Particle->Position));
+		Particle->MeshObject->SetPosition(QToCartesian(Particle->Position));
+		Particle->ExhaustObject->SetPosition(QToCartesian(Particle->Position));
 
 		static glm::vec3 const X = glm::vec3(1, 0, 0);
 		static glm::vec3 const Y = glm::vec3(0, 1, 0);
@@ -114,8 +124,7 @@ void CLagrangianSimulation::UpdateSceneObjects()
 		Rotation = glm::rotate(Rotation, Constants32::Pi / 2 - (float) Particle->Position.X, Z);
 		Rotation = glm::rotate(Rotation, Particle->Heading, Y);
 
-		Particle->DebugObject->SetRotation(Rotation);
-		Particle->ExhaustObject->SetPosition(QToCartesian(Particle->Position));
+		Particle->MeshObject->SetRotation(Rotation);
 		Particle->ExhaustObject->SetRotation(Rotation);
 	}
 }

@@ -43,6 +43,17 @@ void CApplication::OnEvent(IEvent & Event)
 				break;
 			case EKey::Space:
 				break;
+			case EKey::LeftControl:
+			{
+				CLagrangianSimulation::SParticle * Missile = new CLagrangianSimulation::SParticle();
+				Missile->Mass = 0.1;
+				Missile->Position = Simulation->Player->Position;
+				Missile->Heading = Simulation->Player->Heading;
+				Missile->Velocity = Simulation->Player->Velocity * 2.f;
+				Simulation->Particles.push_back(Missile);
+				Simulation->AddSceneObjects();
+				break;
+			}
 			}
 		}
 	}
@@ -268,6 +279,9 @@ void CApplication::MainLoop()
 	Simulation->PlayerMesh = AssetManager->LoadMesh("SpaceShip.obj");
 	Simulation->PlayerMesh->CalculateNormalsPerFace();
 	Simulation->PlayerMesh->Material.LoadTextures();
+	Simulation->MissileMesh = AssetManager->LoadMesh("Missile.obj");
+	Simulation->MissileMesh->CalculateNormalsPerFace();
+	Simulation->MissileMesh->Material.LoadTextures();
 	Simulation->AddSceneObjects();
 	Simulation->UpdateSceneObjects();
 

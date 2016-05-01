@@ -21,7 +21,7 @@ public:
 	{
 		double Mass;
 
-		ion::Scene::CSimpleMeshSceneObject * DebugObject = nullptr;
+		ion::Scene::CSimpleMeshSceneObject * MeshObject = nullptr;
 		CParticleSystemSceneObject * ExhaustObject = nullptr;
 
 		vec2d Position;
@@ -30,6 +30,8 @@ public:
 		vec3d EngineForce;
 
 		float Heading = 0;
+
+		bool IsShip = false;
 	};
 
 	struct SSettings
@@ -43,15 +45,16 @@ public:
 	vec3f ClosestCenter(vec2f const & Angles);
 
 	ion::Scene::CSimpleMesh * PlayerMesh = nullptr;
-
-protected:
-
-	SSettings Settings;
+	ion::Scene::CSimpleMesh * MissileMesh = nullptr;
 
 	vector<SParticle *> Particles;
 
-	double RingRadius = 3.5;
-	double TubeRadius = 0.75;
+	SSettings Settings;
+
+protected:
+
+	double const RingRadius = 3.5;
+	double const TubeRadius = 0.75;
 
 	ion::Scene::CSimpleMeshSceneObject * BoundaryMesh = nullptr;
 
