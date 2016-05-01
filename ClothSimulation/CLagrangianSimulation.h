@@ -39,6 +39,7 @@ public:
 	struct SSettings
 	{
 		double mass = 0.1;
+		bool Friction = false;
 	};
 
 	SParticle * Player = nullptr;

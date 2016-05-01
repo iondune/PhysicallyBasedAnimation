@@ -51,14 +51,15 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 		J_Transpose.resize(Eigen::NoChange, 3);
 		J_Transpose = J.transpose();
 
-		double const Gravity = -0.098;
-		double const Friction = 0.01;
+		double const Gravity = -0.98;
+		double const GlobalEngineScale = 0.1;
+		double const Friction = 0.06;
 
 		Eigen::Matrix2d const A = J_Transpose * M * J;
 		Eigen::Vector2d const b = J_Transpose * M * J * ToEigen(particle->Velocity) +
 			TimeDelta * (
-				J_Transpose * ToEigen(particle->Mass * vec3d(0, 0, Gravity) + particle->EngineForce) +
-				ToEigen(vec2d(-(SquareWithSign(particle->Velocity)) * Friction))
+				J_Transpose * ToEigen(particle->Mass * vec3d(0, 0, Gravity) + particle->EngineForce * GlobalEngineScale) +
+				ToEigen(vec2d(-(SquareWithSign(particle->Velocity)) * (Settings.Friction ? Friction : 0.f)))
 			);
 
 		Eigen::Vector2d const Result = A.ldlt().solve(b);
@@ -78,6 +79,11 @@ void CLagrangianSimulation::SimulateStep(double const TimeDelta)
 		std::swap(Forward.Y, Forward.Z);
 		particle->ForwardVector = Forward;
 		particle->EngineForce = vec3d(particle->ForwardVector) * particle->Thrust;
+
+		if (! particle->IsShip)
+		{
+			particle->Thrust *= 0.95;
+		}
 	}
 }
 
@@ -127,9 +133,9 @@ void CLagrangianSimulation::UpdateSceneObjects()
 {
 	for (auto Particle : Particles)
 	{
-		if (Particle->IsShip)
+		//if (Particle->IsShip)
 		{
-			Particle->ExhaustObject->Settings.EmitCount = (int) (1.f + 7.f / 0.3f * Particle->Thrust);
+			Particle->ExhaustObject->Settings.EmitCount = (int) (3.f + 5.f / 0.3f * Particle->Thrust);
 			Particle->ExhaustObject->Settings.MinSize = (0.6f + 0.3f / 0.3f * Particle->Thrust) * 0.8f * 0.006f;
 			Particle->ExhaustObject->Settings.MaxSize = (0.6f + 0.3f / 0.3f * Particle->Thrust) * 3.2f * 0.006f;
 		}

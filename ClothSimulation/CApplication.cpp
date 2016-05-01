@@ -50,7 +50,7 @@ void CApplication::OnEvent(IEvent & Event)
 				Missile->Position = Simulation->Player->Position;
 				Missile->Heading = Simulation->Player->Heading;
 				Missile->Velocity = Simulation->Player->Velocity;
-				Missile->Thrust = 0.1;
+				Missile->Thrust = 6.0;
 				Simulation->Particles.push_back(Missile);
 				Simulation->AddSceneObjects();
 				break;
@@ -309,8 +309,12 @@ void CApplication::MainLoop()
 
 			vec3f const PlayerPosition = Simulation->QToCartesian(Simulation->Player->Position);
 			vec3f const TowardsCenter = (Simulation->ClosestCenter(Simulation->Player->Position) - PlayerPosition).GetNormalized();
-			
-			if (Window->IsKeyDown(EKey::Space))
+
+			if (Window->IsKeyDown(EKey::LeftShift))
+			{
+				Simulation->Player->Thrust = 0.9;
+			}
+			else if (Window->IsKeyDown(EKey::Space))
 			{
 				Simulation->Player->Thrust = 0.3;
 			}
@@ -362,6 +366,10 @@ void CApplication::MainLoop()
 			ImGui::Text("Player position %.3f %.3f", Simulation->Player->Position.X, Simulation->Player->Position.Y);
 			ImGui::Text("Player velocity %.3f %.3f", Simulation->Player->Velocity.X, Simulation->Player->Velocity.Y);
 			ImGui::Text("Player interior %.3f", Cos(Simulation->Player->Position.X));
+
+			ImGui::Separator();
+
+			ImGui::Checkbox("Friction?", &Simulation->Settings.Friction);
 
 			ImGui::End();
 		}
