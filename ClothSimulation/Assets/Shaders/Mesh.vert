@@ -33,7 +33,7 @@ void main()
 	for (int i = 0; i < LIGHT_MAX && i < uPointLightsCount; ++ i)
 		fLight[i] = uPointLights[i].Position - vec3(Position);
 
-	fNormal = (uNormalMatrix * vec4(vNormal, 1.0)).xyz;
+	fNormal = (uNormalMatrix * vec4(vNormal, 0.0)).xyz;
 	fTexCoords = vTexCoords;
 
 	gl_Position = uProjectionMatrix * uViewMatrix * Position;

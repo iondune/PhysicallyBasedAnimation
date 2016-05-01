@@ -263,6 +263,7 @@ void CApplication::MainLoop()
 {
 	Simulation = new CLagrangianSimulation();
 	Simulation->PlayerMesh = AssetManager->LoadMesh("SpaceShip.obj");
+	Simulation->PlayerMesh->CalculateNormalsPerFace();
 	Simulation->PlayerMesh->Material.LoadTextures();
 	Simulation->AddSceneObjects();
 	Simulation->UpdateSceneObjects();
