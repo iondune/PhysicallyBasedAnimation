@@ -179,7 +179,7 @@ void CApplication::LoadAssets()
 		GroundTexture->SetWrapMode(ITexture::EWrapMode::Clamp);
 	}
 
-	FireTexture1 = AssetManager->LoadTexture("FireParticle1.png");
+	FireTexture1 = AssetManager->LoadTexture("FireParticle1sm.png");
 }
 
 void CApplication::SetupScene()
