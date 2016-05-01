@@ -214,17 +214,17 @@ void CApplication::MainLoop()
 				Simulation->Player->Heading -= TimeStep * 1.f;
 			}
 
-			vec3f const GoalPosition = PlayerPosition - Forward * 0.2f + TowardsCenter * 0.16f * (-(float) Cos(Simulation->Player->Position.X) * 0.5f + 0.5f);
-			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.1f) - GoalPosition;
+			vec3f const GoalPosition = -Forward * 0.2f + TowardsCenter * 0.16f * (-(float) Cos(Simulation->Player->Position.X) * 0.5f + 0.5f);
+			vec3f const GoalLookDirection = (PlayerPosition + TowardsCenter * 0.1f) - (GoalPosition + PlayerPosition);
 
-			float const CameraSpringTension = 60.4f;
+			float const CameraSpringTension = 640.0f;
 
 			PlayerCamera->SetLookDirection(
-				GoalLookDirection);
-				//Move::Cubic(PlayerCamera->GetLookDirecton(), GoalLookDirection, (float) TimeStep, CameraSpringTension, 0.00005f));
-			PlayerCamera->SetPosition(
-				GoalPosition);
-				//Move::Cubic(PlayerCamera->GetPosition(), PlayerPosition, (float) TimeStep, CameraSpringTension, 0.00005f));
+				//GoalLookDirection);
+				Move::Cubic(PlayerCamera->GetLookDirecton(), GoalLookDirection, (float) TimeStep, CameraSpringTension, 0.00005f));
+			PlayerCamera->SetPosition(PlayerPosition +
+				//GoalPosition);
+				Move::Cubic(PlayerCamera->GetPosition() - PlayerPosition, GoalPosition, (float) TimeStep, CameraSpringTension, 0.00005f));
 			PlayerCamera->SetUpVector(TowardsCenter);
 
 			Simulation->UpdateSceneObjects();
