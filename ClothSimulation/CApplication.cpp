@@ -114,6 +114,7 @@ void CApplication::InitializeEngine()
 	SceneColor->SetMinFilter(ITexture::EFilter::Nearest);
 	SceneColor->SetMagFilter(ITexture::EFilter::Nearest);
 	SceneColor->SetWrapMode(ITexture::EWrapMode::Clamp);
+	SceneColor->SetAnisotropy(1.f);
 	SharedPointer<IDepthBuffer> SceneDepth = GraphicsAPI->CreateDepthBuffer(Window->GetSize());
 	SceneBuffer->AttachColorTexture(SceneColor, 0);
 	SceneBuffer->AttachDepthBuffer(SceneDepth);
@@ -124,10 +125,11 @@ void CApplication::InitializeEngine()
 
 	SwapBuffer1 = GraphicsContext->CreateFrameBuffer();
 
-	SwapColor1 = GraphicsAPI->CreateTexture2D(Window->GetSize(), ITexture::EMipMaps::False, ITexture::EFormatComponents::RGB, ITexture::EInternalFormatType::Fix8);
+	SwapColor1 = GraphicsAPI->CreateTexture2D(Window->GetSize() / 2, ITexture::EMipMaps::False, ITexture::EFormatComponents::RGB, ITexture::EInternalFormatType::Fix8);
 	SwapColor1->SetMinFilter(ITexture::EFilter::Nearest);
 	SwapColor1->SetMagFilter(ITexture::EFilter::Nearest);
 	SwapColor1->SetWrapMode(ITexture::EWrapMode::Clamp);
+	SwapColor1->SetAnisotropy(1.f);
 	SharedPointer<IDepthBuffer> SwapDepth1 = GraphicsAPI->CreateDepthBuffer(Window->GetSize());
 	SwapBuffer1->AttachColorTexture(SwapColor1, 0);
 	SwapBuffer1->AttachDepthBuffer(SwapDepth1);
@@ -138,10 +140,11 @@ void CApplication::InitializeEngine()
 
 	SwapBuffer2 = GraphicsContext->CreateFrameBuffer();
 
-	SwapColor2 = GraphicsAPI->CreateTexture2D(Window->GetSize(), ITexture::EMipMaps::False, ITexture::EFormatComponents::RGB, ITexture::EInternalFormatType::Fix8);
+	SwapColor2 = GraphicsAPI->CreateTexture2D(Window->GetSize() / 2, ITexture::EMipMaps::False, ITexture::EFormatComponents::RGB, ITexture::EInternalFormatType::Fix8);
 	SwapColor2->SetMinFilter(ITexture::EFilter::Nearest);
 	SwapColor2->SetMagFilter(ITexture::EFilter::Nearest);
 	SwapColor2->SetWrapMode(ITexture::EWrapMode::Clamp);
+	SwapColor2->SetAnisotropy(1.f);
 	SharedPointer<IDepthBuffer> SwapDepth2 = GraphicsAPI->CreateDepthBuffer(Window->GetSize());
 	SwapBuffer2->AttachColorTexture(SwapColor2, 0);
 	SwapBuffer2->AttachDepthBuffer(SwapDepth2);

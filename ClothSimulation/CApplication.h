@@ -26,7 +26,7 @@ public:
 	ion::Scene::CRenderPass * RenderPass = nullptr;
 	ion::Scene::CRenderPass * PostProcessPassFilter = nullptr;
 
-	static int const NumBlurPasses = 5;
+	static int const NumBlurPasses = 1;
 	ion::Scene::CRenderPass * PostProcessPassBlurV[NumBlurPasses] = { nullptr };
 	ion::Scene::CRenderPass * PostProcessPassBlurH[NumBlurPasses] = { nullptr };
 	ion::Scene::CRenderPass * PostProcessPassBlend = nullptr;
