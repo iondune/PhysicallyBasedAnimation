@@ -75,7 +75,7 @@ void CLagrangianSimulation::AddSceneObjects()
 	SingletonPointer<CApplication> Application;
 
 	BoundaryMesh = new CSimpleMeshSceneObject();
-	BoundaryMesh->SetMesh(CGeometryCreator::CreateTorus((float) RingRadius, (float) TubeRadius, 20, 10));
+	BoundaryMesh->SetMesh(CGeometryCreator::CreateTorus((float) RingRadius, (float) TubeRadius, 64, 16));
 	BoundaryMesh->SetShader(Application->DiffuseShader);
 	BoundaryMesh->SetUniform("uColor", CUniform<color3f>(Colors::Cyan));
 	BoundaryMesh->SetFeatureEnabled(EDrawFeature::Wireframe, true);
