@@ -22,88 +22,42 @@ public:
 
 	void PickParticle(ray3f const & Ray);
 
-	enum class EConstraintType
+
+	struct SBox
 	{
-		None = 0,
-		XAxis = 1,
-		YAxis = 2,
-		DownDiagonal = 3,
-		UpDiagonal = 4
-	};
+		vec3f Extent;
+		float Mass;
 
-	struct SParticle
-	{
-		double Radius;
-		double Mass;
-		int Index;
-		bool IsFixed;
-
-		EConstraintType ConstraintType = EConstraintType::None;
-
-		ion::Scene::CSimpleMeshSceneObject * DebugObject = nullptr;
+		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 		
-		vector<vec2d> PositionFrames;
-		vector<vec2d> VelocityFrames;
-	};
-
-	struct SSpring
-	{
-		double Stiffness;
-		double RestLength;
-
-		SParticle * Particle0;
-		SParticle * Particle1;
-
-		SSpring(SParticle * Particle0, SParticle * Particle1, double const Stiffness)
-		{
-			this->Particle0 = Particle0;
-			this->Particle1 = Particle1;
-			this->Stiffness = Stiffness;
-			this->RestLength = Particle0->PositionFrames[0].GetDistanceFrom(Particle1->PositionFrames[0]);
-		}
+		vector<glm::mat4> PositionFrames;
 	};
 
 	struct SPlane
 	{
-		vec2d Normal;
-		double Distance;
+		vec3f Normal;
+		float Distance;
 	};
 
 	struct SSettings
 	{
-		int rows = 2;
-		int cols = 2;
-		double mass = 0.1;
-		double stiffness = 1e2;
-		vec2d damping = vec2d(0.0, 1.0);
-
-		vec2d Center = vec2d(0, 0.25);
-		vec2d Size = vec2d(0.5, 0.5);
+		vec3f Center = vec3f(0, 0.25f, 0);
+		vec3f Size = vec3f(0.1f, 0.05f, 0.05f);
 	};
 
 protected:
 
 	SSettings Settings;
 
-	int Rows = 0;
-	int Columns = 0;
-	int MatrixSize = 0;
-	vec2d Damping;
-
-	vector<SParticle *> Particles;
-	vector<SSpring *> Springs;
+	vector<SBox *> Boxes;
 	vector<SPlane> Planes;
 
-	mutex ParticlesMutex;
+	mutex SystemMutex;
 
-	SParticle * GetParticle(vec2i const & Index);
+	SBox * GetParticle(vec2i const & Index);
 
 	int VisibleFrame = 0;
-	SParticle * SelectedParticle = nullptr;
-
-	ion::Scene::CSimpleMesh * ClothMesh = nullptr;
-	ion::Scene::CSimpleMeshSceneObject * ClothObjectFront = nullptr;
-	ion::Scene::CSimpleMeshSceneObject * ClothObjectBack = nullptr;
+	SBox * SelectedParticle = nullptr;
 
 	bool PlaneObjectsCreated = false;
 
