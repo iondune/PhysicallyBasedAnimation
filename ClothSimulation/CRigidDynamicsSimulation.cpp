@@ -1,5 +1,5 @@
 
-#include "CClothSimulation.h"
+#include "CRigidDynamicsSimulation.h"
 #include "CApplication.h"
 #include "Util.h"
 #include "SSparseMatrix.h"
@@ -13,10 +13,10 @@ using namespace ion::Scene;
 using namespace ion::Graphics;
 
 
-CClothSimulation::CClothSimulation()
+CRigidDynamicsSimulation::CRigidDynamicsSimulation()
 {}
 
-void CClothSimulation::Setup()
+void CRigidDynamicsSimulation::Setup()
 {
 	SingletonPointer<CApplication> Application;
 
@@ -121,7 +121,7 @@ void CClothSimulation::Setup()
 	UpdateSceneObjects(0);
 }
 
-void CClothSimulation::SimulateStep(double const TimeDelta)
+void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 {
 	static vec2d const Gravity = vec2d(0, -9.8);
 
@@ -285,7 +285,7 @@ void CClothSimulation::SimulateStep(double const TimeDelta)
 	ParticlesMutex.unlock();
 }
 
-void CClothSimulation::GUI()
+void CRigidDynamicsSimulation::GUI()
 {
 	SingletonPointer<CSimulationSystem> SimulationSystem;
 
@@ -381,7 +381,7 @@ void CClothSimulation::GUI()
 	}
 }
 
-void CClothSimulation::Reset()
+void CRigidDynamicsSimulation::Reset()
 {
 	ParticlesMutex.lock();
 	for (SParticle * particle : Particles)
@@ -392,7 +392,7 @@ void CClothSimulation::Reset()
 	ParticlesMutex.unlock();
 }
 
-void CClothSimulation::AddSceneObjects()
+void CRigidDynamicsSimulation::AddSceneObjects()
 {
 	SingletonPointer<CApplication> Application;
 
@@ -495,7 +495,7 @@ void CClothSimulation::AddSceneObjects()
 	}
 }
 
-void CClothSimulation::UpdateSceneObjects(uint const CurrentFrame)
+void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 {
 	VisibleFrame = CurrentFrame;
 
@@ -532,7 +532,7 @@ void CClothSimulation::UpdateSceneObjects(uint const CurrentFrame)
 	ClothObjectBack->SetMesh(ClothMesh);
 }
 
-void CClothSimulation::PickParticle(ray3f const & Ray)
+void CRigidDynamicsSimulation::PickParticle(ray3f const & Ray)
 {
 	SelectedParticle = nullptr;
 	for (auto Particle : Particles)
@@ -553,7 +553,7 @@ void CClothSimulation::PickParticle(ray3f const & Ray)
 	}
 }
 
-CClothSimulation::SParticle * CClothSimulation::GetParticle(vec2i const & Index)
+CRigidDynamicsSimulation::SParticle * CRigidDynamicsSimulation::GetParticle(vec2i const & Index)
 {
 	return Particles[Index.X * Columns + Index.Y];
 }

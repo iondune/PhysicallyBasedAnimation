@@ -5,12 +5,12 @@
 #include "CSimulationSystem.h"
 
 
-class CClothSimulation : public ISimulation
+class CRigidDynamicsSimulation : public ISimulation
 {
 
 public:
 
-	CClothSimulation();
+	CRigidDynamicsSimulation();
 
 	void Setup();
 	void SimulateStep(double const TimeDelta);

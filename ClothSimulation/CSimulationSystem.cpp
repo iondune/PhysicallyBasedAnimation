@@ -1,6 +1,6 @@
 
 #include "CSimulationSystem.h"
-#include "CClothSimulation.h"
+#include "CRigidDynamicsSimulation.h"
 
 using namespace ion;
 

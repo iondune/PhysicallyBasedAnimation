@@ -1,6 +1,5 @@
 
 #include "CApplication.h"
-#include "CClothSimulation.h"
 #include "CLagrangianSimulation.h"
 
 using namespace ion;
@@ -58,7 +57,7 @@ void CApplication::OnEvent(IEvent & Event)
 				if (! MouseEvent.Pressed)
 				{
 					ray3f const Ray = FreeCamera->GetPickingRay(MouseEvent.Location, Window->GetSize());
-					ClothSimulation->PickParticle(Ray);
+					RigidDynamicsSimulation->PickParticle(Ray);
 				}
 			}
 
@@ -152,10 +151,8 @@ void CApplication::AddSceneObjects()
 
 void CApplication::MainLoop()
 {
-	ClothSimulation = new CClothSimulation();
-	CLagrangianSimulation * LagrangianSimulation = new CLagrangianSimulation();
-
-	SimulationSystem->AddSimulation(LagrangianSimulation);
+	RigidDynamicsSimulation = new CRigidDynamicsSimulation();
+	SimulationSystem->AddSimulation(RigidDynamicsSimulation);
 	SimulationSystem->Start(RenderPass);
 
 	TimeManager->Start();

@@ -3,7 +3,7 @@
 
 #include <ionEngine.h>
 #include "CSimulationSystem.h"
-#include "CClothSimulation.h"
+#include "CRigidDynamicsSimulation.h"
 
 
 class CApplication : public Singleton<CApplication>, public IEventListener
@@ -47,7 +47,7 @@ protected:
 	ion::Scene::CPointLight * PointLight = nullptr;
 
 	SingletonPointer<CSimulationSystem> SimulationSystem;
-	CClothSimulation * ClothSimulation = nullptr;
+	CRigidDynamicsSimulation * RigidDynamicsSimulation = nullptr;
 
 private:
 

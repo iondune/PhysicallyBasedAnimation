@@ -4,19 +4,17 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="CApplication.cpp" />
     <ClCompile Include="CSimulationSystem.cpp" />
-    <ClCompile Include="CClothSimulation.cpp" />
     <ClCompile Include="MosekSolver.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="SSparseMatrix.cpp" />
-    <ClCompile Include="CLagrangianSimulation.cpp" />
+    <ClCompile Include="CRigidDynamicsSimulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
     <ClInclude Include="CSimulationSystem.h" />
-    <ClInclude Include="CClothSimulation.h" />
     <ClInclude Include="MosekSolver.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="SSparseMatrix.h" />
-    <ClInclude Include="CLagrangianSimulation.h" />
+    <ClInclude Include="CRigidDynamicsSimulation.h" />
   </ItemGroup>
 </Project>
