@@ -296,6 +296,13 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Eigen::MatrixXf const A = M_i;
 		Eigen::VectorXf const b = M_i * Phi_i_k + h * (Phi_cross_k.transpose() * M_i * Phi_i_k + B_E_i_k);
 
+		cout << "A =" << endl;
+		cout << A << endl;
+		cout << endl;
+		cout << "b =" << endl;
+		cout << b << endl;
+		cout << endl;
+
 		Eigen::VectorXf const Phi_i_k_1 = A.ldlt().solve(b);
 
 		Eigen::Vector3f const w_k_1 = Phi_i_k_1.segment(0, 3);
