@@ -31,6 +31,8 @@ public:
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 		
 		vector<glm::mat4> PositionFrames;
+		vector<vec3f> wFrames;
+		vector<vec3f> vFrames;
 	};
 
 	struct SPlane

@@ -6,7 +6,7 @@
 #include "MosekSolver.h"
 
 #define EIGEN_DONT_ALIGN_STATICALLY
-#include <Eigen/Sparse>
+#include <Eigen/Dense>
 
 using namespace ion;
 using namespace ion::Scene;
@@ -15,7 +15,8 @@ using namespace ion::Graphics;
 
 glm::mat4 RotateAndTranslateToMatrix(vec3f const & Rotation, vec3f const & Translation)
 {
-	glm::mat4 Transformation = glm::rotate(glm::mat4(1.f), Rotation.Z, glm::vec3(0, 0, 1));
+	glm::mat4 Transformation = glm::mat4(1.f);
+	Transformation = glm::rotate(Transformation, Rotation.Z, glm::vec3(0, 0, 1));
 	Transformation = glm::rotate(Transformation, Rotation.Y, glm::vec3(0, 1, 0));
 	Transformation = glm::rotate(Transformation, Rotation.X, glm::vec3(1, 0, 0));
 	Transformation = glm::translate(Transformation, Translation.ToGLM());
@@ -46,6 +47,8 @@ void CRigidDynamicsSimulation::Setup()
 	SBox * p = new SBox();
 	p->Extent = Size;
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center));
+	p->wFrames.push_back(vec3f(1, 0, 0));
+	p->vFrames.push_back(0);
 	p->Mass = 0.2f;
 	Boxes.push_back(p);
 
@@ -60,6 +63,87 @@ void CRigidDynamicsSimulation::Setup()
 
 	AddSceneObjects();
 	UpdateSceneObjects(0);
+}
+
+Eigen::Matrix3f CrossProductMatrix(vec3f const & a)
+{
+	Eigen::Matrix3f M;
+	M.setZero();
+	M(1, 0) = a.Z;
+	M(2, 0) = -a.Y;
+	M(0, 1) = -a.Z;
+	M(2, 1) = a.X;
+	M(0, 2) = a.Y;
+	M(1, 2) = -a.X;
+	return M;
+}
+
+Eigen::Matrix3f CrossProductMatrix(Eigen::Vector3f const & a)
+{
+	Eigen::Matrix3f M;
+	M.setZero();
+	M(1, 0) = a.z();
+	M(2, 0) = -a.y();
+	M(0, 1) = -a.z();
+	M(2, 1) = a.x();
+	M(0, 2) = a.y();
+	M(1, 2) = -a.x();
+	return M;
+}
+
+Eigen::Matrix4f ToEigen(glm::mat4 const & m)
+{
+	Eigen::Matrix4f M;
+	M.setZero();
+	for (int i = 0; i < 4; ++ i)
+	{
+		for (int j = 0; j < 4; ++ j)
+		{
+			M(i, j) = m[i][j];
+		}
+	}
+	return M;
+}
+
+glm::mat4 ToGLM(Eigen::Matrix4f const & m)
+{
+	glm::mat4 M;
+	for (int i = 0; i < 4; ++ i)
+	{
+		for (int j = 0; j < 4; ++ j)
+		{
+			M[i][j] = m(i, j);
+		}
+	}
+	return M;
+}
+
+Eigen::Matrix3f Bottom3(glm::mat4 const & m)
+{
+	Eigen::Matrix3f M;
+	M.setZero();
+	for (int i = 0; i < 3; ++ i)
+	{
+		for (int j = 0; j < 3; ++ j)
+		{
+			M(i, j) = m[i][j];
+		}
+	}
+	return M;
+}
+
+Eigen::Matrix4f exp(Eigen::Matrix4f const & m)
+{
+	Eigen::Matrix4f M;
+	M.setZero();
+	for (int i = 0; i < 4; ++ i)
+	{
+		for (int j = 0; j < 4; ++ j)
+		{
+			M(i, j) = exp(m(i, j));
+		}
+	}
+	return M;
 }
 
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
@@ -135,7 +219,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	//		}
 	//	}
 	//}
-	SystemMutex.unlock();
+	//SystemMutex.unlock();
 
 	//SSparseMatrix const D = Damping.X * TimeDelta * M + Damping.Y * Sq(TimeDelta) * K;
 
@@ -172,9 +256,70 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	//cout << Result << endl;
 	//cout << endl;
 
-	SystemMutex.lock();
 	for (SBox * particle : Boxes)
 	{
+		Eigen::MatrixXf M_i;
+		M_i.resize(6, 6);
+		M_i.setZero();
+		M_i.setIdentity();
+		M_i *= particle->Mass;
+
+		SystemMutex.lock();
+		Eigen::VectorXf Phi_i_k;
+		Phi_i_k.resize(6);
+		Phi_i_k.setZero();
+		Phi_i_k(0) = particle->wFrames.back().X;
+		Phi_i_k(1) = particle->wFrames.back().Y;
+		Phi_i_k(2) = particle->wFrames.back().Z;
+		Phi_i_k(3) = particle->vFrames.back().X;
+		Phi_i_k(4) = particle->vFrames.back().Y;
+		Phi_i_k(5) = particle->vFrames.back().Z;
+
+		float const h = (float) TimeDelta;
+
+		Eigen::MatrixXf Phi_cross_k;
+		Phi_cross_k.resize(6, 6);
+		Phi_cross_k.setZero();
+		Phi_cross_k.block<3, 3>(0, 0) = CrossProductMatrix(particle->wFrames.back());
+		Phi_cross_k.block<3, 3>(3, 3) = CrossProductMatrix(particle->wFrames.back());
+
+		float const m = particle->Mass;
+		Eigen::Vector3f const g = ToEigen(Gravity);
+		Eigen::Matrix3f const Theta_i_T = Bottom3(particle->PositionFrames.back()).transpose();
+		SystemMutex.unlock();
+
+		Eigen::VectorXf B_E_i_k;
+		B_E_i_k.resize(6);
+		B_E_i_k.setZero();
+		B_E_i_k.segment(3, 3) = (Theta_i_T * m * g);
+
+		Eigen::MatrixXf const A = M_i;
+		Eigen::VectorXf const b = M_i * Phi_i_k + h * (Phi_cross_k.transpose() * M_i * Phi_i_k + B_E_i_k);
+
+		Eigen::VectorXf const Phi_i_k_1 = A.ldlt().solve(b);
+
+		Eigen::Vector3f const w_k_1 = Phi_i_k_1.segment(0, 3);
+		Eigen::Vector3f const v_k_1 = Phi_i_k_1.segment(3, 3);
+
+		Eigen::Matrix4f Discretization;
+		Discretization.setZero();
+		Discretization.block<3, 3>(0, 0) = CrossProductMatrix(w_k_1);
+		Discretization.block<3, 1>(0, 3) = v_k_1;
+
+		SystemMutex.lock();
+		Eigen::Matrix4f E_i_k;
+		E_i_k.setZero();
+		E_i_k = ToEigen(particle->PositionFrames.back());
+
+		Eigen::Matrix4f E_i_k_1;
+		E_i_k_1.setZero();
+		E_i_k_1 = E_i_k * exp(h * Discretization);
+
+		particle->wFrames.push_back(ToIon3D(w_k_1));
+		particle->vFrames.push_back(ToIon3D(v_k_1));
+		particle->PositionFrames.push_back(ToGLM(E_i_k_1));
+		SystemMutex.unlock();
+
 		//if (! particle->IsFixed)
 		//{
 		//	particle->VelocityFrames.push_back(ToIon2D(Result.segment(particle->Index, 2)));
@@ -220,7 +365,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		//	particle->PositionFrames.push_back(particle->PositionFrames.back());
 		//}
 	}
-	SystemMutex.unlock();
 }
 
 void CRigidDynamicsSimulation::GUI()
@@ -272,7 +416,16 @@ void CRigidDynamicsSimulation::GUI()
 		{
 			ImGui::SetWindowSize(ImVec2(350, 150), ImGuiSetCond_Once);
 			ImGui::SetWindowPos(ImVec2(1000, 350), ImGuiSetCond_Once);
-			//ImGui::Text("Position: %.3f %.3f", SelectedParticle->PositionFrames[VisibleFrame].X, SelectedParticle->PositionFrames[VisibleFrame].Y);
+			vec4f position(0, 0, 0, 1);
+			vec4f scale(1, 1, 1, 0);
+			position.Transform(SelectedParticle->PositionFrames[VisibleFrame]);
+			scale.Transform(SelectedParticle->PositionFrames[VisibleFrame]);
+			ImGui::Text("Position: %.3f %.3f %.3f", position.X, position.Y, position.Z);
+			ImGui::Text("Scale: %.3f %.3f %.3f", scale.X, scale.Y, scale.Z);
+			vec3f l_vel = SelectedParticle->vFrames[VisibleFrame];
+			ImGui::Text("Linear Velocity: %.3f %.3f %.3f", l_vel.X, l_vel.Y, l_vel.Z);
+			vec3f a_vel = SelectedParticle->wFrames[VisibleFrame];
+			ImGui::Text("Angular Velocity: %.3f %.3f %.3f", a_vel.X, a_vel.Y, a_vel.Z);
 
 			ImGui::End();
 		}
