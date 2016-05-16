@@ -65,31 +65,31 @@ void CRigidDynamicsSimulation::Setup()
 	UpdateSceneObjects(0);
 }
 
-Eigen::Matrix3d CrossProductMatrix(vec3d const & a)
-{
-	Eigen::Matrix3d M;
-	M.setZero();
-	M(1, 0) = a.Z;
-	M(2, 0) = -a.Y;
-	M(0, 1) = -a.Z;
-	M(2, 1) = a.X;
-	M(0, 2) = a.Y;
-	M(1, 2) = -a.X;
-	return M;
-}
-
-Eigen::Matrix3d CrossProductMatrix(Eigen::Vector3d const & a)
-{
-	Eigen::Matrix3d M;
-	M.setZero();
-	M(1, 0) = a.z();
-	M(2, 0) = -a.y();
-	M(0, 1) = -a.z();
-	M(2, 1) = a.x();
-	M(0, 2) = a.y();
-	M(1, 2) = -a.x();
-	return M;
-}
+//Eigen::Matrix3d CrossProductMatrix(vec3d const & a)
+//{
+//	Eigen::Matrix3d M;
+//	M.setZero();
+//	M(1, 0) = a.Z;
+//	M(2, 0) = -a.Y;
+//	M(0, 1) = -a.Z;
+//	M(2, 1) = a.X;
+//	M(0, 2) = a.Y;
+//	M(1, 2) = -a.X;
+//	return M;
+//}
+//
+//Eigen::Matrix3d CrossProductMatrix(Eigen::Vector3d const & a)
+//{
+//	Eigen::Matrix3d M;
+//	M.setZero();
+//	M(1, 0) = a.z();
+//	M(2, 0) = -a.y();
+//	M(0, 1) = -a.z();
+//	M(2, 1) = a.x();
+//	M(0, 2) = a.y();
+//	M(1, 2) = -a.x();
+//	return M;
+//}
 
 Eigen::Matrix4d ToEigen(glm::mat4 const & m)
 {
@@ -99,7 +99,7 @@ Eigen::Matrix4d ToEigen(glm::mat4 const & m)
 	{
 		for (int j = 0; j < 4; ++ j)
 		{
-			M(i, j) = (double) m[i][j];
+			M(i, j) = (double) m[j][i];
 		}
 	}
 	return M;
@@ -112,7 +112,7 @@ glm::mat4 ToGLM(Eigen::Matrix4d const & m)
 	{
 		for (int j = 0; j < 4; ++ j)
 		{
-			M[i][j] = (float) m(i, j);
+			M[i][j] = (float) m(j, i);
 		}
 	}
 	return M;
@@ -263,11 +263,12 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		double const h = TimeDelta;
 
-		Eigen::MatrixXd Phi_cross_k;
-		Phi_cross_k.resize(6, 6);
-		Phi_cross_k.setZero();
-		Phi_cross_k.block<3, 3>(0, 0) = CrossProductMatrix(particle->wFrames.back());
-		Phi_cross_k.block<3, 3>(3, 3) = CrossProductMatrix(particle->wFrames.back());
+		Eigen::MatrixXd Phi_i_bracket_k;
+		Phi_i_bracket_k.resize(6, 6);
+		Phi_i_bracket_k.setZero();
+		Phi_i_bracket_k.block<3, 3>(0, 0) = Rigid::bracket3(ToEigen(particle->wFrames.back()));
+		Phi_i_bracket_k.block<3, 3>(3, 3) = Rigid::bracket3(ToEigen(particle->wFrames.back()));
+		Phi_i_bracket_k.block<3, 3>(3, 0) = Rigid::bracket3(ToEigen(particle->vFrames.back()));
 
 		float const m = particle->Mass;
 		Eigen::Vector3d const g = ToEigen(Gravity);
@@ -280,7 +281,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		B_E_i_k.segment(3, 3) = (Theta_i_T * m * g);
 
 		Eigen::MatrixXd const A = M_i;
-		Eigen::VectorXd const b = M_i * Phi_i_k + h * (Phi_cross_k.transpose() * M_i * Phi_i_k + B_E_i_k);
+		Eigen::VectorXd const b = M_i * Phi_i_k + h * (Phi_i_bracket_k.transpose() * M_i * Phi_i_k + B_E_i_k);
 
 		cout << "A =" << endl;
 		cout << A << endl;
