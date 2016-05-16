@@ -28,6 +28,7 @@ public:
 	{
 		vec3d Extent;
 		float Mass;
+		color3f Color = Colors::Red;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 		

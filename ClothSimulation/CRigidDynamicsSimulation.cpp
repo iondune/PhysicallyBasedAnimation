@@ -47,9 +47,36 @@ void CRigidDynamicsSimulation::Setup()
 	SBox * p = new SBox();
 	p->Extent = Size;
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center));
-	p->wFrames.push_back(vec3f(1, 0, 0));
+	p->wFrames.push_back(vec3d(1, 0, 0));
 	p->vFrames.push_back(0);
 	p->Mass = 0.2f;
+	Boxes.push_back(p);
+
+	p = new SBox();
+	p->Extent = Size * 2;
+	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.2, 0, 0.4)));
+	p->wFrames.push_back(vec3d(2, 0, 0));
+	p->vFrames.push_back(vec3d(0, 1, 0));
+	p->Mass = 0.2f;
+	p->Color = Colors::Green;
+	Boxes.push_back(p);
+
+	p = new SBox();
+	p->Extent = Size;
+	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.3, 0, 0)));
+	p->wFrames.push_back(vec3d(5, 0, 5));
+	p->vFrames.push_back(vec3d(0, 0, 1));
+	p->Mass = 0.2f;
+	p->Color = Colors::Blue;
+	Boxes.push_back(p);
+
+	p = new SBox();
+	p->Extent = Size * 0.5;
+	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0, 0.2, -0.5)));
+	p->wFrames.push_back(vec3d(0, 0, 2));
+	p->vFrames.push_back(vec3d(1, 0, 0));
+	p->Mass = 0.2f;
+	p->Color = Colors::Magenta;
 	Boxes.push_back(p);
 
 
@@ -446,7 +473,7 @@ void CRigidDynamicsSimulation::AddSceneObjects()
 		Particle->SceneObject->SetMesh(Application->CubeMesh);
 		Particle->SceneObject->SetScale(Particle->Extent * 2);
 		Particle->SceneObject->SetShader(Application->DiffuseShader);
-		Particle->SceneObject->SetUniform("uColor", CUniform<color3f>(Colors::Red));
+		Particle->SceneObject->SetUniform("uColor", CUniform<color3f>(Particle->Color));
 		Application->RenderPass->AddSceneObject(Particle->SceneObject);
 	}
 
