@@ -3,6 +3,7 @@
 
 #include <ionEngine.h>
 #include "CSimulationSystem.h"
+#include "Rigid.h"
 
 
 class CRigidDynamicsSimulation : public ISimulation
@@ -25,26 +26,26 @@ public:
 
 	struct SBox
 	{
-		vec3f Extent;
+		vec3d Extent;
 		float Mass;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 		
-		vector<glm::mat4> PositionFrames;
-		vector<vec3f> wFrames;
-		vector<vec3f> vFrames;
+		vector<Eigen::Matrix4d> PositionFrames;
+		vector<vec3d> wFrames;
+		vector<vec3d> vFrames;
 	};
 
 	struct SPlane
 	{
-		vec3f Normal;
+		vec3d Normal;
 		float Distance;
 	};
 
 	struct SSettings
 	{
-		vec3f Center = vec3f(0, 0.25f, 0);
-		vec3f Size = vec3f(0.1f, 0.05f, 0.05f);
+		vec3d Center = vec3d(0, 0.25, 0);
+		vec3d Size = vec3d(0.1, 0.05, 0.05);
 	};
 
 protected:

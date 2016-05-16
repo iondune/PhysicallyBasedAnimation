@@ -14,3 +14,6 @@ Eigen::Array<double, 1, 1> ToEigen(double const x);
 vec3d ToIon3D(Eigen::Vector3d const & v);
 vec3f ToIon3D(Eigen::Vector3f const & v);
 vec2d ToIon2D(Eigen::Vector2d const & v);
+
+Eigen::Matrix4d ToEigen(glm::mat4 const & m);
+glm::mat4 ToGLM(Eigen::Matrix4d const & m);

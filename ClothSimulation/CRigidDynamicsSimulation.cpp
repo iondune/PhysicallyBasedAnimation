@@ -13,14 +13,14 @@ using namespace ion::Scene;
 using namespace ion::Graphics;
 
 
-glm::mat4 RotateAndTranslateToMatrix(vec3f const & Rotation, vec3f const & Translation)
+Eigen::Matrix4d RotateAndTranslateToMatrix(vec3f const & Rotation, vec3f const & Translation)
 {
 	glm::mat4 Transformation = glm::mat4(1.f);
 	Transformation = glm::rotate(Transformation, Rotation.Z, glm::vec3(0, 0, 1));
 	Transformation = glm::rotate(Transformation, Rotation.Y, glm::vec3(0, 1, 0));
 	Transformation = glm::rotate(Transformation, Rotation.X, glm::vec3(1, 0, 0));
 	Transformation = glm::translate(Transformation, Translation.ToGLM());
-	return Transformation;
+	return ToEigen(Transformation);
 }
 
 CRigidDynamicsSimulation::CRigidDynamicsSimulation()
@@ -65,9 +65,9 @@ void CRigidDynamicsSimulation::Setup()
 	UpdateSceneObjects(0);
 }
 
-Eigen::Matrix3f CrossProductMatrix(vec3f const & a)
+Eigen::Matrix3d CrossProductMatrix(vec3d const & a)
 {
-	Eigen::Matrix3f M;
+	Eigen::Matrix3d M;
 	M.setZero();
 	M(1, 0) = a.Z;
 	M(2, 0) = -a.Y;
@@ -78,9 +78,9 @@ Eigen::Matrix3f CrossProductMatrix(vec3f const & a)
 	return M;
 }
 
-Eigen::Matrix3f CrossProductMatrix(Eigen::Vector3f const & a)
+Eigen::Matrix3d CrossProductMatrix(Eigen::Vector3d const & a)
 {
-	Eigen::Matrix3f M;
+	Eigen::Matrix3d M;
 	M.setZero();
 	M(1, 0) = a.z();
 	M(2, 0) = -a.y();
@@ -91,56 +91,42 @@ Eigen::Matrix3f CrossProductMatrix(Eigen::Vector3f const & a)
 	return M;
 }
 
-Eigen::Matrix4f ToEigen(glm::mat4 const & m)
+Eigen::Matrix4d ToEigen(glm::mat4 const & m)
 {
-	Eigen::Matrix4f M;
+	Eigen::Matrix4d M;
 	M.setZero();
 	for (int i = 0; i < 4; ++ i)
 	{
 		for (int j = 0; j < 4; ++ j)
 		{
-			M(i, j) = m[i][j];
+			M(i, j) = (double) m[i][j];
 		}
 	}
 	return M;
 }
 
-glm::mat4 ToGLM(Eigen::Matrix4f const & m)
+glm::mat4 ToGLM(Eigen::Matrix4d const & m)
 {
 	glm::mat4 M;
 	for (int i = 0; i < 4; ++ i)
 	{
 		for (int j = 0; j < 4; ++ j)
 		{
-			M[i][j] = m(i, j);
+			M[i][j] = (float) m(i, j);
 		}
 	}
 	return M;
 }
 
-Eigen::Matrix3f Bottom3(glm::mat4 const & m)
+Eigen::Matrix3d Bottom3(Eigen::Matrix4d const & m)
 {
-	Eigen::Matrix3f M;
+	Eigen::Matrix3d M;
 	M.setZero();
 	for (int i = 0; i < 3; ++ i)
 	{
 		for (int j = 0; j < 3; ++ j)
 		{
-			M(i, j) = m[i][j];
-		}
-	}
-	return M;
-}
-
-Eigen::Matrix4f exp(Eigen::Matrix4f const & m)
-{
-	Eigen::Matrix4f M;
-	M.setZero();
-	for (int i = 0; i < 4; ++ i)
-	{
-		for (int j = 0; j < 4; ++ j)
-		{
-			M(i, j) = exp(m(i, j));
+			M(i, j) = m(i, j);
 		}
 	}
 	return M;
@@ -148,7 +134,7 @@ Eigen::Matrix4f exp(Eigen::Matrix4f const & m)
 
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 {
-	static vec3f const Gravity = vec3f(0, -9.8f, 0);
+	static vec3d const Gravity = vec3d(0, -9.8, 0);
 
 	/*Eigen::VectorXd v;
 	v.resize(3);
@@ -258,14 +244,14 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 	for (SBox * particle : Boxes)
 	{
-		Eigen::MatrixXf M_i;
+		Eigen::MatrixXd M_i;
 		M_i.resize(6, 6);
 		M_i.setZero();
 		M_i.setIdentity();
 		M_i *= particle->Mass;
 
 		SystemMutex.lock();
-		Eigen::VectorXf Phi_i_k;
+		Eigen::VectorXd Phi_i_k;
 		Phi_i_k.resize(6);
 		Phi_i_k.setZero();
 		Phi_i_k(0) = particle->wFrames.back().X;
@@ -275,26 +261,26 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Phi_i_k(4) = particle->vFrames.back().Y;
 		Phi_i_k(5) = particle->vFrames.back().Z;
 
-		float const h = (float) TimeDelta;
+		double const h = TimeDelta;
 
-		Eigen::MatrixXf Phi_cross_k;
+		Eigen::MatrixXd Phi_cross_k;
 		Phi_cross_k.resize(6, 6);
 		Phi_cross_k.setZero();
 		Phi_cross_k.block<3, 3>(0, 0) = CrossProductMatrix(particle->wFrames.back());
 		Phi_cross_k.block<3, 3>(3, 3) = CrossProductMatrix(particle->wFrames.back());
 
 		float const m = particle->Mass;
-		Eigen::Vector3f const g = ToEigen(Gravity);
-		Eigen::Matrix3f const Theta_i_T = Bottom3(particle->PositionFrames.back()).transpose();
+		Eigen::Vector3d const g = ToEigen(Gravity);
+		Eigen::Matrix3d const Theta_i_T = Bottom3(particle->PositionFrames.back()).transpose();
 		SystemMutex.unlock();
 
-		Eigen::VectorXf B_E_i_k;
+		Eigen::VectorXd B_E_i_k;
 		B_E_i_k.resize(6);
 		B_E_i_k.setZero();
 		B_E_i_k.segment(3, 3) = (Theta_i_T * m * g);
 
-		Eigen::MatrixXf const A = M_i;
-		Eigen::VectorXf const b = M_i * Phi_i_k + h * (Phi_cross_k.transpose() * M_i * Phi_i_k + B_E_i_k);
+		Eigen::MatrixXd const A = M_i;
+		Eigen::VectorXd const b = M_i * Phi_i_k + h * (Phi_cross_k.transpose() * M_i * Phi_i_k + B_E_i_k);
 
 		cout << "A =" << endl;
 		cout << A << endl;
@@ -303,28 +289,28 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		cout << b << endl;
 		cout << endl;
 
-		Eigen::VectorXf const Phi_i_k_1 = A.ldlt().solve(b);
+		Eigen::VectorXd const Phi_i_k_1 = A.ldlt().solve(b);
 
-		Eigen::Vector3f const w_k_1 = Phi_i_k_1.segment(0, 3);
-		Eigen::Vector3f const v_k_1 = Phi_i_k_1.segment(3, 3);
+		Eigen::Vector3d const w_k_1 = Phi_i_k_1.segment(0, 3);
+		Eigen::Vector3d const v_k_1 = Phi_i_k_1.segment(3, 3);
 
-		Eigen::Matrix4f Discretization;
-		Discretization.setZero();
-		Discretization.block<3, 3>(0, 0) = CrossProductMatrix(w_k_1);
-		Discretization.block<3, 1>(0, 3) = v_k_1;
+		//Eigen::Matrix4d Discretization;
+		//Discretization.setZero();
+		//Discretization.block<3, 3>(0, 0) = CrossProductMatrix(w_k_1);
+		//Discretization.block<3, 1>(0, 3) = v_k_1;
 
 		SystemMutex.lock();
-		Eigen::Matrix4f E_i_k;
+		Eigen::Matrix4d E_i_k;
 		E_i_k.setZero();
-		E_i_k = ToEigen(particle->PositionFrames.back());
+		E_i_k = particle->PositionFrames.back();
 
-		Eigen::Matrix4f E_i_k_1;
+		Eigen::Matrix4d E_i_k_1;
 		E_i_k_1.setZero();
-		E_i_k_1 = E_i_k * exp(h * Discretization);
+		E_i_k_1 = Rigid::integrate(E_i_k, Phi_i_k_1, h);
 
 		particle->wFrames.push_back(ToIon3D(w_k_1));
 		particle->vFrames.push_back(ToIon3D(v_k_1));
-		particle->PositionFrames.push_back(ToGLM(E_i_k_1));
+		particle->PositionFrames.push_back((E_i_k_1));
 		SystemMutex.unlock();
 
 		//if (! particle->IsFixed)
@@ -425,8 +411,8 @@ void CRigidDynamicsSimulation::GUI()
 			ImGui::SetWindowPos(ImVec2(1000, 350), ImGuiSetCond_Once);
 			vec4f position(0, 0, 0, 1);
 			vec4f scale(1, 1, 1, 0);
-			position.Transform(SelectedParticle->PositionFrames[VisibleFrame]);
-			scale.Transform(SelectedParticle->PositionFrames[VisibleFrame]);
+			position.Transform(ToGLM(SelectedParticle->PositionFrames[VisibleFrame]));
+			scale.Transform(ToGLM(SelectedParticle->PositionFrames[VisibleFrame]));
 			ImGui::Text("Position: %.3f %.3f %.3f", position.X, position.Y, position.Z);
 			ImGui::Text("Scale: %.3f %.3f %.3f", scale.X, scale.Y, scale.Z);
 			vec3f l_vel = SelectedParticle->vFrames[VisibleFrame];
@@ -491,7 +477,7 @@ void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 	SystemMutex.lock();
 	for (auto Particle : Boxes)
 	{
-		Particle->SceneObject->SetRotation(Particle->PositionFrames[CurrentFrame]);
+		Particle->SceneObject->SetRotation(ToGLM(Particle->PositionFrames[CurrentFrame]));
 	}
 	SystemMutex.unlock();
 }
