@@ -145,7 +145,7 @@ glm::mat4 ToGLM(Eigen::Matrix4d const & m)
 	return M;
 }
 
-Eigen::Matrix3d Bottom3(Eigen::Matrix4d const & m)
+Eigen::Matrix3d ThetaFromE(Eigen::Matrix4d const & m)
 {
 	Eigen::Matrix3d M;
 	M.setZero();
@@ -159,9 +159,21 @@ Eigen::Matrix3d Bottom3(Eigen::Matrix4d const & m)
 	return M;
 }
 
+Eigen::Vector3d pFromE(Eigen::Matrix4d const & m)
+{
+	Eigen::Vector3d p;
+	p.setZero();
+	for (int i = 0; i < 3; ++ i)
+	{
+		p(i) = m(i, 3);
+	}
+	return p;
+}
+
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 {
 	static vec3d const Gravity = vec3d(0, -9.8, 0);
+	static vec3d const Fan = vec3d(0, 30.0, 0);
 
 	/*Eigen::VectorXd v;
 	v.resize(3);
@@ -298,24 +310,25 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Phi_i_bracket_k.block<3, 3>(3, 0) = Rigid::bracket3(ToEigen(particle->vFrames.back()));
 
 		float const m = particle->Mass;
-		Eigen::Vector3d const g = ToEigen(Gravity);
-		Eigen::Matrix3d const Theta_i_T = Bottom3(particle->PositionFrames.back()).transpose();
+		Eigen::Vector3d const p_i = pFromE(particle->PositionFrames.back());
+		Eigen::Vector3d const Acceleration = ToEigen(Gravity + Fan * (p_i.y() < -1.25 ? 1.0 : 0.0));
+		Eigen::Matrix3d const Theta_i_T = ThetaFromE(particle->PositionFrames.back()).transpose();
 		SystemMutex.unlock();
 
 		Eigen::VectorXd B_E_i_k;
 		B_E_i_k.resize(6);
 		B_E_i_k.setZero();
-		B_E_i_k.segment(3, 3) = (Theta_i_T * m * g);
+		B_E_i_k.segment(3, 3) = (Theta_i_T * m * Acceleration);
 
 		Eigen::MatrixXd const A = M_i;
 		Eigen::VectorXd const b = M_i * Phi_i_k + h * (Phi_i_bracket_k.transpose() * M_i * Phi_i_k + B_E_i_k);
 
-		cout << "A =" << endl;
-		cout << A << endl;
-		cout << endl;
-		cout << "b =" << endl;
-		cout << b << endl;
-		cout << endl;
+		//cout << "A =" << endl;
+		//cout << A << endl;
+		//cout << endl;
+		//cout << "b =" << endl;
+		//cout << b << endl;
+		//cout << endl;
 
 		Eigen::VectorXd const Phi_i_k_1 = A.ldlt().solve(b);
 
