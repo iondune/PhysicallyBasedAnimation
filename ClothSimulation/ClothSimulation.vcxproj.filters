@@ -8,6 +8,12 @@
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="SSparseMatrix.cpp" />
     <ClCompile Include="CRigidDynamicsSimulation.cpp" />
+    <ClCompile Include="odeBoxBox.cpp">
+      <Filter>Provided</Filter>
+    </ClCompile>
+    <ClCompile Include="Rigid.cpp">
+      <Filter>Provided</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
@@ -16,5 +22,16 @@
     <ClInclude Include="Util.h" />
     <ClInclude Include="SSparseMatrix.h" />
     <ClInclude Include="CRigidDynamicsSimulation.h" />
+    <ClInclude Include="odeBoxBox.h">
+      <Filter>Provided</Filter>
+    </ClInclude>
+    <ClInclude Include="Rigid.h">
+      <Filter>Provided</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Provided">
+      <UniqueIdentifier>{9919a19b-a873-4941-a1bc-c0f2492d2a08}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

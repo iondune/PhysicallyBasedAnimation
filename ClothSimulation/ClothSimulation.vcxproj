@@ -32,6 +32,8 @@
     <ClCompile Include="CSimulationSystem.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MosekSolver.cpp" />
+    <ClCompile Include="odeBoxBox.cpp" />
+    <ClCompile Include="Rigid.cpp" />
     <ClCompile Include="SSparseMatrix.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
@@ -40,6 +42,8 @@
     <ClInclude Include="CRigidDynamicsSimulation.h" />
     <ClInclude Include="CSimulationSystem.h" />
     <ClInclude Include="MosekSolver.h" />
+    <ClInclude Include="odeBoxBox.h" />
+    <ClInclude Include="Rigid.h" />
     <ClInclude Include="SSparseMatrix.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
