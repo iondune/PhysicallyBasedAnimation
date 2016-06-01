@@ -334,6 +334,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	//cout << endl;
 
 	int const n = 6 * (int) Boxes.size();
+	double const h = TimeDelta;
 
 	Eigen::MatrixXd M;
 	Eigen::VectorXd f;
@@ -348,6 +349,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	v.resize(n);
 	v.setZero();
 
+	SystemMutex.lock();
 	for (SBox * particle : Boxes)
 	{
 		SBox * box = particle;
@@ -356,7 +358,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		M.block<6, 6>(box->Index, box->Index) = M_i;
 
-		SystemMutex.lock();
 		Eigen::Vector6d Phi_i_k;
 		Phi_i_k.setZero();
 		Phi_i_k(0) = particle->wFrames.back().X;
@@ -366,7 +367,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Phi_i_k(4) = particle->vFrames.back().Y;
 		Phi_i_k(5) = particle->vFrames.back().Z;
 
-		double const h = TimeDelta;
+		v.segment(box->Index, 6) = Phi_i_k;
 
 		Eigen::Matrix6d Phi_i_bracket_k;
 		Phi_i_bracket_k.setZero();
@@ -377,14 +378,19 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Eigen::Vector3d const p_i = pFromE(particle->PositionFrames.back());
 		Eigen::Vector3d const Acceleration = ToEigen(Gravity);
 		Eigen::Matrix3d const Theta_i_T = ThetaFromE(particle->PositionFrames.back()).transpose();
-		SystemMutex.unlock();
+
+		Eigen::Vector3d const BodyForces = Theta_i_T * particle->m * Acceleration;
+		Eigen::Vector6d const Coriolis = Phi_i_bracket_k.transpose() * M_i * Phi_i_k;
+
+		f.segment(box->Index, 6) += Coriolis;
+		f.segment(box->Index + 3, 3) += BodyForces;
 
 		Eigen::Vector6d B_E_i_k;
 		B_E_i_k.setZero();
-		B_E_i_k.segment(3, 3) = (Theta_i_T * particle->m * Acceleration);
+		B_E_i_k.segment(3, 3) = BodyForces;
 
 		Eigen::Matrix6d const A = M_i;
-		Eigen::Vector6d const b = M_i * Phi_i_k + h * (Phi_i_bracket_k.transpose() * M_i * Phi_i_k + B_E_i_k);
+		Eigen::Vector6d const b = M_i * Phi_i_k + h * (Coriolis + B_E_i_k);
 
 		//cout << "A =" << endl;
 		//cout << A << endl;
@@ -398,7 +404,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Eigen::Vector3d const w_k_1 = Phi_i_k_1.segment(0, 3);
 		Eigen::Vector3d const v_k_1 = Phi_i_k_1.segment(3, 3);
 
-		SystemMutex.lock();
 		Eigen::Matrix4d E_i_k;
 		E_i_k.setZero();
 		E_i_k = particle->PositionFrames.back();
@@ -407,16 +412,47 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		E_i_k_1.setZero();
 		E_i_k_1 = Rigid::integrate(E_i_k, Phi_i_k_1, h);
 
-		particle->wFrames.push_back(ToIon3D(w_k_1));
-		particle->vFrames.push_back(ToIon3D(v_k_1));
-		particle->PositionFrames.push_back((E_i_k_1));
+		//particle->wFrames.push_back(ToIon3D(w_k_1));
+		//particle->vFrames.push_back(ToIon3D(v_k_1));
+		//particle->PositionFrames.push_back((E_i_k_1));
 
 		Contacts const c = odeBoxBox(Eigen::Matrix4d::Identity(), ToEigen(vec3d(100, 0.5, 100)), E_i_k_1, ToEigen(particle->Extent));
 		if (c.count > 0)
 		{
 		}
-		SystemMutex.unlock();
 	}
+	SystemMutex.unlock();
+
+	double const damping = 0.7;
+
+	Eigen::MatrixXd const spMtilde = M + h*damping*M;
+	Eigen::VectorXd const ftilde = M*v + h*f;
+
+	Eigen::VectorXd const NewV = spMtilde.ldlt().solve(ftilde);
+
+	SystemMutex.lock();
+	for (SBox * particle : Boxes)
+	{
+		SBox * box = particle;
+
+		Eigen::Vector6d const Phi_i_k_1 = NewV.segment(box->Index, 6);
+
+		Eigen::Vector3d const w_k_1 = Phi_i_k_1.segment(0, 3);
+		Eigen::Vector3d const v_k_1 = Phi_i_k_1.segment(3, 3);
+
+		Eigen::Matrix4d E_i_k;
+		E_i_k.setZero();
+		E_i_k = particle->PositionFrames.back();
+
+		Eigen::Matrix4d E_i_k_1;
+		E_i_k_1.setZero();
+		E_i_k_1 = Rigid::integrate(E_i_k, Phi_i_k_1, h);
+
+		box->wFrames.push_back(ToIon3D(w_k_1));
+		box->vFrames.push_back(ToIon3D(v_k_1));
+		box->PositionFrames.push_back((E_i_k_1));
+	}
+	SystemMutex.unlock();
 }
 
 void CRigidDynamicsSimulation::GUI()
