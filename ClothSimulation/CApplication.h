@@ -34,6 +34,8 @@ public:
 	
 	SharedPointer<ion::Graphics::ITexture> GroundTexture;
 
+	ion::Scene::CSimpleMeshSceneObject * GroundObject = nullptr;
+
 protected:
 
 	void InitializeEngine();

@@ -132,11 +132,11 @@ void CApplication::SetupScene()
 
 void CApplication::AddSceneObjects()
 {
-	CSimpleMeshSceneObject * GroundObject = new CSimpleMeshSceneObject();
+	GroundObject = new CSimpleMeshSceneObject();
 	GroundObject->SetMesh(CubeMesh);
 	GroundObject->SetShader(GroundShader);
 	GroundObject->SetScale(vec3f(16, 1, 16));
-	GroundObject->SetPosition(vec3f(0, -6, 0));
+	GroundObject->SetPosition(vec3f(0, -2, 0));
 	GroundObject->SetTexture("uTexture", GroundTexture);
 	RenderPass->AddSceneObject(GroundObject);
 	

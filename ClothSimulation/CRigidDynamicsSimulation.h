@@ -4,6 +4,7 @@
 #include <ionEngine.h>
 #include "CSimulationSystem.h"
 #include "Rigid.h"
+#include "odeBoxBox.h"
 
 
 class CRigidDynamicsSimulation : public ISimulation
@@ -33,10 +34,12 @@ public:
 		int Index = 0;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
+		ion::Graphics::CUniform<color3f> ColorUniform;
 		
 		vector<Eigen::Matrix4d> PositionFrames;
 		vector<vec3d> wFrames;
 		vector<vec3d> vFrames;
+		vector<vector<Contacts>> contactFrames;
 	};
 
 	struct SPlane

@@ -48,11 +48,14 @@ void CRigidDynamicsSimulation::Setup()
 
 	int n = 0;
 
-	SBox * p = new SBox();
+	SBox * p = nullptr;
+
+	p = new SBox();
 	p->Extent = Size;
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center));
 	p->wFrames.push_back(vec3d(1, 0, 0));
 	p->vFrames.push_back(0);
+	p->contactFrames.push_back(vector<Contacts>());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -61,15 +64,17 @@ void CRigidDynamicsSimulation::Setup()
 	p->Mass(4) = p->m;
 	p->Mass(5) = p->m;
 	p->Index = n;
+	p->Color = Colors::Red;
 	Boxes.push_back(p);
 
-	n += 6;
+	//n += 6;
 
 	p = new SBox();
 	p->Extent = Size * 2;
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.2, 0, 0.4)));
 	p->wFrames.push_back(vec3d(2, 0, 0));
 	p->vFrames.push_back(vec3d(0, 1, 0));
+	p->contactFrames.push_back(vector<Contacts>());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -88,6 +93,7 @@ void CRigidDynamicsSimulation::Setup()
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.3, 0, 0)));
 	p->wFrames.push_back(vec3d(5, 0, 5));
 	p->vFrames.push_back(vec3d(0, 0, 1));
+	p->contactFrames.push_back(vector<Contacts>());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -106,6 +112,7 @@ void CRigidDynamicsSimulation::Setup()
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0, 0.2, -0.5)));
 	p->wFrames.push_back(vec3d(0, 0, 2));
 	p->vFrames.push_back(vec3d(1, 0, 0));
+	p->contactFrames.push_back(vector<Contacts>());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -351,7 +358,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	v.setZero();
 
 	SystemMutex.lock();
-	for (SBox const * const Box : Boxes)
+	for (SBox * const Box : Boxes)
 	{
 		Eigen::Matrix6d const M_i = Diagonal(Box->Mass);
 
@@ -385,9 +392,16 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		
 		Eigen::Matrix4d const E_i_k = Box->PositionFrames.back();
 
-		Contacts const c = odeBoxBox(Eigen::Matrix4d::Identity(), ToEigen(vec3d(100, 0.5, 100)), E_i_k, ToEigen(Box->Extent));
+		SingletonPointer<CApplication> Application;
+
+		Box->contactFrames.push_back(vector<Contacts>());
+		glm::mat4 FloorMatrix = glm::mat4(1.f);
+		FloorMatrix = glm::translate(FloorMatrix, Application->GroundObject->GetTranslation().ToGLM());
+
+		Contacts const c = odeBoxBox(ToEigen(FloorMatrix), ToEigen(vec3d(1.0) * Application->GroundObject->GetScale()), E_i_k, ToEigen(Box->Extent));
 		if (c.count > 0)
 		{
+			Box->contactFrames.back().push_back(c);
 		}
 	}
 	SystemMutex.unlock();
@@ -484,6 +498,15 @@ void CRigidDynamicsSimulation::GUI()
 			vec3f a_vel = SelectedParticle->wFrames[VisibleFrame];
 			ImGui::Text("Angular Velocity: %.3f %.3f %.3f", a_vel.X, a_vel.Y, a_vel.Z);
 
+			ImGui::Separator();
+
+			for (auto Contact : SelectedParticle->contactFrames[VisibleFrame])
+			{
+				ImGui::Text("Contacts %d", Contact.count);
+				ImGui::Text("Normal %.3f %.3f %.3f", Contact.normal.x(), Contact.normal.y(), Contact.normal.z());
+				ImGui::Separator();
+			}
+
 			ImGui::End();
 		}
 	}
@@ -507,9 +530,9 @@ void CRigidDynamicsSimulation::AddSceneObjects()
 	{
 		Particle->SceneObject = new CSimpleMeshSceneObject();
 		Particle->SceneObject->SetMesh(Application->CubeMesh);
-		Particle->SceneObject->SetScale(Particle->Extent * 2);
+		Particle->SceneObject->SetScale(Particle->Extent);
 		Particle->SceneObject->SetShader(Application->DiffuseShader);
-		Particle->SceneObject->SetUniform("uColor", CUniform<color3f>(Particle->Color));
+		Particle->SceneObject->SetUniform("uColor", Particle->ColorUniform);
 		Application->RenderPass->AddSceneObject(Particle->SceneObject);
 	}
 
@@ -527,7 +550,7 @@ void CRigidDynamicsSimulation::AddSceneObjects()
 			double const Rotation = -atan2(Plane.Normal.X, Plane.Normal.Y);
 			PlaneObject->SetRotation(vec3f(0, 0, (float) Rotation));
 			PlaneObject->SetPosition(Plane.Normal * (Plane.Distance - 0.025f));
-			Application->RenderPass->AddSceneObject(PlaneObject);
+			//Application->RenderPass->AddSceneObject(PlaneObject);
 		}
 
 		PlaneObjectsCreated = true;
@@ -539,9 +562,13 @@ void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 	VisibleFrame = CurrentFrame;
 
 	SystemMutex.lock();
-	for (auto Particle : Boxes)
+	for (SBox * Box : Boxes)
 	{
-		Particle->SceneObject->SetRotation(ToGLM(Particle->PositionFrames[CurrentFrame]));
+		Box->SceneObject->SetRotation(ToGLM(Box->PositionFrames[CurrentFrame]));
+		color3f Color = Box->Color;
+		if (Box->contactFrames[CurrentFrame].size())
+			Color *= 0.5f;
+		Box->ColorUniform = Color;
 	}
 	SystemMutex.unlock();
 }
@@ -551,7 +578,7 @@ void CRigidDynamicsSimulation::PickParticle(ray3f const & Ray)
 	SelectedParticle = nullptr;
 	for (auto Particle : Boxes)
 	{
-		Particle->SceneObject->SetUniform("uColor", CUniform<color3f>(Particle->Color));
+		Particle->ColorUniform = Particle->Color;
 	}
 	for (auto Particle : Boxes)
 	{
@@ -562,7 +589,7 @@ void CRigidDynamicsSimulation::PickParticle(ray3f const & Ray)
 		if (Ray.IntersectsSphere(Center, Radius))
 		{
 			SelectedParticle = Particle;
-			Particle->SceneObject->SetUniform("uColor", CUniform<color3f>(Colors::White * 0.75f));
+			Particle->ColorUniform = Colors::White * 0.75f;
 			break;
 		}
 	}
