@@ -299,7 +299,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	SystemMutex.unlock();
 
 
-	Eigen::MatrixXd const spMtilde = M + h*damping*M;
+	Eigen::MatrixXd const Mtilde = M + h*damping*M;
 	Eigen::VectorXd const ftilde = M*v + h*f;
 
 	Eigen::VectorXd NewV;
@@ -326,11 +326,11 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Nv.resize(ContactsArray.size());
 		Nv = restitution * ContactMatrix * v;
 
-		NewV = quadprog(spMtilde, ftilde, ContactMatrix, Nv, v);
+		NewV = quadprog(Mtilde, ftilde, ContactMatrix, Nv, v);
 	}
 	else
 	{
-		NewV = spMtilde.ldlt().solve(ftilde);
+		NewV = Mtilde.ldlt().solve(ftilde);
 	}
 
 	SystemMutex.lock();
