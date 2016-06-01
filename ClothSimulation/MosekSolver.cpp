@@ -84,6 +84,14 @@ Eigen::VectorXd  MosekSolver::Solve(Eigen::MatrixXd const & Q0, Eigen::VectorXd 
 		if (r == MSK_RES_OK)
 			r = MSK_appendvars(task, NUMVAR);
 
+		if (r == MSK_RES_OK)
+		{
+			MSKrealt * xc = new MSKrealt[NUMVAR];
+			for (int i = 0; i < NUMVAR; ++ i)
+				xc[i] = x0(i);
+			r = MSK_putxc(task, MSK_SOL_BEGIN, xc);
+		}
+
 		/* Optionally add a constant term to the objective. */
 		if (r == MSK_RES_OK)
 			r = MSK_putcfix(task, 0.0);
