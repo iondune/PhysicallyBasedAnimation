@@ -230,6 +230,11 @@ Eigen::Matrix6d Diagonal(Eigen::Vector6d const & v)
 	return M;
 }
 
+Eigen::VectorXd quadprog(Eigen::MatrixXd const & H, Eigen::VectorXd const & f, Eigen::MatrixXd const & A, Eigen::VectorXd const & b, Eigen::VectorXd const & x0)
+{
+	return H.ldlt().solve(-f);
+}
+
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 {
 	static vec3d const Gravity = vec3d(0, -9.8, 0);
@@ -343,6 +348,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	int const n = 6 * (int) Boxes.size();
 	double const h = TimeDelta;
 	double const damping = 0.7;
+	double const restitution = 0.2;
 
 	Eigen::MatrixXd M;
 	Eigen::VectorXd f;
@@ -447,7 +453,11 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 			ContactMatrix.block<1, 6>(i, C.Which->Index) = ContactRow;
 		}
 
-		NewV = spMtilde.ldlt().solve(ftilde);
+		Eigen::VectorXd Nv;
+		Nv.resize(ContactsArray.size());
+		Nv = restitution * ContactMatrix * v;
+
+		NewV = quadprog(spMtilde, -ftilde, ContactMatrix, Nv, v);
 	}
 	else
 	{
