@@ -174,7 +174,6 @@ Eigen::Vector3d pFromE(Eigen::Matrix4d const & m)
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 {
 	static vec3d const Gravity = vec3d(0, -9.8, 0);
-	static vec3d const Fan = vec3d(0, 30.0, 0) * 0.0;
 
 	/*Eigen::VectorXd v;
 	v.resize(3);
@@ -312,7 +311,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		float const m = particle->Mass;
 		Eigen::Vector3d const p_i = pFromE(particle->PositionFrames.back());
-		Eigen::Vector3d const Acceleration = ToEigen(Gravity + Fan * (p_i.y() < -1.25 ? 1.0 : 0.0));
+		Eigen::Vector3d const Acceleration = ToEigen(Gravity);
 		Eigen::Matrix3d const Theta_i_T = ThetaFromE(particle->PositionFrames.back()).transpose();
 		SystemMutex.unlock();
 
@@ -336,11 +335,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Eigen::Vector3d const w_k_1 = Phi_i_k_1.segment(0, 3);
 		Eigen::Vector3d const v_k_1 = Phi_i_k_1.segment(3, 3);
 
-		//Eigen::Matrix4d Discretization;
-		//Discretization.setZero();
-		//Discretization.block<3, 3>(0, 0) = CrossProductMatrix(w_k_1);
-		//Discretization.block<3, 1>(0, 3) = v_k_1;
-
 		SystemMutex.lock();
 		Eigen::Matrix4d E_i_k;
 		E_i_k.setZero();
@@ -354,77 +348,11 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		particle->vFrames.push_back(ToIon3D(v_k_1));
 		particle->PositionFrames.push_back((E_i_k_1));
 
-		Contacts c = odeBoxBox(Eigen::Matrix4d::Identity(), ToEigen(vec3d(100, 0.5, 100)), E_i_k_1, ToEigen(particle->Extent));
+		Contacts const c = odeBoxBox(Eigen::Matrix4d::Identity(), ToEigen(vec3d(100, 0.5, 100)), E_i_k_1, ToEigen(particle->Extent));
 		if (c.count > 0)
 		{
-			vec3d const Velocity = particle->vFrames.back();
-			vec3d const Normal = ToIon3D(c.normal);
-
-			double const DotProduct = Dot(Normal, Velocity);
-
-			if (DotProduct > 0)
-			{
-				//Velocity -= 2 * DotProduct * Normal;
-
-				//particle->wFrames.back() *= -1;
-				//particle->vFrames.back() = Velocity;
-
-			}
-
-			//glm::mat4 m = ToGLM(particle->PositionFrames.back());
-			//m = glm::translate(m, (Normal * c.depths[0]).ToGLM());
-			//particle->PositionFrames.back() = ToEigen(m);
-
-			particle->wFrames.back() *= -1;
-			particle->vFrames.back() *= -1;
-			//particle->vFrames.back() -= 2 * Normal * Dot(Velocity.GetNormalized(), Normal);
 		}
 		SystemMutex.unlock();
-
-		//if (! particle->IsFixed)
-		//{
-		//	particle->VelocityFrames.push_back(ToIon2D(Result.segment(particle->Index, 2)));
-
-		//	//if (particle->ConstraintType == EConstraintType::XAxis)
-		//	//{
-		//	//	particle->VelocityFrames.back() *= vec2d(1, 0);
-		//	//}
-		//	//else if (particle->ConstraintType == EConstraintType::YAxis)
-		//	//{
-		//	//	particle->VelocityFrames.back() *= vec2d(0, 1);
-		//	//}
-		//	//else if (particle->ConstraintType == EConstraintType::DownDiagonal)
-		//	//{
-		//	//	vec2d const Vector = vec2d(1, -1);
-		//	//	particle->VelocityFrames.back() = Dot(particle->VelocityFrames.back(), Vector) * Vector.GetNormalized();
-		//	//}
-		//	//else if (particle->ConstraintType == EConstraintType::UpDiagonal)
-		//	//{
-		//	//	vec2d const Vector = vec2d(1, 1);
-		//	//	particle->VelocityFrames.back() = Dot(particle->VelocityFrames.back(), Vector) * Vector.GetNormalized();
-		//	//}
-
-		//	particle->PositionFrames.push_back(particle->PositionFrames.back() + TimeDelta * particle->VelocityFrames.back());
-
-		//	for (size_t i = 0; i < Planes.size(); ++ i)
-		//	{
-		//		SPlane const & Plane = Planes[i];
-
-		//		double const Distance = Dot(particle->PositionFrames.back(), Plane.Normal);
-
-		//		if (Distance < Plane.Distance)
-		//		{
-		//			particle->PositionFrames.back() += Plane.Normal * (Plane.Distance - Distance);
-		//			particle->VelocityFrames.back() -= Plane.Normal * Dot(particle->VelocityFrames.back().GetNormalized(), Plane.Normal);
-		//		}
-		//	}
-
-		//}
-		//else
-		//{
-		//	particle->VelocityFrames.push_back(0);
-		//	particle->PositionFrames.push_back(particle->PositionFrames.back());
-		//}
 	}
 }
 
