@@ -333,13 +333,31 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	//cout << Result << endl;
 	//cout << endl;
 
+	int const n = 6 * (int) Boxes.size();
+
+	Eigen::MatrixXd M;
+	Eigen::VectorXd f;
+	Eigen::VectorXd v;
+
+	M.resize(n, n);
+	M.setZero();
+
+	f.resize(n);
+	f.setZero();
+
+	v.resize(n);
+	v.setZero();
+
 	for (SBox * particle : Boxes)
 	{
+		SBox * box = particle;
+
 		Eigen::Matrix6d const M_i = Diagonal(particle->Mass);
 
+		M.block<6, 6>(box->Index, box->Index) = M_i;
+
 		SystemMutex.lock();
-		Eigen::VectorXd Phi_i_k;
-		Phi_i_k.resize(6);
+		Eigen::Vector6d Phi_i_k;
 		Phi_i_k.setZero();
 		Phi_i_k(0) = particle->wFrames.back().X;
 		Phi_i_k(1) = particle->wFrames.back().Y;
@@ -350,8 +368,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		double const h = TimeDelta;
 
-		Eigen::MatrixXd Phi_i_bracket_k;
-		Phi_i_bracket_k.resize(6, 6);
+		Eigen::Matrix6d Phi_i_bracket_k;
 		Phi_i_bracket_k.setZero();
 		Phi_i_bracket_k.block<3, 3>(0, 0) = Rigid::bracket3(ToEigen(particle->wFrames.back()));
 		Phi_i_bracket_k.block<3, 3>(3, 3) = Rigid::bracket3(ToEigen(particle->wFrames.back()));
@@ -362,13 +379,12 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Eigen::Matrix3d const Theta_i_T = ThetaFromE(particle->PositionFrames.back()).transpose();
 		SystemMutex.unlock();
 
-		Eigen::VectorXd B_E_i_k;
-		B_E_i_k.resize(6);
+		Eigen::Vector6d B_E_i_k;
 		B_E_i_k.setZero();
 		B_E_i_k.segment(3, 3) = (Theta_i_T * particle->m * Acceleration);
 
-		Eigen::MatrixXd const A = M_i;
-		Eigen::VectorXd const b = M_i * Phi_i_k + h * (Phi_i_bracket_k.transpose() * M_i * Phi_i_k + B_E_i_k);
+		Eigen::Matrix6d const A = M_i;
+		Eigen::Vector6d const b = M_i * Phi_i_k + h * (Phi_i_bracket_k.transpose() * M_i * Phi_i_k + B_E_i_k);
 
 		//cout << "A =" << endl;
 		//cout << A << endl;
@@ -377,7 +393,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		//cout << b << endl;
 		//cout << endl;
 
-		Eigen::VectorXd const Phi_i_k_1 = A.ldlt().solve(b);
+		Eigen::Vector6d const Phi_i_k_1 = A.ldlt().solve(b);
 
 		Eigen::Vector3d const w_k_1 = Phi_i_k_1.segment(0, 3);
 		Eigen::Vector3d const v_k_1 = Phi_i_k_1.segment(3, 3);
