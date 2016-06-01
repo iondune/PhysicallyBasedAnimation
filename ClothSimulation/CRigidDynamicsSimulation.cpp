@@ -44,13 +44,20 @@ void CRigidDynamicsSimulation::Setup()
 
 	vec3d Center = Settings.Center;
 	vec3d Size = Settings.Size;
+	double const Mass = 0.2;
 
 	SBox * p = new SBox();
 	p->Extent = Size;
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center));
 	p->wFrames.push_back(vec3d(1, 0, 0));
 	p->vFrames.push_back(0);
-	p->Mass = 0.2f;
+	p->Mass(0) = (1.0 / 12.0) * Mass * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * Mass * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * Mass * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = Mass;
+	p->Mass(4) = Mass;
+	p->Mass(5) = Mass;
+	p->m = Mass;
 	Boxes.push_back(p);
 
 	p = new SBox();
@@ -58,8 +65,14 @@ void CRigidDynamicsSimulation::Setup()
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.2, 0, 0.4)));
 	p->wFrames.push_back(vec3d(2, 0, 0));
 	p->vFrames.push_back(vec3d(0, 1, 0));
-	p->Mass = 0.2f;
+	p->Mass(0) = (1.0 / 12.0) * Mass * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * Mass * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * Mass * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = Mass;
+	p->Mass(4) = Mass;
+	p->Mass(5) = Mass;
 	p->Color = Colors::Green;
+	p->m = Mass;
 	Boxes.push_back(p);
 
 	p = new SBox();
@@ -67,8 +80,14 @@ void CRigidDynamicsSimulation::Setup()
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.3, 0, 0)));
 	p->wFrames.push_back(vec3d(5, 0, 5));
 	p->vFrames.push_back(vec3d(0, 0, 1));
-	p->Mass = 0.2f;
+	p->Mass(0) = (1.0 / 12.0) * Mass * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * Mass * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * Mass * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = Mass;
+	p->Mass(4) = Mass;
+	p->Mass(5) = Mass;
 	p->Color = Colors::Blue;
+	p->m = Mass;
 	Boxes.push_back(p);
 
 	p = new SBox();
@@ -76,8 +95,14 @@ void CRigidDynamicsSimulation::Setup()
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0, 0.2, -0.5)));
 	p->wFrames.push_back(vec3d(0, 0, 2));
 	p->vFrames.push_back(vec3d(1, 0, 0));
-	p->Mass = 0.2f;
+	p->Mass(0) = (1.0 / 12.0) * Mass * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * Mass * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * Mass * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = Mass;
+	p->Mass(4) = Mass;
+	p->Mass(5) = Mass;
 	p->Color = Colors::Magenta;
+	p->m = Mass;
 	Boxes.push_back(p);
 
 
@@ -169,6 +194,19 @@ Eigen::Vector3d pFromE(Eigen::Matrix4d const & m)
 		p(i) = m(i, 3);
 	}
 	return p;
+}
+
+Eigen::Matrix6d Diagonal(Eigen::Vector6d const & v)
+{
+	Eigen::Matrix6d M;
+	M.setIdentity();
+
+	for (int i = 0; i < 6; ++ i)
+	{
+		M(i, i) = v(i);
+	}
+
+	return M;
 }
 
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
@@ -283,11 +321,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 	for (SBox * particle : Boxes)
 	{
-		Eigen::MatrixXd M_i;
-		M_i.resize(6, 6);
-		M_i.setZero();
-		M_i.setIdentity();
-		M_i *= particle->Mass;
+		Eigen::Matrix6d const M_i = Diagonal(particle->Mass);
 
 		SystemMutex.lock();
 		Eigen::VectorXd Phi_i_k;
@@ -309,7 +343,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Phi_i_bracket_k.block<3, 3>(3, 3) = Rigid::bracket3(ToEigen(particle->wFrames.back()));
 		Phi_i_bracket_k.block<3, 3>(3, 0) = Rigid::bracket3(ToEigen(particle->vFrames.back()));
 
-		float const m = particle->Mass;
 		Eigen::Vector3d const p_i = pFromE(particle->PositionFrames.back());
 		Eigen::Vector3d const Acceleration = ToEigen(Gravity);
 		Eigen::Matrix3d const Theta_i_T = ThetaFromE(particle->PositionFrames.back()).transpose();
@@ -318,7 +351,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Eigen::VectorXd B_E_i_k;
 		B_E_i_k.resize(6);
 		B_E_i_k.setZero();
-		B_E_i_k.segment(3, 3) = (Theta_i_T * m * Acceleration);
+		B_E_i_k.segment(3, 3) = (Theta_i_T * particle->m * Acceleration);
 
 		Eigen::MatrixXd const A = M_i;
 		Eigen::VectorXd const b = M_i * Phi_i_k + h * (Phi_i_bracket_k.transpose() * M_i * Phi_i_k + B_E_i_k);
@@ -403,7 +436,7 @@ void CRigidDynamicsSimulation::GUI()
 	{
 		if (ImGui::Begin("Rigid Body Info"))
 		{
-			ImGui::SetWindowSize(ImVec2(350, 150), ImGuiSetCond_Once);
+			ImGui::SetWindowSize(ImVec2(425, 250), ImGuiSetCond_Once);
 			ImGui::SetWindowPos(ImVec2(1000, 350), ImGuiSetCond_Once);
 			vec4f position(0, 0, 0, 1);
 			vec4f scale(1, 1, 1, 0);
@@ -411,6 +444,9 @@ void CRigidDynamicsSimulation::GUI()
 			scale.Transform(ToGLM(SelectedParticle->PositionFrames[VisibleFrame]));
 			ImGui::Text("Position: %.3f %.3f %.3f", position.X, position.Y, position.Z);
 			ImGui::Text("Scale: %.3f %.3f %.3f", scale.X, scale.Y, scale.Z);
+			ImGui::Text("Mass: %.5f %.5f %.5f %.5f %.5f %.5f",
+				SelectedParticle->Mass(0), SelectedParticle->Mass(1), SelectedParticle->Mass(2),
+				SelectedParticle->Mass(3), SelectedParticle->Mass(4), SelectedParticle->Mass(5));
 			vec3f l_vel = SelectedParticle->vFrames[VisibleFrame];
 			ImGui::Text("Linear Velocity: %.3f %.3f %.3f", l_vel.X, l_vel.Y, l_vel.Z);
 			vec3f a_vel = SelectedParticle->wFrames[VisibleFrame];

@@ -27,7 +27,8 @@ public:
 	struct SBox
 	{
 		vec3d Extent;
-		float Mass;
+		Eigen::Vector6d Mass;
+		double m;
 		color3f Color = Colors::Red;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
