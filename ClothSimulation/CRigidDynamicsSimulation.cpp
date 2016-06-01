@@ -24,6 +24,12 @@ Eigen::Matrix4d RotateAndTranslateToMatrix(vec3f const & Rotation, vec3f const &
 	return ToEigen(Transformation);
 }
 
+Eigen::VectorXd quadprog(Eigen::MatrixXd const & H, Eigen::VectorXd const & f, Eigen::MatrixXd const & A, Eigen::VectorXd const & b, Eigen::VectorXd const & x0)
+{
+	//return H.ldlt().solve(f);
+	return MosekSolver::Solve(H, f, A, b, x0);
+}
+
 CRigidDynamicsSimulation::CRigidDynamicsSimulation()
 {}
 
@@ -137,6 +143,40 @@ void CRigidDynamicsSimulation::Setup()
 
 	AddSceneObjects();
 	UpdateSceneObjects(0);
+
+
+
+	//////// Mosek Test
+	Eigen::Matrix2d H;
+	H(0, 0) = 1;
+	H(0, 1) = -1;
+	H(1, 0) = -1;
+	H(1, 1) = 2;
+
+	Eigen::Vector2d f;
+	f(0) = -2;
+	f(1) = -6;
+
+	Eigen::Matrix<double, 3, 2> A;
+	A(0, 0) = 1;
+	A(0, 1) = 1;
+	A(1, 0) = -1;
+	A(1, 1) = 2;
+	A(2, 0) = 2;
+	A(2, 1) = 1;
+
+	Eigen::Vector3d b;
+	b(0) = 2;
+	b(1) = 2;
+	b(2) = 3;
+
+	Eigen::Vector2d x0;
+	x0.setZero();
+
+	cout << "H=" << H << endl;
+	cout << "A=" << A << endl;
+	cout << quadprog(H, f, A, b, x0) << endl;
+	cout << "---" << endl;
 }
 
 Eigen::Matrix4d ToEigen(glm::mat4 const & m)
@@ -202,12 +242,6 @@ Eigen::Matrix6d Diagonal(Eigen::Vector6d const & v)
 	}
 
 	return M;
-}
-
-Eigen::VectorXd quadprog(Eigen::MatrixXd const & H, Eigen::VectorXd const & f, Eigen::MatrixXd const & A, Eigen::VectorXd const & b, Eigen::VectorXd const & x0)
-{
-	//return H.ldlt().solve(f);
-	return MosekSolver::Solve(H, f, A, b, x0);
 }
 
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
