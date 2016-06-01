@@ -335,6 +335,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 	int const n = 6 * (int) Boxes.size();
 	double const h = TimeDelta;
+	double const damping = 0.7;
 
 	Eigen::MatrixXd M;
 	Eigen::VectorXd f;
@@ -350,50 +351,47 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	v.setZero();
 
 	SystemMutex.lock();
-	for (SBox * particle : Boxes)
+	for (SBox const * const Box : Boxes)
 	{
-		SBox * box = particle;
+		Eigen::Matrix6d const M_i = Diagonal(Box->Mass);
 
-		Eigen::Matrix6d const M_i = Diagonal(particle->Mass);
-
-		M.block<6, 6>(box->Index, box->Index) = M_i;
+		M.block<6, 6>(Box->Index, Box->Index) = M_i;
 
 		Eigen::Vector6d Phi_i_k;
 		Phi_i_k.setZero();
-		Phi_i_k(0) = particle->wFrames.back().X;
-		Phi_i_k(1) = particle->wFrames.back().Y;
-		Phi_i_k(2) = particle->wFrames.back().Z;
-		Phi_i_k(3) = particle->vFrames.back().X;
-		Phi_i_k(4) = particle->vFrames.back().Y;
-		Phi_i_k(5) = particle->vFrames.back().Z;
+		Phi_i_k(0) = Box->wFrames.back().X;
+		Phi_i_k(1) = Box->wFrames.back().Y;
+		Phi_i_k(2) = Box->wFrames.back().Z;
+		Phi_i_k(3) = Box->vFrames.back().X;
+		Phi_i_k(4) = Box->vFrames.back().Y;
+		Phi_i_k(5) = Box->vFrames.back().Z;
 
-		v.segment(box->Index, 6) = Phi_i_k;
+		v.segment(Box->Index, 6) = Phi_i_k;
 
 		Eigen::Matrix6d Phi_i_bracket_k;
 		Phi_i_bracket_k.setZero();
-		Phi_i_bracket_k.block<3, 3>(0, 0) = Rigid::bracket3(ToEigen(particle->wFrames.back()));
-		Phi_i_bracket_k.block<3, 3>(3, 3) = Rigid::bracket3(ToEigen(particle->wFrames.back()));
-		Phi_i_bracket_k.block<3, 3>(3, 0) = Rigid::bracket3(ToEigen(particle->vFrames.back()));
+		Phi_i_bracket_k.block<3, 3>(0, 0) = Rigid::bracket3(ToEigen(Box->wFrames.back()));
+		Phi_i_bracket_k.block<3, 3>(3, 3) = Rigid::bracket3(ToEigen(Box->wFrames.back()));
+		Phi_i_bracket_k.block<3, 3>(3, 0) = Rigid::bracket3(ToEigen(Box->vFrames.back()));
 
 		Eigen::Vector3d const Acceleration = ToEigen(Gravity);
-		Eigen::Matrix3d const Theta_i_T = ThetaFromE(particle->PositionFrames.back()).transpose();
+		Eigen::Matrix3d const Theta_i_T = ThetaFromE(Box->PositionFrames.back()).transpose();
 
-		Eigen::Vector3d const BodyForces = Theta_i_T * particle->m * Acceleration;
+		Eigen::Vector3d const BodyForces = Theta_i_T * Box->m * Acceleration;
 		Eigen::Vector6d const Coriolis = Phi_i_bracket_k.transpose() * M_i * Phi_i_k;
 
-		f.segment(box->Index, 6) += Coriolis;
-		f.segment(box->Index + 3, 3) += BodyForces;
+		f.segment(Box->Index, 6) += Coriolis;
+		f.segment(Box->Index + 3, 3) += BodyForces;
 		
-		Eigen::Matrix4d const E_i_k = particle->PositionFrames.back();
+		Eigen::Matrix4d const E_i_k = Box->PositionFrames.back();
 
-		Contacts const c = odeBoxBox(Eigen::Matrix4d::Identity(), ToEigen(vec3d(100, 0.5, 100)), E_i_k, ToEigen(particle->Extent));
+		Contacts const c = odeBoxBox(Eigen::Matrix4d::Identity(), ToEigen(vec3d(100, 0.5, 100)), E_i_k, ToEigen(Box->Extent));
 		if (c.count > 0)
 		{
 		}
 	}
 	SystemMutex.unlock();
 
-	double const damping = 0.7;
 
 	Eigen::MatrixXd const spMtilde = M + h*damping*M;
 	Eigen::VectorXd const ftilde = M*v + h*f;
@@ -401,26 +399,24 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	Eigen::VectorXd const NewV = spMtilde.ldlt().solve(ftilde);
 
 	SystemMutex.lock();
-	for (SBox * particle : Boxes)
+	for (SBox * const Box : Boxes)
 	{
-		SBox * box = particle;
-
-		Eigen::Vector6d const Phi_i_k_1 = NewV.segment(box->Index, 6);
+		Eigen::Vector6d const Phi_i_k_1 = NewV.segment(Box->Index, 6);
 
 		Eigen::Vector3d const w_k_1 = Phi_i_k_1.segment(0, 3);
 		Eigen::Vector3d const v_k_1 = Phi_i_k_1.segment(3, 3);
 
 		Eigen::Matrix4d E_i_k;
 		E_i_k.setZero();
-		E_i_k = particle->PositionFrames.back();
+		E_i_k = Box->PositionFrames.back();
 
 		Eigen::Matrix4d E_i_k_1;
 		E_i_k_1.setZero();
 		E_i_k_1 = Rigid::integrate(E_i_k, Phi_i_k_1, h);
 
-		box->wFrames.push_back(ToIon3D(w_k_1));
-		box->vFrames.push_back(ToIon3D(v_k_1));
-		box->PositionFrames.push_back((E_i_k_1));
+		Box->wFrames.push_back(ToIon3D(w_k_1));
+		Box->vFrames.push_back(ToIon3D(v_k_1));
+		Box->PositionFrames.push_back((E_i_k_1));
 	}
 	SystemMutex.unlock();
 }
