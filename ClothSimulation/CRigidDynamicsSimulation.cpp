@@ -143,42 +143,6 @@ void CRigidDynamicsSimulation::Setup()
 
 	AddSceneObjects();
 	UpdateSceneObjects(0);
-
-
-
-	//////// Mosek Test
-	Eigen::Matrix2d H;
-	H(0, 0) = 1;
-	H(0, 1) = -1;
-	H(1, 0) = -1;
-	H(1, 1) = 2;
-
-	Eigen::Vector2d f;
-	f(0) = -2;
-	f(1) = -6;
-
-	Eigen::Matrix<double, 3, 2> A;
-	A(0, 0) = 1;
-	A(0, 1) = 1;
-	A(1, 0) = -1;
-	A(1, 1) = 2;
-	A(2, 0) = 2;
-	A(2, 1) = 1;
-
-	Eigen::Vector3d b;
-	b(0) = 2;
-	b(1) = 2;
-	b(2) = 3;
-
-	Eigen::Vector2d x0;
-	x0.setZero();
-
-	cout << "H=" << endl << H << endl << endl;
-	cout << "f=" << endl << f << endl << endl;
-	cout << "A=" << endl << A << endl << endl;
-	cout << "b=" << endl << b << endl << endl;
-	cout << quadprog(H, f, A, b, x0) << endl;
-	cout << "---" << endl;
 }
 
 Eigen::Matrix4d ToEigen(glm::mat4 const & m)
