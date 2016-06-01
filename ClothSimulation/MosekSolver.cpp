@@ -124,18 +124,18 @@ Eigen::VectorXd  MosekSolver::Solve(Eigen::MatrixXd const & Q0, Eigen::VectorXd 
 			MSKrealt * RowValuesA = new MSKrealt[NumNonZeroA];
 
 			uint Index = 0;
-			printf("column j=%d of A contains...\n", j);
+			//printf("column j=%d of A contains...\n", j);
 			for (i = 0; i < NUMCON; ++ i)
 			{
 				if (A(i, j) != 0)
 				{
 					RowIndicesA[Index] = i;
 					RowValuesA[Index] = A(i, j);
-					printf("A(%d, %d) = %.6f\n", i, j, A(i, j));
+					//printf("A(%d, %d) = %.6f\n", i, j, A(i, j));
 					Index ++;
 				}
 			}
-			printf("\n");
+			//printf("\n");
 			assert(Index == NumNonZeroA);
 
 								 /* Input column j of A */
@@ -174,12 +174,12 @@ Eigen::VectorXd  MosekSolver::Solve(Eigen::MatrixXd const & Q0, Eigen::VectorXd 
 					if (Value != 0)
 					{
 						qsubi[NonZeroIndexInQ0] = i;   qsubj[NonZeroIndexInQ0] = j;  qval[NonZeroIndexInQ0] = Value;
-						printf("Q0(%d, %d) = %.6f\n", i, j, Value);
+						//printf("Q0(%d, %d) = %.6f\n", i, j, Value);
 						NonZeroIndexInQ0 ++;
 					}
 				}
 			}
-			printf("\n");
+			//printf("\n");
 			assert(NonZeroIndexInQ0 == NUMQNZ);
 
 			/* Input the Q for the objective. */
