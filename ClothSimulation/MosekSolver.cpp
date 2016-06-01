@@ -31,7 +31,6 @@ int CountNonZeroSymmetric(Eigen::MatrixXd const & m)
 }
 
 Eigen::VectorXd  MosekSolver::Solve(Eigen::MatrixXd const & Q0, Eigen::VectorXd const & c, Eigen::MatrixXd const & A, Eigen::VectorXd const & b, Eigen::VectorXd const & x0)
-//Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd const & c, vector<vector<double>> const & A)
 {
 	Eigen::VectorXd ReturnValue;
 
