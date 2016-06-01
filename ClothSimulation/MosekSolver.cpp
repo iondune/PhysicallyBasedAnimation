@@ -87,7 +87,7 @@ Eigen::VectorXd  MosekSolver::Solve(Eigen::MatrixXd const & Q0, Eigen::VectorXd 
 		if (r == MSK_RES_OK)
 		{
 			MSKrealt * xc = new MSKrealt[NUMVAR];
-			for (int i = 0; i < NUMVAR; ++ i)
+			for (i = 0; i < NUMVAR; ++ i)
 				xc[i] = x0(i);
 			r = MSK_putxc(task, MSK_SOL_BEGIN, xc);
 		}
@@ -162,10 +162,10 @@ Eigen::VectorXd  MosekSolver::Solve(Eigen::MatrixXd const & Q0, Eigen::VectorXd 
 			*/
 
 			uint NonZeroIndexInQ0 = 0;
-			for (int i = 0; i < Q0.rows(); ++ i)
+			for (i = 0; i < Q0.rows(); ++ i)
 			{
 				double ProductSum = 0;
-				for (int j = 0; j <= i; ++ j)
+				for (j = 0; j <= i; ++ j)
 				{
 					double const Value = Q0(i, j);
 					if (Value != 0)
