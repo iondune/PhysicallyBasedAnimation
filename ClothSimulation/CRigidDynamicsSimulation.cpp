@@ -232,7 +232,8 @@ Eigen::Matrix6d Diagonal(Eigen::Vector6d const & v)
 
 Eigen::VectorXd quadprog(Eigen::MatrixXd const & H, Eigen::VectorXd const & f, Eigen::MatrixXd const & A, Eigen::VectorXd const & b, Eigen::VectorXd const & x0)
 {
-	return H.ldlt().solve(-f);
+	//return H.ldlt().solve(f);
+	return MosekSolver::Solve(H, f, A, b, x0);
 }
 
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
@@ -457,7 +458,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Nv.resize(ContactsArray.size());
 		Nv = restitution * ContactMatrix * v;
 
-		NewV = quadprog(spMtilde, -ftilde, ContactMatrix, Nv, v);
+		NewV = quadprog(spMtilde, ftilde, ContactMatrix, Nv, v);
 	}
 	else
 	{

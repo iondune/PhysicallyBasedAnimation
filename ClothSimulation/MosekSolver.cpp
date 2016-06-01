@@ -10,7 +10,28 @@ static void MSKAPI printstr(void *handle, MSKCONST char str[])
 	printf("%s", str);
 }
 
-Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd const & c, vector<vector<double>> const & A)
+int CountNonZeroSymmetric(Eigen::MatrixXd const & m)
+{
+	uint NonZero = 0;
+
+	assert(m.rows() == m.cols());
+	//assert(IsSymmetric(m));
+
+	for (int i = 0; i < m.rows(); ++ i)
+	{
+		double ProductSum = 0;
+		for (int j = 0; j <= i; ++ j)
+		{
+			if (m(i, j) != 0)
+				NonZero ++;
+		}
+	}
+
+	return NonZero;
+}
+
+Eigen::VectorXd  MosekSolver::Solve(Eigen::MatrixXd const & Q0, Eigen::VectorXd const & c, Eigen::MatrixXd const & A, Eigen::VectorXd const & b, Eigen::VectorXd const & x0)
+//Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd const & c, vector<vector<double>> const & A)
 {
 	Eigen::VectorXd ReturnValue;
 
@@ -19,11 +40,12 @@ Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd co
 		Init();
 	}
 
-	assert(Q0.Size == c.size());
+	assert(Q0.rows() == c.size());
+	assert(Q0.rows() == Q0.cols());
 
-	int const NUMCON = (int) A.size();
-	int const NUMVAR = Q0.Size;
-	int const NUMQNZ = Q0.CountNonZeroSymmetric();
+	int const NUMCON = (int) A.rows();
+	int const NUMVAR = (int) Q0.rows();
+	int const NUMQNZ = CountNonZeroSymmetric(Q0);
 
 	ReturnValue.resize(NUMVAR);
 
@@ -44,10 +66,7 @@ Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd co
 	MSKtask_t     task = NULL;
 	MSKrescodee   r;
 
-	for (i = 0; i < NUMCON; ++ i)
-	{
-		assert(A[i].size() == NUMVAR);
-	}
+	assert(A.cols() == NUMVAR);
 
 	/* Create the optimization task. */
 	r = MSK_maketask(env, NUMCON, NUMVAR, &task);
@@ -88,7 +107,7 @@ Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd co
 
 			for (i = 0; i < NUMCON; ++ i)
 			{
-				if (A[i][j] != 0)
+				if (A(i, j) != 0)
 				{
 					NumNonZeroA ++;
 				}
@@ -100,10 +119,10 @@ Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd co
 			uint Index = 0;
 			for (i = 0; i < NUMCON; ++ i)
 			{
-				if (A[i][j] != 0)
+				if (A(i, j) != 0)
 				{
 					RowIndicesA[Index] = i;
-					RowValuesA[Index] = A[i][j];
+					RowValuesA[Index] = A(i, j);
 					Index ++;
 				}
 			}
@@ -136,12 +155,12 @@ Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd co
 			*/
 
 			uint NonZeroIndexInQ0 = 0;
-			for (int i = 0; i < Q0.Size; ++ i)
+			for (int i = 0; i < Q0.rows(); ++ i)
 			{
 				double ProductSum = 0;
 				for (int j = 0; j <= i; ++ j)
 				{
-					double Value = Q0.Get(i, j);
+					double const Value = Q0(i, j);
 					if (Value != 0)
 					{
 						qsubi[NonZeroIndexInQ0] = i;   qsubj[NonZeroIndexInQ0] = j;  qval[NonZeroIndexInQ0] = Value;
