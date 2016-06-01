@@ -357,6 +357,15 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	v.resize(n);
 	v.setZero();
 
+	struct SContactStore
+	{
+		vec3d Position;
+		vec3d Normal;
+		SBox * Which = nullptr;
+	};
+
+	vector<SContactStore> ContactsArray;
+
 	SystemMutex.lock();
 	for (SBox * const Box : Boxes)
 	{
@@ -402,6 +411,14 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		if (c.count > 0)
 		{
 			Box->contactFrames.back().push_back(c);
+			for (int i = 0; i < c.count; ++ i)
+			{
+				SContactStore Store;
+				Store.Which = Box;
+				Store.Normal = ToIon3D(c.normal);
+				Store.Position = ToIon3D(c.positions[i]);
+				ContactsArray.push_back(Store);
+			}
 		}
 	}
 	SystemMutex.unlock();
@@ -410,7 +427,32 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	Eigen::MatrixXd const spMtilde = M + h*damping*M;
 	Eigen::VectorXd const ftilde = M*v + h*f;
 
-	Eigen::VectorXd const NewV = spMtilde.ldlt().solve(ftilde);
+	Eigen::VectorXd NewV;
+	if (ContactsArray.size())
+	{
+		Eigen::MatrixXd ContactMatrix;
+		ContactMatrix.resize(ContactsArray.size(), n);
+		ContactMatrix.setZero();
+
+		for (int i = 0; i < ContactsArray.size(); ++ i)
+		{
+			auto C = ContactsArray[i];
+			Eigen::Vector3d const nw = ToEigen(C.Normal);
+			Eigen::Matrix4d const E = C.Which->PositionFrames.back();
+			Eigen::Vector4d const xw = Eigen::Vector4d(C.Position.X, C.Position.Y, C.Position.Z, 1.0);
+			Eigen::Vector4d const xa = E.ldlt().solve(xw);
+
+			Eigen::Matrix<double, 1, 6> const ContactRow = nw.transpose() * ThetaFromE(C.Which->PositionFrames.back()) * Rigid::gamma(xa.segment(0, 3));
+
+			ContactMatrix.block<1, 6>(i, C.Which->Index) = ContactRow;
+		}
+
+		NewV = spMtilde.ldlt().solve(ftilde);
+	}
+	else
+	{
+		NewV = spMtilde.ldlt().solve(ftilde);
+	}
 
 	SystemMutex.lock();
 	for (SBox * const Box : Boxes)
