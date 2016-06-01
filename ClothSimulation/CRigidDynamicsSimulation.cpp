@@ -73,7 +73,7 @@ void CRigidDynamicsSimulation::Setup()
 	p->Color = Colors::Red;
 	Boxes.push_back(p);
 
-	//n += 6;
+	n += 6;
 
 	p = new SBox();
 	p->Extent = Size * 2;
@@ -314,10 +314,10 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 			auto C = ContactsArray[i];
 			Eigen::Vector3d const nw = ToEigen(C.Normal);
 			Eigen::Matrix4d const E = C.Which->PositionFrames.back();
-			Eigen::Vector4d const xw = Eigen::Vector4d(C.Position.X, C.Position.Y, C.Position.Z, 1.0);
-			Eigen::Vector4d const xa = E.ldlt().solve(xw);
+			glm::mat4 const m = ToGLM(E);
+			vec3d const local = C.Position.GetTransformed(glm::inverse(m));
 
-			Eigen::Matrix<double, 1, 6> const ContactRow = nw.transpose() * ThetaFromE(C.Which->PositionFrames.back()) * Rigid::gamma(xa.segment(0, 3));
+			Eigen::Matrix<double, 1, 6> const ContactRow = nw.transpose() * ThetaFromE(C.Which->PositionFrames.back()) * Rigid::gamma(ToEigen(local));
 
 			ContactMatrix.block<1, 6>(i, C.Which->Index) = ContactRow;
 		}
@@ -326,7 +326,10 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Nv.resize(ContactsArray.size());
 		Nv = restitution * ContactMatrix * v;
 
-		NewV = quadprog(Mtilde, ftilde, ContactMatrix, Nv, v);
+		Eigen::VectorXd LinV = Mtilde.ldlt().solve(ftilde);
+		NewV = quadprog(Mtilde, -ftilde, -ContactMatrix, Nv, v);
+		cout << "Linear Solution=" << endl << LinV << endl;
+		cout << "QP Solution=" << endl << NewV << endl;
 	}
 	else
 	{

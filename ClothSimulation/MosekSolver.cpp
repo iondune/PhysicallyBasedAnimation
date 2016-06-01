@@ -153,9 +153,9 @@ Eigen::VectorXd  MosekSolver::Solve(Eigen::MatrixXd const & Q0, Eigen::VectorXd 
 		for (i = 0; i < NUMCON && r == MSK_RES_OK; ++i)
 			r = MSK_putconbound(task,
 				i,                  /* Index of constraint.*/
-				MSK_BK_LO,          /* Bound key.*/
-				b(i),               /* Numerical value of lower bound.*/
-				+MSK_INFINITY);     /* Numerical value of upper bound.*/
+				MSK_BK_UP,          /* Bound key.*/
+				-MSK_INFINITY,      /* Numerical value of lower bound.*/
+				b(i));              /* Numerical value of upper bound.*/
 
 		if (r == MSK_RES_OK)
 		{
