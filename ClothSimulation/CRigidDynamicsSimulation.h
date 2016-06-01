@@ -45,7 +45,7 @@ public:
 
 	struct SSettings
 	{
-		vec3d Center = vec3d(0, 0.25, 0);
+		vec3d Center = vec3d(0, 1.25, 0);
 		vec3d Size = vec3d(0.1, 0.05, 0.05);
 	};
 

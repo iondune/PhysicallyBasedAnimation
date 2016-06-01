@@ -4,6 +4,7 @@
 #include "Util.h"
 #include "SSparseMatrix.h"
 #include "MosekSolver.h"
+#include "odeBoxBox.h"
 
 #define EIGEN_DONT_ALIGN_STATICALLY
 #include <Eigen/Dense>
@@ -173,7 +174,7 @@ Eigen::Vector3d pFromE(Eigen::Matrix4d const & m)
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 {
 	static vec3d const Gravity = vec3d(0, -9.8, 0);
-	static vec3d const Fan = vec3d(0, 30.0, 0);
+	static vec3d const Fan = vec3d(0, 30.0, 0) * 0.0;
 
 	/*Eigen::VectorXd v;
 	v.resize(3);
@@ -352,6 +353,32 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		particle->wFrames.push_back(ToIon3D(w_k_1));
 		particle->vFrames.push_back(ToIon3D(v_k_1));
 		particle->PositionFrames.push_back((E_i_k_1));
+
+		Contacts c = odeBoxBox(Eigen::Matrix4d::Identity(), ToEigen(vec3d(100, 0.5, 100)), E_i_k_1, ToEigen(particle->Extent));
+		if (c.count > 0)
+		{
+			vec3d const Velocity = particle->vFrames.back();
+			vec3d const Normal = ToIon3D(c.normal);
+
+			double const DotProduct = Dot(Normal, Velocity);
+
+			if (DotProduct > 0)
+			{
+				//Velocity -= 2 * DotProduct * Normal;
+
+				//particle->wFrames.back() *= -1;
+				//particle->vFrames.back() = Velocity;
+
+			}
+
+			//glm::mat4 m = ToGLM(particle->PositionFrames.back());
+			//m = glm::translate(m, (Normal * c.depths[0]).ToGLM());
+			//particle->PositionFrames.back() = ToEigen(m);
+
+			particle->wFrames.back() *= -1;
+			particle->vFrames.back() *= -1;
+			//particle->vFrames.back() -= 2 * Normal * Dot(Velocity.GetNormalized(), Normal);
+		}
 		SystemMutex.unlock();
 
 		//if (! particle->IsFixed)
