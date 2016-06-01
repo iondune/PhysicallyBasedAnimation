@@ -401,7 +401,7 @@ void CRigidDynamicsSimulation::GUI()
 
 	if (SelectedParticle)
 	{
-		if (ImGui::Begin("Edit Cloth Node"))
+		if (ImGui::Begin("Rigid Body Info"))
 		{
 			ImGui::SetWindowSize(ImVec2(350, 150), ImGuiSetCond_Once);
 			ImGui::SetWindowPos(ImVec2(1000, 350), ImGuiSetCond_Once);
@@ -483,17 +483,18 @@ void CRigidDynamicsSimulation::PickParticle(ray3f const & Ray)
 	SelectedParticle = nullptr;
 	for (auto Particle : Boxes)
 	{
-		Particle->SceneObject->SetUniform("uColor", CUniform<color3f>(Colors::Red));
+		Particle->SceneObject->SetUniform("uColor", CUniform<color3f>(Particle->Color));
 	}
 	for (auto Particle : Boxes)
 	{
-		//vec3f const Center = Particle->PositionFrames[VisibleFrame];
-		//float const Radius = 0.025f;
+		vec3f Center;
+		Center.Transform(ToGLM(Particle->PositionFrames[VisibleFrame]), 1.f);
+		float const Radius = 0.125f;
 
-		//if (Ray.IntersectsSphere(Center, Radius))
+		if (Ray.IntersectsSphere(Center, Radius))
 		{
 			SelectedParticle = Particle;
-			Particle->SceneObject->SetUniform("uColor", CUniform<color3f>(Colors::Yellow));
+			Particle->SceneObject->SetUniform("uColor", CUniform<color3f>(Colors::White * 0.75f));
 			break;
 		}
 	}
