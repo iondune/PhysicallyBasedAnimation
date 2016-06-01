@@ -44,20 +44,20 @@ void CRigidDynamicsSimulation::Setup()
 
 	vec3d Center = Settings.Center;
 	vec3d Size = Settings.Size;
-	double const Mass = 0.2;
+	double const Density = 1e3;
 
 	SBox * p = new SBox();
 	p->Extent = Size;
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center));
 	p->wFrames.push_back(vec3d(1, 0, 0));
 	p->vFrames.push_back(0);
-	p->Mass(0) = (1.0 / 12.0) * Mass * Dot(p->Extent.YZ(), p->Extent.YZ());
-	p->Mass(1) = (1.0 / 12.0) * Mass * Dot(p->Extent.XZ(), p->Extent.XZ());
-	p->Mass(2) = (1.0 / 12.0) * Mass * Dot(p->Extent.XY(), p->Extent.XY());
-	p->Mass(3) = Mass;
-	p->Mass(4) = Mass;
-	p->Mass(5) = Mass;
-	p->m = Mass;
+	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
+	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = p->m;
+	p->Mass(4) = p->m;
+	p->Mass(5) = p->m;
 	Boxes.push_back(p);
 
 	p = new SBox();
@@ -65,14 +65,14 @@ void CRigidDynamicsSimulation::Setup()
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.2, 0, 0.4)));
 	p->wFrames.push_back(vec3d(2, 0, 0));
 	p->vFrames.push_back(vec3d(0, 1, 0));
-	p->Mass(0) = (1.0 / 12.0) * Mass * Dot(p->Extent.YZ(), p->Extent.YZ());
-	p->Mass(1) = (1.0 / 12.0) * Mass * Dot(p->Extent.XZ(), p->Extent.XZ());
-	p->Mass(2) = (1.0 / 12.0) * Mass * Dot(p->Extent.XY(), p->Extent.XY());
-	p->Mass(3) = Mass;
-	p->Mass(4) = Mass;
-	p->Mass(5) = Mass;
+	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
+	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = p->m;
+	p->Mass(4) = p->m;
+	p->Mass(5) = p->m;
 	p->Color = Colors::Green;
-	p->m = Mass;
 	Boxes.push_back(p);
 
 	p = new SBox();
@@ -80,14 +80,14 @@ void CRigidDynamicsSimulation::Setup()
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.3, 0, 0)));
 	p->wFrames.push_back(vec3d(5, 0, 5));
 	p->vFrames.push_back(vec3d(0, 0, 1));
-	p->Mass(0) = (1.0 / 12.0) * Mass * Dot(p->Extent.YZ(), p->Extent.YZ());
-	p->Mass(1) = (1.0 / 12.0) * Mass * Dot(p->Extent.XZ(), p->Extent.XZ());
-	p->Mass(2) = (1.0 / 12.0) * Mass * Dot(p->Extent.XY(), p->Extent.XY());
-	p->Mass(3) = Mass;
-	p->Mass(4) = Mass;
-	p->Mass(5) = Mass;
+	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
+	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = p->m;
+	p->Mass(4) = p->m;
+	p->Mass(5) = p->m;
 	p->Color = Colors::Blue;
-	p->m = Mass;
 	Boxes.push_back(p);
 
 	p = new SBox();
@@ -95,14 +95,14 @@ void CRigidDynamicsSimulation::Setup()
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0, 0.2, -0.5)));
 	p->wFrames.push_back(vec3d(0, 0, 2));
 	p->vFrames.push_back(vec3d(1, 0, 0));
-	p->Mass(0) = (1.0 / 12.0) * Mass * Dot(p->Extent.YZ(), p->Extent.YZ());
-	p->Mass(1) = (1.0 / 12.0) * Mass * Dot(p->Extent.XZ(), p->Extent.XZ());
-	p->Mass(2) = (1.0 / 12.0) * Mass * Dot(p->Extent.XY(), p->Extent.XY());
-	p->Mass(3) = Mass;
-	p->Mass(4) = Mass;
-	p->Mass(5) = Mass;
+	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
+	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = p->m;
+	p->Mass(4) = p->m;
+	p->Mass(5) = p->m;
 	p->Color = Colors::Magenta;
-	p->m = Mass;
 	Boxes.push_back(p);
 
 
