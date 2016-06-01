@@ -173,8 +173,10 @@ void CRigidDynamicsSimulation::Setup()
 	Eigen::Vector2d x0;
 	x0.setZero();
 
-	cout << "H=" << H << endl;
-	cout << "A=" << A << endl;
+	cout << "H=" << endl << H << endl << endl;
+	cout << "f=" << endl << f << endl << endl;
+	cout << "A=" << endl << A << endl << endl;
+	cout << "b=" << endl << b << endl << endl;
 	cout << quadprog(H, f, A, b, x0) << endl;
 	cout << "---" << endl;
 }
