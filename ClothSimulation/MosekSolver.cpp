@@ -40,7 +40,7 @@ Eigen::VectorXd  MosekSolver::Solve(SSparseMatrix const & Q0, Eigen::VectorXd co
 	MSKint32t     i, j;
 	double * xx = new double[NUMVAR];
 
-	MSKenv_t      env = NULL;
+	MSKenv_t      env = Environment;
 	MSKtask_t     task = NULL;
 	MSKrescodee   r;
 
