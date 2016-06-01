@@ -117,7 +117,7 @@ void CApplication::SetupScene()
 	SceneManager->AddRenderPass(RenderPass);
 
 	FreeCamera = new CPerspectiveCamera(Window->GetAspectRatio());
-	FreeCamera->SetPosition(vec3f(0, 0.25f, 1));
+	FreeCamera->SetPosition(vec3f(0, 0.25f, 4));
 	FreeCamera->SetFocalLength(0.4f);
 	FreeCamera->SetFarPlane(10000.f);
 
