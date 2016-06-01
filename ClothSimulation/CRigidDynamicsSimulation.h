@@ -30,6 +30,7 @@ public:
 		Eigen::Vector6d Mass;
 		double m;
 		color3f Color = Colors::Red;
+		int Index = 0;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 		

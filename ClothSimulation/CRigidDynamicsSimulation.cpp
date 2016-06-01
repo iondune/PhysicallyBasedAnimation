@@ -46,6 +46,8 @@ void CRigidDynamicsSimulation::Setup()
 	vec3d Size = Settings.Size;
 	double const Density = 1e3;
 
+	int n = 0;
+
 	SBox * p = new SBox();
 	p->Extent = Size;
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center));
@@ -58,7 +60,10 @@ void CRigidDynamicsSimulation::Setup()
 	p->Mass(3) = p->m;
 	p->Mass(4) = p->m;
 	p->Mass(5) = p->m;
+	p->Index = n;
 	Boxes.push_back(p);
+
+	n += 6;
 
 	p = new SBox();
 	p->Extent = Size * 2;
@@ -72,8 +77,11 @@ void CRigidDynamicsSimulation::Setup()
 	p->Mass(3) = p->m;
 	p->Mass(4) = p->m;
 	p->Mass(5) = p->m;
+	p->Index = n;
 	p->Color = Colors::Green;
 	Boxes.push_back(p);
+
+	n += 6;
 
 	p = new SBox();
 	p->Extent = Size;
@@ -87,8 +95,11 @@ void CRigidDynamicsSimulation::Setup()
 	p->Mass(3) = p->m;
 	p->Mass(4) = p->m;
 	p->Mass(5) = p->m;
+	p->Index = n;
 	p->Color = Colors::Blue;
 	Boxes.push_back(p);
+
+	n += 6;
 
 	p = new SBox();
 	p->Extent = Size * 0.5;
@@ -102,8 +113,11 @@ void CRigidDynamicsSimulation::Setup()
 	p->Mass(3) = p->m;
 	p->Mass(4) = p->m;
 	p->Mass(5) = p->m;
+	p->Index = n;
 	p->Color = Colors::Magenta;
 	Boxes.push_back(p);
+
+	n += 6;
 
 
 	// Create planes
