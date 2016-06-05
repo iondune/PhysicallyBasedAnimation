@@ -523,3 +523,15 @@ CRigidDynamicsSimulation::SBox * CRigidDynamicsSimulation::GetParticle(vec2i con
 {
 	return Boxes[Index.X];
 }
+
+Eigen::Vector6d CRigidDynamicsSimulation::SBox::GetPhi() const
+{
+	Eigen::Vector6d Phi;
+	Phi(0) = wFrames.back().X;
+	Phi(1) = wFrames.back().Y;
+	Phi(2) = wFrames.back().Z;
+	Phi(3) = vFrames.back().X;
+	Phi(4) = vFrames.back().Y;
+	Phi(5) = vFrames.back().Z;
+	return Phi;
+}

@@ -40,6 +40,8 @@ public:
 		vector<vec3d> wFrames;
 		vector<vec3d> vFrames;
 		vector<vector<Contacts>> contactFrames;
+
+		Eigen::Vector6d GetPhi() const;
 	};
 
 	struct SPlane
