@@ -46,14 +46,40 @@ void CRigidDynamicsSimulation::Setup()
 
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 {
-	static vec3d const Gravity = vec3d(0, -9.8, 0);
-
+	static vec3f const Gravity = vec3d(0, -9.8, 0);
+	static vec3f const GravityVector = vec3d(0, -1, 0);
+	static float const Damping = 0.5;
 
 	//SystemMutex.lock();
+	float MomentOfInertia = 0;
+	vec3f Torque = 0;
 	for (SBone * const Bone : Bones)
 	{
-		Bone->RotationFrames.push_back(Bone->RotationFrames.back() + vec3f(0, 0, TimeDelta));
-		Bone->VelocityFrames.push_back(0.f);
+		for (int i = 0; i < 5; ++ i)
+		{
+			float const Mass = Bone->Density * Dot(Bone->Extents, 1) / 5.f;
+			float const x = (i + 1) / 5.f;
+			vec3f Position = vec3f(x, 0, 0) * Bone->Extents.X;
+			Position.Transform(Bone->GetRotationMatrix());
+
+			float const r = Position.Length();
+
+			if (r > 0)
+			{
+				vec3f const PositionVector = Position.GetNormalized();
+				float const Theta = acos(Dot(Position.GetNormalized(), GravityVector));
+				float const sinTheta = sin(Theta);
+
+				Torque += r * (Gravity.Y * Mass) * sinTheta * Cross(PositionVector, GravityVector);
+			}
+
+			MomentOfInertia += Sq(r) * Mass;
+		}
+
+		vec3f const Acceleration = Torque / MomentOfInertia;
+
+		Bone->VelocityFrames.push_back(Bone->VelocityFrames.back() + Acceleration * TimeDelta);
+		Bone->RotationFrames.push_back(Bone->RotationFrames.back() + Bone->VelocityFrames.back() * TimeDelta);
 	}
 	//SystemMutex.unlock();
 }
@@ -174,4 +200,13 @@ void CRigidDynamicsSimulation::PickParticle(ray3f const & Ray)
 		//	break;
 		//}
 	}
+}
+
+glm::mat4 CRigidDynamicsSimulation::SBone::GetRotationMatrix()
+{
+	glm::mat4 Transformation = glm::mat4(1.f);
+	Transformation = glm::rotate(glm::mat4(1.f), RotationFrames.back().Z, glm::vec3(0, 0, 1)) * Transformation;
+	Transformation = glm::rotate(glm::mat4(1.f), RotationFrames.back().Y, glm::vec3(0, 1, 0)) * Transformation;
+	Transformation = glm::rotate(glm::mat4(1.f), RotationFrames.back().X, glm::vec3(1, 0, 0)) * Transformation;
+	return Transformation;
 }

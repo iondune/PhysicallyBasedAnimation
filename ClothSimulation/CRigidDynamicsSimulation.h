@@ -39,6 +39,8 @@ public:
 		
 		vector<vec3f> RotationFrames;
 		vector<vec3f> VelocityFrames;
+
+		glm::mat4 GetRotationMatrix();
 	};
 
 	struct SPlane
