@@ -40,14 +40,27 @@ void CRigidDynamicsSimulation::Setup()
 
 	Bones.push_back(Bone);
 
+	Bone = new SBone();
+	Bone->Color = Colors::Orange;
+	Bone->Position = vec3f(0.3, 0, 0);
+	Bone->Anchor = vec3f(-0.3f, 0, 0);
+	Bone->Extents = vec3f(0.3f, 0.1f, 0.1f);
+	Bone->Density = 1.f;
+
+	Bone->RotationFrames.push_back(vec3f());
+	Bone->VelocityFrames.push_back(vec3f());
+
+	Bones.back()->Children.push_back(Bone);
+	Bone->Parent = Bones.back();
+
+	Bones.push_back(Bone);
+
 	AddSceneObjects();
 	UpdateSceneObjects(0);
 }
 
 void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 {
-	static vec3f const Gravity = vec3d(0, -9.8, 0);
-	static vec3f const GravityVector = vec3d(0, -1, 0);
 	static float const Damping = 0.5;
 
 	//SystemMutex.lock();
@@ -56,26 +69,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		float MomentOfInertia = 0;
 		vec3f Torque = 0;
 
-		for (int i = 0; i < 5; ++ i)
-		{
-			float const Mass = Bone->Density * Dot(Bone->Extents, 1) / 5.f;
-			float const x = (i / 4.f) * 2.f - 1.f;
-			vec3f Position = vec3f(x * Bone->Extents.X - Bone->Anchor.X, 0, 0);
-			Position.Transform(Bone->GetRotationMatrix());
-
-			float const r = Position.Length();
-
-			if (r > 0)
-			{
-				vec3f const PositionVector = Position.GetNormalized();
-				float const Theta = acos(Dot(Position.GetNormalized(), GravityVector));
-				float const sinTheta = sin(Theta);
-
-				Torque += r * (Gravity.Y * Mass) * sinTheta * Cross(PositionVector, GravityVector);
-			}
-
-			MomentOfInertia += Sq(r) * Mass;
-		}
+		Bone->CalculateTorque(glm::mat4(1.f), Torque, MomentOfInertia);
 
 		vec3f const Acceleration = Torque / MomentOfInertia;
 
@@ -168,15 +162,7 @@ void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 	SystemMutex.lock();
 	for (SBone * Bone : Bones)
 	{
-		glm::mat4 Transformation = glm::mat4(1.f);
-		Transformation = glm::scale(glm::mat4(1.f), (Bone->Extents * 2.f).ToGLM()) * Transformation;
-		Transformation = glm::translate(glm::mat4(1.f), Bone->Anchor.ToGLM()) * Transformation;
-		Transformation = glm::rotate(glm::mat4(1.f), Bone->RotationFrames[VisibleFrame].Z, glm::vec3(0, 0, 1)) * Transformation;
-		Transformation = glm::rotate(glm::mat4(1.f), Bone->RotationFrames[VisibleFrame].Y, glm::vec3(0, 1, 0)) * Transformation;
-		Transformation = glm::rotate(glm::mat4(1.f), Bone->RotationFrames[VisibleFrame].X, glm::vec3(1, 0, 0)) * Transformation;
-		Transformation = glm::translate(glm::mat4(1.f), Bone->Position.ToGLM()) * Transformation;
-
-		Bone->SceneObject->SetTransformation(Transformation);
+		Bone->SceneObject->SetTransformation(Bone->GetDrawTransform(CurrentFrame));
 	}
 	SystemMutex.unlock();
 }
@@ -210,4 +196,51 @@ glm::mat4 CRigidDynamicsSimulation::SBone::GetRotationMatrix()
 	Transformation = glm::rotate(glm::mat4(1.f), RotationFrames.back().Y, glm::vec3(0, 1, 0)) * Transformation;
 	Transformation = glm::rotate(glm::mat4(1.f), RotationFrames.back().X, glm::vec3(1, 0, 0)) * Transformation;
 	return Transformation;
+}
+
+glm::mat4 CRigidDynamicsSimulation::SBone::GetDrawTransform(int const VisibleFrame)
+{
+	glm::mat4 Transformation = glm::mat4(1.f);
+	if (Parent)
+		Transformation = Parent->GetDrawTransform(VisibleFrame);
+	Transformation = glm::scale(glm::mat4(1.f), (Extents * 2.f).ToGLM()) * Transformation;
+	Transformation = glm::translate(glm::mat4(1.f), Anchor.ToGLM()) * Transformation;
+	Transformation = glm::rotate(glm::mat4(1.f), RotationFrames[VisibleFrame].Z, glm::vec3(0, 0, 1)) * Transformation;
+	Transformation = glm::rotate(glm::mat4(1.f), RotationFrames[VisibleFrame].Y, glm::vec3(0, 1, 0)) * Transformation;
+	Transformation = glm::rotate(glm::mat4(1.f), RotationFrames[VisibleFrame].X, glm::vec3(1, 0, 0)) * Transformation;
+	Transformation = glm::translate(glm::mat4(1.f), Position.ToGLM()) * Transformation;
+	return Transformation;
+}
+
+void CRigidDynamicsSimulation::SBone::CalculateTorque(glm::mat4 const & ParentTransform, vec3f & Torque, float & MomentOfInertia)
+{
+	static vec3f const Gravity = vec3d(0, -9.8, 0);
+	static vec3f const GravityVector = vec3d(0, -1, 0);
+
+	for (int i = 0; i < 5; ++ i)
+	{
+		float const Mass = Density * Dot(Extents, 1) / 5.f;
+		float const x = (i / 4.f) * 2.f - 1.f;
+		vec3f Position = vec3f(x * Extents.X - Anchor.X, 0, 0);
+		Position.Transform(ParentTransform * GetRotationMatrix());
+
+		float const r = Position.Length();
+
+		if (r > 0)
+		{
+			vec3f const PositionVector = Position.GetNormalized();
+			float const Theta = acos(Dot(Position.GetNormalized(), GravityVector));
+			float const sinTheta = sin(Theta);
+
+			Torque += r * (Gravity.Y * Mass) * sinTheta * Cross(PositionVector, GravityVector);
+		}
+
+		for (auto Child : Children)
+		{
+			vec3f DiscardTorque;
+			Child->CalculateTorque(ParentTransform * glm::translate(glm::mat4(1.f), Child->Position.ToGLM()) * GetRotationMatrix(), DiscardTorque, MomentOfInertia);
+		}
+
+		MomentOfInertia += Sq(r) * Mass;
+	}
 }

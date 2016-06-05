@@ -42,6 +42,8 @@ public:
 		vector<vec3f> VelocityFrames;
 
 		glm::mat4 GetRotationMatrix();
+		glm::mat4 GetDrawTransform(int const VisibleFrame);
+		void CalculateTorque(glm::mat4 const & ParentTransform, vec3f & Torque, float & MomentOfInertia);
 	};
 
 	struct SPlane
