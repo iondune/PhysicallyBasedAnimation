@@ -77,7 +77,7 @@ void CRigidDynamicsSimulation::Setup()
 
 	p = new SBox();
 	p->Extent = Size * 2;
-	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.2, 0, 0.4)));
+	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.175, 0, 0)));
 	p->wFrames.push_back(vec3d(2, 0, 0));
 	p->vFrames.push_back(vec3d(0, 1, 0));
 	p->contactFrames.push_back(vector<Contacts>());
@@ -96,7 +96,7 @@ void CRigidDynamicsSimulation::Setup()
 
 	p = new SBox();
 	p->Extent = Size;
-	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.3, 0, 0)));
+	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.2, 0, 0)));
 	p->wFrames.push_back(vec3d(5, 0, 5));
 	p->vFrames.push_back(vec3d(0, 0, 1));
 	p->contactFrames.push_back(vector<Contacts>());
@@ -115,7 +115,7 @@ void CRigidDynamicsSimulation::Setup()
 
 	p = new SBox();
 	p->Extent = Size * 0.5;
-	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0, 0.2, -0.5)));
+	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.1, 0, 0)));
 	p->wFrames.push_back(vec3d(0, 0, 2));
 	p->vFrames.push_back(vec3d(1, 0, 0));
 	p->contactFrames.push_back(vector<Contacts>());
@@ -222,6 +222,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	Eigen::MatrixXd M;
 	Eigen::VectorXd f;
 	Eigen::VectorXd v;
+	Eigen::MatrixXd G;
 
 	M.resize(n, n);
 	M.setZero();
@@ -231,6 +232,9 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 	v.resize(n);
 	v.setZero();
+
+	G.resize(n, n);
+	G.setZero();
 
 	struct SContactStore
 	{
@@ -273,6 +277,8 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		f.segment(Box->Index, 6) += Coriolis;
 		f.segment(Box->Index + 3, 3) += BodyForces;
+
+		// contacts
 		
 		Eigen::Matrix4d const E_i_k = Box->PositionFrames.back();
 
@@ -292,10 +298,27 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 				Store.Which = Box;
 				Store.Normal = ToIon3D(c.normal);
 				Store.Position = ToIon3D(c.positions[i]);
-				ContactsArray.push_back(Store);
+				//ContactsArray.push_back(Store);
 			}
 		}
 	}
+
+	// joints
+	SBox * body_i = Boxes[0];
+	SBox * body_j = Boxes[1];
+	Eigen::Matrix4d JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.11f, 0, 0)));
+	
+	Eigen::Vector6d deltaPhi = (Rigid::adjoint(JointFrame) * body_i->GetPhi() - Rigid::adjoint(JointFrame) * Rigid::adjoint(body_i->PositionFrames.back().inverse() * body_j->PositionFrames.back()) * body_j->GetPhi());
+	deltaPhi(0) = 0;
+	deltaPhi(1) = 0;
+	deltaPhi(2) = 0;
+
+	cout << "deltaPhi = " << endl;
+	cout << deltaPhi << endl;
+	cout << endl;
+
+	//G.block<6, 6>(body_j->Index, body_j->Index) = Diagonal(deltaPhi);
+
 	SystemMutex.unlock();
 
 
@@ -333,7 +356,21 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	}
 	else
 	{
-		NewV = Mtilde.ldlt().solve(ftilde);
+		//NewV = Mtilde.ldlt().solve(ftilde);
+
+		Eigen::MatrixXd A;
+		A.resize(n * 2, n * 2);
+		A.setZero();
+		A.block(0, 0, n, n) = Mtilde;
+		A.block(n, 0, n, n) = G;
+		A.block(0, n, n, n) = G.transpose();
+
+		Eigen::VectorXd b;
+		b.resize(n * 2);
+		b.segment(0, n) = ftilde;
+
+		Eigen::VectorXd x = A.ldlt().solve(b);
+		NewV = x.segment(0, n);
 	}
 
 	SystemMutex.lock();
