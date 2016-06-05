@@ -25,23 +25,20 @@ public:
 	void PickParticle(ray3f const & Ray);
 
 
-	struct SBox
+	struct SBone
 	{
-		vec3d Extent;
-		Eigen::Vector6d Mass;
-		double m;
+		vec3f Position;
+		vec3f Anchor;
+		vec3f Extents;
+		float Density;
 		color3f Color = Colors::Red;
-		int Index = 0;
+		vector<SBone *> Children;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 		ion::Graphics::CUniform<color3f> ColorUniform;
 		
-		vector<Eigen::Matrix4d> PositionFrames;
-		vector<vec3d> wFrames;
-		vector<vec3d> vFrames;
-		vector<vector<Contacts>> contactFrames;
-
-		Eigen::Vector6d GetPhi() const;
+		vector<vec3f> RotationFrames;
+		vector<vec3f> VelocityFrames;
 	};
 
 	struct SPlane
@@ -50,26 +47,13 @@ public:
 		float Distance;
 	};
 
-	struct SSettings
-	{
-		vec3d Center = vec3d(0, 1.25, 0);
-		vec3d Size = vec3d(0.1, 0.05, 0.05);
-	};
-
 protected:
 
-	SSettings Settings;
-
-	vector<SBox *> Boxes;
-	vector<SPlane> Planes;
+	vector<SBone *> Bones;
 
 	mutex SystemMutex;
 
-	SBox * GetParticle(vec2i const & Index);
-
 	int VisibleFrame = 0;
-	SBox * SelectedParticle = nullptr;
-
-	bool PlaneObjectsCreated = false;
+	SBone * SelectedBone = nullptr;
 
 };
