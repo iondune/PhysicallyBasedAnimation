@@ -33,6 +33,7 @@ public:
 		float Density;
 		color3f Color = Colors::Red;
 		vector<SBone *> Children;
+		SBone * Parent = nullptr;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 		ion::Graphics::CUniform<color3f> ColorUniform;

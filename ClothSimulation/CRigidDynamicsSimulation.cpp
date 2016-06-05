@@ -51,15 +51,16 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	static float const Damping = 0.5;
 
 	//SystemMutex.lock();
-	float MomentOfInertia = 0;
-	vec3f Torque = 0;
 	for (SBone * const Bone : Bones)
 	{
+		float MomentOfInertia = 0;
+		vec3f Torque = 0;
+
 		for (int i = 0; i < 5; ++ i)
 		{
 			float const Mass = Bone->Density * Dot(Bone->Extents, 1) / 5.f;
-			float const x = (i + 1) / 5.f;
-			vec3f Position = vec3f(x, 0, 0) * Bone->Extents.X;
+			float const x = (i / 4.f) * 2.f - 1.f;
+			vec3f Position = vec3f(x * Bone->Extents.X - Bone->Anchor.X, 0, 0);
 			Position.Transform(Bone->GetRotationMatrix());
 
 			float const r = Position.Length();
