@@ -78,7 +78,7 @@ void CRigidDynamicsSimulation::Setup()
 
 	p = new SBox();
 	p->Extent = Size * 2;
-	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.175, 0, 0)));
+	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.275, 0, 0)));
 	p->wFrames.push_back(vec3d(2, 0, 0));
 	p->vFrames.push_back(vec3d(0, 1, 0));
 	p->contactFrames.push_back(vector<Contacts>());
@@ -144,6 +144,15 @@ void CRigidDynamicsSimulation::Setup()
 	Planes.push_back(Plane);
 	Plane.Normal = vec2f(-0.25f, 1.f).GetNormalized();
 	Planes.push_back(Plane);
+
+
+	// Create joints
+	SJoint * joint = new SJoint();
+
+	joint->Body_i = Boxes[0];
+	joint->Body_k = Boxes[1];
+	joint->JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.11f, 0, 0)));
+	Joints.push_back(joint);
 
 	AddSceneObjects();
 	UpdateSceneObjects(0);
@@ -301,12 +310,9 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	}
 
 	// joints
-	SBox * body_i = Boxes[0];
-	SBox * body_k = Boxes[1];
-	Eigen::Matrix4d JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.11f, 0, 0)));
 	
-	Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(JointFrame.inverse());
-	Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(body_i->PositionFrames.back() * body_k->PositionFrames.back().inverse());
+	Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(Joints[0]->JointFrame.inverse());
+	Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(Joints[0]->Body_i->PositionFrames.back() * Joints[0]->Body_k->PositionFrames.back().inverse());
 
 	//cout << "Adjunct_ij = " << endl;
 	//cout << Adjunct_ij << endl;
@@ -316,8 +322,8 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	//cout << Adjunct_ki << endl;
 	//cout << endl;
 
-	G.block<3, 6>(0, body_i->Index) = Adjunct_ij.block<3, 6>(3, 0);
-	G.block<3, 6>(0, body_k->Index) = (-Adjunct_ij * Adjunct_ki).block<3, 6>(3, 0);
+	G.block<3, 6>(0, Joints[0]->Body_i->Index) = Adjunct_ij.block<3, 6>(3, 0);
+	G.block<3, 6>(0, Joints[0]->Body_k->Index) = (-Adjunct_ij * Adjunct_ki).block<3, 6>(3, 0);
 
 	//cout << "G = " << endl;
 	//cout << G << endl;
@@ -520,6 +526,17 @@ void CRigidDynamicsSimulation::AddSceneObjects()
 		Application->RenderPass->AddSceneObject(Particle->SceneObject);
 	}
 
+	for (auto Joint : Joints)
+	{
+		Joint->SceneObject = new CSimpleMeshSceneObject();
+		Joint->SceneObject->SetMesh(Application->SphereMesh);
+		Joint->SceneObject->SetScale(0.025f);
+		Joint->SceneObject->SetShader(Application->DiffuseShader);
+		Joint->SceneObject->SetUniform("uColor", CUniform<color3f>(Colors::Black));
+		Joint->SceneObject->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+		Application->RenderPass->AddSceneObject(Joint->SceneObject);
+	}
+
 	if (! PlaneObjectsCreated)
 	{
 		for (size_t i = 0; i < Planes.size(); ++ i)
@@ -553,6 +570,11 @@ void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 		if (Box->contactFrames[CurrentFrame].size())
 			Color *= 0.5f;
 		Box->ColorUniform = Color;
+	}
+
+	for (auto Joint : Joints)
+	{
+		Joint->SceneObject->SetRotation(ToGLM(Joint->Body_i->PositionFrames[CurrentFrame] * Joint->JointFrame));
 	}
 	SystemMutex.unlock();
 }

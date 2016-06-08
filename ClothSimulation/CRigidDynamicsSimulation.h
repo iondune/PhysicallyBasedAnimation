@@ -57,12 +57,23 @@ public:
 		vec3d Size = vec3d(0.1, 0.05, 0.05);
 	};
 
+	struct SJoint
+	{
+		SBox * Body_i = nullptr;
+		SBox * Body_k = nullptr;
+
+		Eigen::Matrix4d JointFrame;
+
+		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
+	};
+
 protected:
 
 	SSettings Settings;
 
 	vector<SBox *> Boxes;
 	vector<SPlane> Planes;
+	vector<SJoint *> Joints;
 
 	mutex SystemMutex;
 
