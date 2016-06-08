@@ -63,6 +63,7 @@ public:
 		SBox * Body_k = nullptr;
 
 		Eigen::Matrix4d JointFrame;
+		int Index = 0;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 	};

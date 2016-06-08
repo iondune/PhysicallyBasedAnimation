@@ -98,7 +98,7 @@ void CRigidDynamicsSimulation::Setup()
 
 	p = new SBox();
 	p->Extent = Size;
-	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.2, 0, 0)));
+	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.275, 0, 0)));
 	p->wFrames.push_back(vec3d(5, 0, 5));
 	p->vFrames.push_back(vec3d(0, 0, 1));
 	p->contactFrames.push_back(vector<Contacts>());
@@ -116,26 +116,25 @@ void CRigidDynamicsSimulation::Setup()
 
 	n += 6;
 
-	p = new SBox();
-	p->Extent = Size * 0.5;
-	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.1, 0, 0)));
-	p->wFrames.push_back(vec3d(0, 0, 2));
-	p->vFrames.push_back(vec3d(1, 0, 0));
-	p->contactFrames.push_back(vector<Contacts>());
-	p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
-	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
-	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
-	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
-	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
-	p->Mass(3) = p->m;
-	p->Mass(4) = p->m;
-	p->Mass(5) = p->m;
-	p->Index = n;
-	p->Color = Colors::Magenta;
-	Boxes.push_back(p);
+	//p = new SBox();
+	//p->Extent = Size * 0.5;
+	//p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.1, 0, 0)));
+	//p->wFrames.push_back(vec3d(0, 0, 2));
+	//p->vFrames.push_back(vec3d(1, 0, 0));
+	//p->contactFrames.push_back(vector<Contacts>());
+	//p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
+	//p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
+	//p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
+	//p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
+	//p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
+	//p->Mass(3) = p->m;
+	//p->Mass(4) = p->m;
+	//p->Mass(5) = p->m;
+	//p->Index = n;
+	//p->Color = Colors::Magenta;
+	//Boxes.push_back(p);
 
-	n += 6;
-
+	//n += 6;
 
 	// Create planes
 	SPlane Plane;
@@ -147,12 +146,27 @@ void CRigidDynamicsSimulation::Setup()
 
 
 	// Create joints
-	SJoint * joint = new SJoint();
+	int j = 0;
 
+	SJoint * joint;
+
+	joint = new SJoint();
 	joint->Body_i = Boxes[0];
 	joint->Body_k = Boxes[1];
 	joint->JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.11f, 0, 0)));
+	joint->Index = j;
 	Joints.push_back(joint);
+
+	j += 3;
+
+	joint = new SJoint();
+	joint->Body_i = Boxes[0];
+	joint->Body_k = Boxes[2];
+	joint->JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(-0.11f, 0, 0)));
+	joint->Index = j;
+	Joints.push_back(joint);
+
+	j += 3;
 
 	AddSceneObjects();
 	UpdateSceneObjects(0);
@@ -228,6 +242,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	static vec3d const Gravity = vec3d(0, -9.8, 0);
 
 	int const n = 6 * (int) Boxes.size();
+	int const j = 3 * (int) Joints.size();
 	double const h = TimeDelta;
 	double const damping = 0.7;
 	double const restitution = 0.2;
@@ -246,7 +261,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	v.resize(n);
 	v.setZero();
 
-	G.resize(3, n);
+	G.resize(j, n);
 	G.setZero();
 
 	struct SContactStore
@@ -310,28 +325,31 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	}
 
 	// joints
+	for (auto Joint : Joints)
+	{
+		Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(Joint->JointFrame.inverse());
+		Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(Joint->Body_i->PositionFrames.back().inverse() * Joint->Body_k->PositionFrames.back());
+
+		//cout << "Adjunct_ij = " << endl;
+		//cout << Adjunct_ij << endl;
+		//cout << endl;
+
+		//cout << "Adjunct_ki = " << endl;
+		//cout << Adjunct_ki << endl;
+		//cout << endl;
+
+		G.block<3, 6>(Joint->Index, Joint->Body_i->Index) = Adjunct_ij.block<3, 6>(3, 0);
+		G.block<3, 6>(Joint->Index, Joint->Body_k->Index) = (-Adjunct_ij * Adjunct_ki).block<3, 6>(3, 0);
+
+		//cout << "G = " << endl;
+		//cout << G << endl;
+		//cout << endl;
+
+		//cout << "GT = " << endl;
+		//cout << G.transpose() << endl;
+		//cout << endl;
+	}
 	
-	Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(Joints[0]->JointFrame.inverse());
-	Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(Joints[0]->Body_i->PositionFrames.back().inverse() * Joints[0]->Body_k->PositionFrames.back());
-
-	//cout << "Adjunct_ij = " << endl;
-	//cout << Adjunct_ij << endl;
-	//cout << endl;
-
-	//cout << "Adjunct_ki = " << endl;
-	//cout << Adjunct_ki << endl;
-	//cout << endl;
-
-	G.block<3, 6>(0, Joints[0]->Body_i->Index) = Adjunct_ij.block<3, 6>(3, 0);
-	G.block<3, 6>(0, Joints[0]->Body_k->Index) = (-Adjunct_ij * Adjunct_ki).block<3, 6>(3, 0);
-
-	//cout << "G = " << endl;
-	//cout << G << endl;
-	//cout << endl;
-
-	//cout << "GT = " << endl;
-	//cout << G.transpose() << endl;
-	//cout << endl;
 
 	SystemMutex.unlock();
 
@@ -375,14 +393,14 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		NewV = Mtilde.ldlt().solve(ftilde);
 #else
 		Eigen::MatrixXd A;
-		A.resize(n + 3, n + 3);
+		A.resize(n + j, n + j);
 		A.setZero();
 		A.block(0, 0, n, n) = Mtilde;
-		A.block(n, 0, 3, n) = G;
-		A.block(0, n, n, 3) = G.transpose();
+		A.block(n, 0, j, n) = G;
+		A.block(0, n, n, j) = G.transpose();
 
 		Eigen::VectorXd b;
-		b.resize(n + 3);
+		b.resize(n + j);
 		b.setZero();
 		b.segment(0, n) = ftilde;
 
@@ -393,7 +411,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		//cout << endl;
 
 		NewV = x.segment(0, n);
-		ReactionForces = G.transpose() * x.segment(n, 3) / h;
+		ReactionForces = G.transpose() * x.segment(n, j) / h;
 
 		//cout << "ReactionForces = " << endl;
 		//cout << ReactionForces << endl;
