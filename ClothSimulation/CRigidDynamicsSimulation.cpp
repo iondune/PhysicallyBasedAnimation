@@ -17,10 +17,10 @@ using namespace ion::Graphics;
 Eigen::Matrix4d RotateAndTranslateToMatrix(vec3f const & Rotation, vec3f const & Translation)
 {
 	glm::mat4 Transformation = glm::mat4(1.f);
-	Transformation = glm::rotate(Transformation, Rotation.Z, glm::vec3(0, 0, 1));
-	Transformation = glm::rotate(Transformation, Rotation.Y, glm::vec3(0, 1, 0));
-	Transformation = glm::rotate(Transformation, Rotation.X, glm::vec3(1, 0, 0));
-	Transformation = glm::translate(Transformation, Translation.ToGLM());
+	Transformation = glm::rotate(glm::mat4(1.f), Rotation.Z, glm::vec3(0, 0, 1)) * Transformation;
+	Transformation = glm::rotate(glm::mat4(1.f), Rotation.Y, glm::vec3(0, 1, 0)) * Transformation;
+	Transformation = glm::rotate(glm::mat4(1.f), Rotation.X, glm::vec3(1, 0, 0)) * Transformation;
+	Transformation = glm::translate(glm::mat4(1.f), Translation.ToGLM()) * Transformation;
 	return ToEigen(Transformation);
 }
 
