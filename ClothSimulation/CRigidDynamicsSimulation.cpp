@@ -233,7 +233,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	v.resize(n);
 	v.setZero();
 
-	G.resize(n, n);
+	G.resize(3, n);
 	G.setZero();
 
 	struct SContactStore
@@ -309,15 +309,16 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	Eigen::Matrix4d JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.11f, 0, 0)));
 	
 	Eigen::Vector6d deltaPhi = (Rigid::adjoint(JointFrame) * body_i->GetPhi() - Rigid::adjoint(JointFrame) * Rigid::adjoint(body_i->PositionFrames.back().inverse() * body_j->PositionFrames.back()) * body_j->GetPhi());
-	deltaPhi(0) = 0;
-	deltaPhi(1) = 0;
-	deltaPhi(2) = 0;
 
 	cout << "deltaPhi = " << endl;
 	cout << deltaPhi << endl;
 	cout << endl;
 
-	//G.block<6, 6>(body_j->Index, body_j->Index) = Diagonal(deltaPhi);
+	G.block<3, 6>(0, body_j->Index) = Diagonal(deltaPhi).block<3, 6>(3, 0);
+
+	cout << "G = " << endl;
+	cout << G << endl;
+	cout << endl;
 
 	SystemMutex.unlock();
 
@@ -359,17 +360,23 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		//NewV = Mtilde.ldlt().solve(ftilde);
 
 		Eigen::MatrixXd A;
-		A.resize(n * 2, n * 2);
+		A.resize(n + 3, n + 3);
 		A.setZero();
 		A.block(0, 0, n, n) = Mtilde;
-		A.block(n, 0, n, n) = G;
-		A.block(0, n, n, n) = G.transpose();
+		A.block(n, 0, 3, n) = G;
+		A.block(0, n, n, 3) = G.transpose();
 
 		Eigen::VectorXd b;
-		b.resize(n * 2);
+		b.setZero();
+		b.resize(n + 3);
 		b.segment(0, n) = ftilde;
 
-		Eigen::VectorXd x = A.ldlt().solve(b);
+		Eigen::VectorXd const x = A.ldlt().solve(b);
+
+		cout << "x = " << endl;
+		cout << x << endl;
+		cout << endl;
+
 		NewV = x.segment(0, n);
 	}
 
