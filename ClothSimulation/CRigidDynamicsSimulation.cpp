@@ -258,9 +258,8 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		Eigen::Matrix6d Phi_i_cross;
 		Phi_i_cross.setZero();
-		Phi_i_cross.block<3, 3>(0, 0) = Rigid::bracket3(ToEigen(Box->wFrames.back()));
-		Phi_i_cross.block<3, 3>(3, 3) = Rigid::bracket3(ToEigen(Box->wFrames.back()));
-		Phi_i_cross.block<3, 3>(3, 0) = Rigid::bracket3(ToEigen(Box->vFrames.back()));
+		Phi_i_cross.block<3, 3>(0, 0) = Rigid::bracket3(Phi_i.segment(0, 3));
+		Phi_i_cross.block<3, 3>(3, 3) = Rigid::bracket3(Phi_i.segment(0, 3));
 
 		Eigen::Vector3d const Acceleration = ToEigen(Gravity);
 		Eigen::Matrix3d const Theta_i_T = ThetaFromE(Box->PositionFrames.back()).transpose();
