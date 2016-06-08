@@ -32,6 +32,7 @@ public:
 		double m;
 		color3f Color = Colors::Red;
 		int Index = 0;
+		bool Fixed = false;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 		ion::Graphics::CUniform<color3f> ColorUniform;
@@ -75,6 +76,9 @@ protected:
 	vector<SBox *> Boxes;
 	vector<SPlane> Planes;
 	vector<SJoint *> Joints;
+
+	int BodyMatrixSize = 0;
+	int JointMatrixSize = 0;
 
 	mutex SystemMutex;
 

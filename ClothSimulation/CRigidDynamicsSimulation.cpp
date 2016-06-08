@@ -99,8 +99,8 @@ void CRigidDynamicsSimulation::Setup()
 	p = new SBox();
 	p->Extent = Size;
 	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.275, 0, 0)));
-	p->wFrames.push_back(vec3d(5, 0, 5));
-	p->vFrames.push_back(vec3d(0, 0, 1));
+	p->wFrames.push_back(0);// vec3d(5, 0, 5));
+	p->vFrames.push_back(0);// vec3d(0, 0, 1));
 	p->contactFrames.push_back(vector<Contacts>());
 	p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
@@ -110,11 +110,12 @@ void CRigidDynamicsSimulation::Setup()
 	p->Mass(3) = p->m;
 	p->Mass(4) = p->m;
 	p->Mass(5) = p->m;
-	p->Index = n;
+	p->Index = -1;
 	p->Color = Colors::Blue;
+	p->Fixed = true;
 	Boxes.push_back(p);
 
-	n += 6;
+	//n += 6;
 
 	//p = new SBox();
 	//p->Extent = Size * 0.5;
@@ -135,6 +136,8 @@ void CRigidDynamicsSimulation::Setup()
 	//Boxes.push_back(p);
 
 	//n += 6;
+
+	BodyMatrixSize = n;
 
 	// Create planes
 	SPlane Plane;
@@ -167,6 +170,8 @@ void CRigidDynamicsSimulation::Setup()
 	Joints.push_back(joint);
 
 	j += 3;
+
+	JointMatrixSize = j;
 
 	AddSceneObjects();
 	UpdateSceneObjects(0);
@@ -241,8 +246,8 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 {
 	static vec3d const Gravity = vec3d(0, -9.8, 0);
 
-	int const n = 6 * (int) Boxes.size();
-	int const j = 3 * (int) Joints.size();
+	int const n = BodyMatrixSize;
+	int const j = JointMatrixSize;
 	double const h = TimeDelta;
 	double const damping = 0.7;
 	double const restitution = 0.2;
@@ -276,6 +281,12 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	SystemMutex.lock();
 	for (SBox * const Box : Boxes)
 	{
+		if (Box->Fixed)
+		{
+			Box->contactFrames.push_back(vector<Contacts>());
+			continue;
+		}
+
 		Eigen::Matrix6d const M_i = Diagonal(Box->Mass);
 
 		M.block<6, 6>(Box->Index, Box->Index) = M_i;
@@ -338,8 +349,10 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		//cout << Adjunct_ki << endl;
 		//cout << endl;
 
-		G.block<3, 6>(Joint->Index, Joint->Body_i->Index) = Adjunct_ij.block<3, 6>(3, 0);
-		G.block<3, 6>(Joint->Index, Joint->Body_k->Index) = (-Adjunct_ij * Adjunct_ki).block<3, 6>(3, 0);
+		if (! Joint->Body_i->Fixed)
+			G.block<3, 6>(Joint->Index, Joint->Body_i->Index) = Adjunct_ij.block<3, 6>(3, 0);
+		if (! Joint->Body_k->Fixed)
+			G.block<3, 6>(Joint->Index, Joint->Body_k->Index) = (-Adjunct_ij * Adjunct_ki).block<3, 6>(3, 0);
 
 		//cout << "G = " << endl;
 		//cout << G << endl;
@@ -411,7 +424,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		//cout << endl;
 
 		NewV = x.segment(0, n);
-		ReactionForces = G.transpose() * x.segment(n, j) / h;
+		ReactionForces = G.transpose() * x.segment(n, j);
 
 		//cout << "ReactionForces = " << endl;
 		//cout << ReactionForces << endl;
@@ -422,6 +435,15 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	SystemMutex.lock();
 	for (SBox * const Box : Boxes)
 	{
+		if (Box->Fixed)
+		{
+			Box->wFrames.push_back(0);
+			Box->vFrames.push_back(0);
+			Box->PositionFrames.push_back(Box->PositionFrames.back());
+			Box->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
+			continue;
+		}
+		
 		Eigen::Vector6d const Phi_i_k_1 = NewV.segment(Box->Index, 6);
 
 		Eigen::Vector3d const w_k_1 = Phi_i_k_1.segment(0, 3);
