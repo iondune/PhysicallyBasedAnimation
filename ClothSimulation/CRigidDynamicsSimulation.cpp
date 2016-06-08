@@ -305,19 +305,29 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 	// joints
 	SBox * body_i = Boxes[0];
-	SBox * body_j = Boxes[1];
+	SBox * body_k = Boxes[1];
 	Eigen::Matrix4d JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.11f, 0, 0)));
 	
-	Eigen::Vector6d deltaPhi = (Rigid::adjoint(JointFrame) * body_i->GetPhi() - Rigid::adjoint(JointFrame) * Rigid::adjoint(body_i->PositionFrames.back().inverse() * body_j->PositionFrames.back()) * body_j->GetPhi());
+	Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(JointFrame);
+	Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(body_i->PositionFrames.back() * body_k->PositionFrames.back().inverse());
 
-	cout << "deltaPhi = " << endl;
-	cout << deltaPhi << endl;
+	cout << "Adjunct_ij = " << endl;
+	cout << Adjunct_ij << endl;
 	cout << endl;
 
-	G.block<3, 6>(0, body_j->Index) = Diagonal(deltaPhi).block<3, 6>(3, 0);
+	cout << "Adjunct_ki = " << endl;
+	cout << Adjunct_ki << endl;
+	cout << endl;
+
+	G.block<3, 6>(0, body_i->Index) = Adjunct_ij.block<3, 6>(3, 0);
+	G.block<3, 6>(0, body_k->Index) = (-Adjunct_ij * Adjunct_ki).block<3, 6>(3, 0);
 
 	cout << "G = " << endl;
 	cout << G << endl;
+	cout << endl;
+
+	cout << "GT = " << endl;
+	cout << G.transpose() << endl;
 	cout << endl;
 
 	SystemMutex.unlock();
@@ -357,8 +367,9 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	}
 	else
 	{
-		//NewV = Mtilde.ldlt().solve(ftilde);
-
+#if 1
+		NewV = Mtilde.ldlt().solve(ftilde);
+#else
 		Eigen::MatrixXd A;
 		A.resize(n + 3, n + 3);
 		A.setZero();
@@ -378,6 +389,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		cout << endl;
 
 		NewV = x.segment(0, n);
+#endif
 	}
 
 	SystemMutex.lock();
