@@ -304,24 +304,24 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(JointFrame);
 	Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(body_i->PositionFrames.back() * body_k->PositionFrames.back().inverse());
 
-	cout << "Adjunct_ij = " << endl;
-	cout << Adjunct_ij << endl;
-	cout << endl;
+	//cout << "Adjunct_ij = " << endl;
+	//cout << Adjunct_ij << endl;
+	//cout << endl;
 
-	cout << "Adjunct_ki = " << endl;
-	cout << Adjunct_ki << endl;
-	cout << endl;
+	//cout << "Adjunct_ki = " << endl;
+	//cout << Adjunct_ki << endl;
+	//cout << endl;
 
 	G.block<3, 6>(0, body_i->Index) = Adjunct_ij.block<3, 6>(3, 0);
 	G.block<3, 6>(0, body_k->Index) = (-Adjunct_ij * Adjunct_ki).block<3, 6>(3, 0);
 
-	cout << "G = " << endl;
-	cout << G << endl;
-	cout << endl;
+	//cout << "G = " << endl;
+	//cout << G << endl;
+	//cout << endl;
 
-	cout << "GT = " << endl;
-	cout << G.transpose() << endl;
-	cout << endl;
+	//cout << "GT = " << endl;
+	//cout << G.transpose() << endl;
+	//cout << endl;
 
 	SystemMutex.unlock();
 
