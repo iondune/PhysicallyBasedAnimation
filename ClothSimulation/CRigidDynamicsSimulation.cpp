@@ -252,21 +252,21 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		M.block<6, 6>(Box->Index, Box->Index) = M_i;
 
-		Eigen::Vector6d Phi_i_k = Box->GetPhi();
+		Eigen::Vector6d const Phi_i = Box->GetPhi();
 
-		v.segment(Box->Index, 6) = Phi_i_k;
+		v.segment(Box->Index, 6) = Phi_i;
 
-		Eigen::Matrix6d Phi_i_bracket_k;
-		Phi_i_bracket_k.setZero();
-		Phi_i_bracket_k.block<3, 3>(0, 0) = Rigid::bracket3(ToEigen(Box->wFrames.back()));
-		Phi_i_bracket_k.block<3, 3>(3, 3) = Rigid::bracket3(ToEigen(Box->wFrames.back()));
-		Phi_i_bracket_k.block<3, 3>(3, 0) = Rigid::bracket3(ToEigen(Box->vFrames.back()));
+		Eigen::Matrix6d Phi_i_cross;
+		Phi_i_cross.setZero();
+		Phi_i_cross.block<3, 3>(0, 0) = Rigid::bracket3(ToEigen(Box->wFrames.back()));
+		Phi_i_cross.block<3, 3>(3, 3) = Rigid::bracket3(ToEigen(Box->wFrames.back()));
+		Phi_i_cross.block<3, 3>(3, 0) = Rigid::bracket3(ToEigen(Box->vFrames.back()));
 
 		Eigen::Vector3d const Acceleration = ToEigen(Gravity);
 		Eigen::Matrix3d const Theta_i_T = ThetaFromE(Box->PositionFrames.back()).transpose();
 
 		Eigen::Vector3d const BodyForces = Theta_i_T * Box->m * Acceleration;
-		Eigen::Vector6d const Coriolis = Phi_i_bracket_k.transpose() * M_i * Phi_i_k;
+		Eigen::Vector6d const Coriolis = Phi_i_cross.transpose() * M_i * Phi_i;
 
 		f.segment(Box->Index, 6) += Coriolis;
 		f.segment(Box->Index + 3, 3) += BodyForces;
