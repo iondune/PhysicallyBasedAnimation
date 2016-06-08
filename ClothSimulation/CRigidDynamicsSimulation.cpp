@@ -300,7 +300,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	SBox * body_k = Boxes[1];
 	Eigen::Matrix4d JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.11f, 0, 0)));
 	
-	Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(JointFrame);
+	Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(JointFrame.inverse());
 	Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(body_i->PositionFrames.back() * body_k->PositionFrames.back().inverse());
 
 	//cout << "Adjunct_ij = " << endl;
