@@ -37,6 +37,7 @@ public:
 		ion::Graphics::CUniform<color3f> ColorUniform;
 		
 		vector<Eigen::Matrix4d> PositionFrames;
+		vector<Eigen::Vector6d> ReactionForceFrames;
 		vector<vec3d> wFrames;
 		vector<vec3d> vFrames;
 		vector<vector<Contacts>> contactFrames;

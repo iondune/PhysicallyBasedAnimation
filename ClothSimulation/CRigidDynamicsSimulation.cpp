@@ -62,6 +62,7 @@ void CRigidDynamicsSimulation::Setup()
 	p->wFrames.push_back(vec3d(1, 0, 0));
 	p->vFrames.push_back(0);
 	p->contactFrames.push_back(vector<Contacts>());
+	p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -81,6 +82,7 @@ void CRigidDynamicsSimulation::Setup()
 	p->wFrames.push_back(vec3d(2, 0, 0));
 	p->vFrames.push_back(vec3d(0, 1, 0));
 	p->contactFrames.push_back(vector<Contacts>());
+	p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -100,6 +102,7 @@ void CRigidDynamicsSimulation::Setup()
 	p->wFrames.push_back(vec3d(5, 0, 5));
 	p->vFrames.push_back(vec3d(0, 0, 1));
 	p->contactFrames.push_back(vector<Contacts>());
+	p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -119,6 +122,7 @@ void CRigidDynamicsSimulation::Setup()
 	p->wFrames.push_back(vec3d(0, 0, 2));
 	p->vFrames.push_back(vec3d(1, 0, 0));
 	p->contactFrames.push_back(vector<Contacts>());
+	p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -269,6 +273,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		f.segment(Box->Index, 6) += Coriolis;
 		f.segment(Box->Index + 3, 3) += BodyForces;
+		f.segment(Box->Index, 6) += Box->ReactionForceFrames.back();
 
 		// contacts
 		
@@ -329,6 +334,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	Eigen::VectorXd const ftilde = M*v + h*f;
 
 	Eigen::VectorXd NewV;
+	Eigen::VectorXd ReactionForces;
 	if (ContactsArray.size())
 	{
 		Eigen::MatrixXd ContactMatrix;
@@ -376,11 +382,16 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		Eigen::VectorXd const x = A.ldlt().solve(b);
 
-		cout << "x = " << endl;
-		cout << x << endl;
-		cout << endl;
+		//cout << "x = " << endl;
+		//cout << x << endl;
+		//cout << endl;
 
 		NewV = x.segment(0, n);
+		ReactionForces = G.transpose() * x.segment(n, 3) / h;
+
+		//cout << "ReactionForces = " << endl;
+		//cout << ReactionForces << endl;
+		//cout << endl;
 #endif
 	}
 
@@ -403,6 +414,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Box->wFrames.push_back(ToIon3D(w_k_1));
 		Box->vFrames.push_back(ToIon3D(v_k_1));
 		Box->PositionFrames.push_back((E_i_k_1));
+		Box->ReactionForceFrames.push_back(ReactionForces.segment(Box->Index, 6));
 	}
 	SystemMutex.unlock();
 }
