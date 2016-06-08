@@ -312,7 +312,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	// joints
 	
 	Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(Joints[0]->JointFrame.inverse());
-	Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(Joints[0]->Body_i->PositionFrames.back() * Joints[0]->Body_k->PositionFrames.back().inverse());
+	Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(Joints[0]->Body_i->PositionFrames.back().inverse() * Joints[0]->Body_k->PositionFrames.back());
 
 	//cout << "Adjunct_ij = " << endl;
 	//cout << Adjunct_ij << endl;
