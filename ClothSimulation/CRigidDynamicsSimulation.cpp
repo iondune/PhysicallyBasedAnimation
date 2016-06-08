@@ -291,7 +291,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 				Store.Which = Box;
 				Store.Normal = ToIon3D(c.normal);
 				Store.Position = ToIon3D(c.positions[i]);
-				//ContactsArray.push_back(Store);
+				ContactsArray.push_back(Store);
 			}
 		}
 	}
