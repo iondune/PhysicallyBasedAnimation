@@ -253,13 +253,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		M.block<6, 6>(Box->Index, Box->Index) = M_i;
 
 		Eigen::Vector6d Phi_i_k = Box->GetPhi();
-		//Phi_i_k.setZero();
-		//Phi_i_k(0) = Box->wFrames.back().X;
-		//Phi_i_k(1) = Box->wFrames.back().Y;
-		//Phi_i_k(2) = Box->wFrames.back().Z;
-		//Phi_i_k(3) = Box->vFrames.back().X;
-		//Phi_i_k(4) = Box->vFrames.back().Y;
-		//Phi_i_k(5) = Box->vFrames.back().Z;
 
 		v.segment(Box->Index, 6) = Phi_i_k;
 
