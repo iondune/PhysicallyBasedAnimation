@@ -370,8 +370,8 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		A.block(0, n, n, 3) = G.transpose();
 
 		Eigen::VectorXd b;
-		b.setZero();
 		b.resize(n + 3);
+		b.setZero();
 		b.segment(0, n) = ftilde;
 
 		Eigen::VectorXd const x = A.ldlt().solve(b);
