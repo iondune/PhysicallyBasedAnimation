@@ -38,7 +38,9 @@ public:
 		ion::Graphics::CUniform<color3f> ColorUniform;
 		
 		Eigen::Matrix4d Position;
-		Eigen::Vector6d ReactionForce;
+		Eigen::Vector6d ReactionForce = Eigen::Vector6d::Zero();
+		Eigen::Vector3d AppliedForce = Eigen::Vector3d::Zero();
+		Eigen::Vector3d AppliedTorque = Eigen::Vector3d::Zero();
 		vec3d w;
 		vec3d v;
 
@@ -68,13 +70,13 @@ public:
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 	};
 
-protected:
-
 	SSettings Settings;
 
 	vector<SBox *> Boxes;
 	vector<SPlane> Planes;
 	vector<SJoint *> Joints;
+
+protected:
 
 	int BodyMatrixSize = 0;
 	int JointMatrixSize = 0;

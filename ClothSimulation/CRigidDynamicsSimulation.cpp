@@ -246,8 +246,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	int const n = BodyMatrixSize;
 	int const j = JointMatrixSize;
 	double const h = TimeDelta;
-	double const damping = 0.7;
-	double const restitution = 0.2;
+	double const damping = 2.5;
 
 	Eigen::MatrixXd M;
 	Eigen::VectorXd f;
@@ -303,7 +302,9 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		f.segment(Box->Index, 6) += Coriolis;
 		f.segment(Box->Index + 3, 3) += BodyForces;
-		f.segment(Box->Index, 6) += Box->ReactionForce;
+		f.segment(Box->Index, 3) += Box->AppliedTorque * Box->m;
+		f.segment(Box->Index + 3, 3) += Theta_i_T * Box->AppliedForce * Box->m;
+		f.segment(Box->Index, 6) += Box->ReactionForce * Box->m;
 
 		// contacts
 		
@@ -398,6 +399,8 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Box->v = (ToIon3D(v_k_1));
 		Box->Position = ((E_i_k_1));
 		Box->ReactionForce = (ReactionForces.segment(Box->Index, 6));
+		Box->AppliedForce = Eigen::Vector3d::Zero();
+		Box->AppliedTorque = Eigen::Vector3d::Zero();
 	}
 }
 
