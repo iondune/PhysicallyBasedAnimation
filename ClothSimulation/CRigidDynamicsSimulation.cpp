@@ -275,7 +275,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 	vector<SContactStore> ContactsArray;
 
-	SystemMutex.lock();
 	for (SBox const * const Box : Boxes)
 	{
 		if (Box->Fixed)
@@ -340,9 +339,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	}
 	
 
-	SystemMutex.unlock();
-
-
 	Eigen::MatrixXd const Mtilde = M + h*damping*M;
 	Eigen::VectorXd const ftilde = M*v + h*f;
 
@@ -374,7 +370,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	//cout << ReactionForces << endl;
 	//cout << endl;
 
-	SystemMutex.lock();
 	for (SBox * const Box : Boxes)
 	{
 		if (Box->Fixed)
@@ -404,7 +399,6 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Box->Position = ((E_i_k_1));
 		Box->ReactionForce = (ReactionForces.segment(Box->Index, 6));
 	}
-	SystemMutex.unlock();
 }
 
 void CRigidDynamicsSimulation::GUI()
@@ -477,8 +471,6 @@ void CRigidDynamicsSimulation::GUI()
 
 void CRigidDynamicsSimulation::Reset()
 {
-	SystemMutex.lock();
-	SystemMutex.unlock();
 }
 
 void CRigidDynamicsSimulation::AddSceneObjects()
@@ -529,7 +521,6 @@ void CRigidDynamicsSimulation::AddSceneObjects()
 
 void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 {
-	SystemMutex.lock();
 	for (SBox * Box : Boxes)
 	{
 		Box->SceneObject->SetRotation(ToGLM(Box->Position));
@@ -541,7 +532,6 @@ void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 	{
 		Joint->SceneObject->SetRotation(ToGLM(Joint->Body_i->Position * Joint->JointFrame));
 	}
-	SystemMutex.unlock();
 }
 
 void CRigidDynamicsSimulation::PickObject(ray3f const & Ray)

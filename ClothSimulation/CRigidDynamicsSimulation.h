@@ -79,8 +79,6 @@ protected:
 	int BodyMatrixSize = 0;
 	int JointMatrixSize = 0;
 
-	mutex SystemMutex;
-
 	SBox * SelectedBox = nullptr;
 
 	bool PlaneObjectsCreated = false;
