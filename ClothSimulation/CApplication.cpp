@@ -56,7 +56,7 @@ void CApplication::OnEvent(IEvent & Event)
 				if (! MouseEvent.Pressed)
 				{
 					ray3f const Ray = FreeCamera->GetPickingRay(MouseEvent.Location, Window->GetSize());
-					RigidDynamicsSimulation->PickParticle(Ray);
+					RigidDynamicsSimulation->PickObject(Ray);
 				}
 			}
 

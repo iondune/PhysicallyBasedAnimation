@@ -22,7 +22,7 @@ public:
 	void AddSceneObjects();
 	void UpdateSceneObjects(uint const CurrentFrame);
 
-	void PickParticle(ray3f const & Ray);
+	void PickObject(ray3f const & Ray);
 
 
 	struct SBox
@@ -81,10 +81,7 @@ protected:
 
 	mutex SystemMutex;
 
-	SBox * GetParticle(vec2i const & Index);
-
-	int VisibleFrame = 0;
-	SBox * SelectedParticle = nullptr;
+	SBox * SelectedBox = nullptr;
 
 	bool PlaneObjectsCreated = false;
 

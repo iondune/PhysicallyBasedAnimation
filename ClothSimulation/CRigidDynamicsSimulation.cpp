@@ -37,14 +37,14 @@ void CRigidDynamicsSimulation::Setup()
 {
 	SingletonPointer<CApplication> Application;
 
-	SelectedParticle = nullptr;
-	for (auto Particle : Boxes)
+	SelectedBox = nullptr;
+	for (SBox * const Box : Boxes)
 	{
-		if (Particle->SceneObject)
+		if (Box->SceneObject)
 		{
-			Application->RenderPass->RemoveSceneObject(Particle->SceneObject);
+			Application->RenderPass->RemoveSceneObject(Box->SceneObject);
 		}
-		delete Particle;
+		delete Box;
 	}
 	Boxes.clear();
 
@@ -450,7 +450,7 @@ void CRigidDynamicsSimulation::GUI()
 		ImGui::EndPopup();
 	}
 
-	if (SelectedParticle)
+	if (SelectedBox)
 	{
 		if (ImGui::Begin("Rigid Body Info"))
 		{
@@ -458,16 +458,16 @@ void CRigidDynamicsSimulation::GUI()
 			ImGui::SetWindowPos(ImVec2(1000, 350), ImGuiSetCond_Once);
 			vec4f position(0, 0, 0, 1);
 			vec4f scale(1, 1, 1, 0);
-			position.Transform(ToGLM(SelectedParticle->Position));
-			scale.Transform(ToGLM(SelectedParticle->Position));
+			position.Transform(ToGLM(SelectedBox->Position));
+			scale.Transform(ToGLM(SelectedBox->Position));
 			ImGui::Text("Position: %.3f %.3f %.3f", position.X, position.Y, position.Z);
 			ImGui::Text("Scale: %.3f %.3f %.3f", scale.X, scale.Y, scale.Z);
 			ImGui::Text("Mass: %.5f %.5f %.5f %.5f %.5f %.5f",
-				SelectedParticle->Mass(0), SelectedParticle->Mass(1), SelectedParticle->Mass(2),
-				SelectedParticle->Mass(3), SelectedParticle->Mass(4), SelectedParticle->Mass(5));
-			vec3f l_vel = SelectedParticle->v;
+				SelectedBox->Mass(0), SelectedBox->Mass(1), SelectedBox->Mass(2),
+				SelectedBox->Mass(3), SelectedBox->Mass(4), SelectedBox->Mass(5));
+			vec3f l_vel = SelectedBox->v;
 			ImGui::Text("Linear Velocity: %.3f %.3f %.3f", l_vel.X, l_vel.Y, l_vel.Z);
-			vec3f a_vel = SelectedParticle->w;
+			vec3f a_vel = SelectedBox->w;
 			ImGui::Text("Angular Velocity: %.3f %.3f %.3f", a_vel.X, a_vel.Y, a_vel.Z);
 
 			ImGui::End();
@@ -478,9 +478,6 @@ void CRigidDynamicsSimulation::GUI()
 void CRigidDynamicsSimulation::Reset()
 {
 	SystemMutex.lock();
-	for (SBox * particle : Boxes)
-	{
-	}
 	SystemMutex.unlock();
 }
 
@@ -488,14 +485,14 @@ void CRigidDynamicsSimulation::AddSceneObjects()
 {
 	SingletonPointer<CApplication> Application;
 
-	for (auto Particle : Boxes)
+	for (auto Box : Boxes)
 	{
-		Particle->SceneObject = new CSimpleMeshSceneObject();
-		Particle->SceneObject->SetMesh(Application->CubeMesh);
-		Particle->SceneObject->SetScale(Particle->Extent);
-		Particle->SceneObject->SetShader(Application->DiffuseShader);
-		Particle->SceneObject->SetUniform("uColor", Particle->ColorUniform);
-		Application->RenderPass->AddSceneObject(Particle->SceneObject);
+		Box->SceneObject = new CSimpleMeshSceneObject();
+		Box->SceneObject->SetMesh(Application->CubeMesh);
+		Box->SceneObject->SetScale(Box->Extent);
+		Box->SceneObject->SetShader(Application->DiffuseShader);
+		Box->SceneObject->SetUniform("uColor", Box->ColorUniform);
+		Application->RenderPass->AddSceneObject(Box->SceneObject);
 	}
 
 	for (auto Joint : Joints)
@@ -532,8 +529,6 @@ void CRigidDynamicsSimulation::AddSceneObjects()
 
 void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 {
-	VisibleFrame = CurrentFrame;
-
 	SystemMutex.lock();
 	for (SBox * Box : Boxes)
 	{
@@ -549,31 +544,26 @@ void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 	SystemMutex.unlock();
 }
 
-void CRigidDynamicsSimulation::PickParticle(ray3f const & Ray)
+void CRigidDynamicsSimulation::PickObject(ray3f const & Ray)
 {
-	SelectedParticle = nullptr;
-	for (auto Particle : Boxes)
+	SelectedBox = nullptr;
+	for (auto Box : Boxes)
 	{
-		Particle->ColorUniform = Particle->Color;
+		Box->ColorUniform = Box->Color;
 	}
-	for (auto Particle : Boxes)
+	for (auto Box : Boxes)
 	{
 		vec3f Center;
-		Center.Transform(ToGLM(Particle->Position), 1.f);
+		Center.Transform(ToGLM(Box->Position), 1.f);
 		float const Radius = 0.125f;
 
 		if (Ray.IntersectsSphere(Center, Radius))
 		{
-			SelectedParticle = Particle;
-			Particle->ColorUniform = Colors::White * 0.75f;
+			SelectedBox = Box;
+			Box->ColorUniform = Colors::White * 0.75f;
 			break;
 		}
 	}
-}
-
-CRigidDynamicsSimulation::SBox * CRigidDynamicsSimulation::GetParticle(vec2i const & Index)
-{
-	return Boxes[Index.X];
 }
 
 Eigen::Vector6d CRigidDynamicsSimulation::SBox::GetPhi() const
