@@ -1,6 +1,5 @@
 
 #include "CApplication.h"
-#include "CLagrangianSimulation.h"
 
 using namespace ion;
 using namespace ion::Scene;
