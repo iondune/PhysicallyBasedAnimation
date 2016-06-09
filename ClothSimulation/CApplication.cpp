@@ -73,7 +73,8 @@ void CApplication::InitializeEngine()
 	WindowManager->Init(GraphicsAPI);
 	TimeManager->Init(WindowManager);
 
-	Window = WindowManager->CreateWindow(vec2i(1600, 900), "DemoApplication", EWindowType::Windowed);
+	Window = WindowManager->CreateWindow(vec2i(2400, 1300), "Physically-Based Animation", EWindowType::Windowed);
+	Window->SetPosition(vec2i(50, 50));
 
 	GraphicsContext = GraphicsAPI->GetWindowContext(Window);
 
