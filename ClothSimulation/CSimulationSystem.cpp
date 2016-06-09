@@ -13,34 +13,11 @@ void CSimulationSystem::Start(ion::Scene::CRenderPass * RenderPass)
 	{
 		Simulation->Setup();
 	}
-
-	SimulationThread = thread([this]()
-	{
-		while (Running)
-		{
-			if (Simulating)
-			{
-				SimulationMutex.lock();
-				for (auto Simulation : Simulations)
-				{
-					Simulation->SimulateStep(TimeStep);
-				}
-				SimulatedFrames ++;
-				SimulationMutex.unlock();
-			}
-			else
-			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
-				std::this_thread::yield();
-			}
-		}
-	});
 }
 
 void CSimulationSystem::Stop()
 {
 	Running = false;
-	SimulationThread.join();
 }
 
 void CSimulationSystem::Update()
@@ -56,6 +33,14 @@ void CSimulationSystem::Update()
 		if (StepAccumulator > TimeNeeded)
 		{
 			StepAccumulator = 0;
+
+			SimulationMutex.lock();
+			for (auto Simulation : Simulations)
+			{
+				Simulation->SimulateStep(TimeStep);
+			}
+			SimulatedFrames ++;
+			SimulationMutex.unlock();
 
 			if (DisplayedFrame < MaxFrames)
 			{

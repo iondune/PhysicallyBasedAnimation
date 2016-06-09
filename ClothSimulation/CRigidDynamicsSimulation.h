@@ -37,11 +37,10 @@ public:
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
 		ion::Graphics::CUniform<color3f> ColorUniform;
 		
-		vector<Eigen::Matrix4d> PositionFrames;
-		vector<Eigen::Vector6d> ReactionForceFrames;
-		vector<vec3d> wFrames;
-		vector<vec3d> vFrames;
-		vector<vector<Contacts>> contactFrames;
+		Eigen::Matrix4d Position;
+		Eigen::Vector6d ReactionForce;
+		vec3d w;
+		vec3d v;
 
 		Eigen::Vector6d GetPhi() const;
 	};

@@ -40,7 +40,6 @@ protected:
 
 	vector<ISimulation *> Simulations;
 
-	thread SimulationThread;
 	int DisplayedFrame = 0;
 	int MaxFrames = 1;
 

@@ -58,11 +58,10 @@ void CRigidDynamicsSimulation::Setup()
 
 	p = new SBox();
 	p->Extent = Size;
-	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center));
-	p->wFrames.push_back(vec3d(1, 0, 0));
-	p->vFrames.push_back(0);
-	p->contactFrames.push_back(vector<Contacts>());
-	p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
+	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center));
+	p->w = (vec3d(1, 0, 0));
+	p->v = (0);
+	p->ReactionForce = (Eigen::Vector6d::Zero());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -78,11 +77,10 @@ void CRigidDynamicsSimulation::Setup()
 
 	p = new SBox();
 	p->Extent = Size * 2;
-	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.275, 0, 0)));
-	p->wFrames.push_back(vec3d(2, 0, 0));
-	p->vFrames.push_back(vec3d(0, 1, 0));
-	p->contactFrames.push_back(vector<Contacts>());
-	p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
+	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.275, 0, 0)));
+	p->w = (vec3d(2, 0, 0));
+	p->v = (vec3d(0, 1, 0));
+	p->ReactionForce = (Eigen::Vector6d::Zero());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -98,11 +96,10 @@ void CRigidDynamicsSimulation::Setup()
 
 	p = new SBox();
 	p->Extent = Size;
-	p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.275, 0, 0)));
-	p->wFrames.push_back(0);// vec3d(5, 0, 5));
-	p->vFrames.push_back(0);// vec3d(0, 0, 1));
-	p->contactFrames.push_back(vector<Contacts>());
-	p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
+	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.275, 0, 0)));
+	p->w = (0);// vec3d(5, 0, 5));
+	p->v = (0);// vec3d(0, 0, 1));
+	p->ReactionForce = (Eigen::Vector6d::Zero());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -279,11 +276,10 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	vector<SContactStore> ContactsArray;
 
 	SystemMutex.lock();
-	for (SBox * const Box : Boxes)
+	for (SBox const * const Box : Boxes)
 	{
 		if (Box->Fixed)
 		{
-			Box->contactFrames.push_back(vector<Contacts>());
 			continue;
 		}
 
@@ -301,45 +297,25 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Phi_i_cross.block<3, 3>(3, 3) = Rigid::bracket3(Phi_i.segment(0, 3));
 
 		Eigen::Vector3d const Acceleration = ToEigen(Gravity);
-		Eigen::Matrix3d const Theta_i_T = ThetaFromE(Box->PositionFrames.back()).transpose();
+		Eigen::Matrix3d const Theta_i_T = ThetaFromE(Box->Position).transpose();
 
 		Eigen::Vector3d const BodyForces = Theta_i_T * Box->m * Acceleration;
 		Eigen::Vector6d const Coriolis = Phi_i_cross.transpose() * M_i * Phi_i;
 
 		f.segment(Box->Index, 6) += Coriolis;
 		f.segment(Box->Index + 3, 3) += BodyForces;
-		f.segment(Box->Index, 6) += Box->ReactionForceFrames.back();
+		f.segment(Box->Index, 6) += Box->ReactionForce;
 
 		// contacts
 		
-		Eigen::Matrix4d const E_i_k = Box->PositionFrames.back();
-
-		SingletonPointer<CApplication> Application;
-
-		Box->contactFrames.push_back(vector<Contacts>());
-		glm::mat4 FloorMatrix = glm::mat4(1.f);
-		FloorMatrix = glm::translate(FloorMatrix, Application->GroundObject->GetTranslation().ToGLM());
-
-		Contacts const c = odeBoxBox(ToEigen(FloorMatrix), ToEigen(vec3d(1.0) * Application->GroundObject->GetScale()), E_i_k, ToEigen(Box->Extent));
-		if (c.count > 0)
-		{
-			Box->contactFrames.back().push_back(c);
-			for (int i = 0; i < c.count; ++ i)
-			{
-				SContactStore Store;
-				Store.Which = Box;
-				Store.Normal = ToIon3D(c.normal);
-				Store.Position = ToIon3D(c.positions[i]);
-				//ContactsArray.push_back(Store);
-			}
-		}
+		Eigen::Matrix4d const E_i_k = Box->Position;
 	}
 
 	// joints
-	for (auto Joint : Joints)
+	for (SJoint const * const Joint : Joints)
 	{
 		Eigen::Matrix6d const Adjunct_ij = Rigid::adjoint(Joint->JointFrame.inverse());
-		Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(Joint->Body_i->PositionFrames.back().inverse() * Joint->Body_k->PositionFrames.back());
+		Eigen::Matrix6d const Adjunct_ki = Rigid::adjoint(Joint->Body_i->Position.inverse() * Joint->Body_k->Position);
 
 		//cout << "Adjunct_ij = " << endl;
 		//cout << Adjunct_ij << endl;
@@ -372,75 +348,41 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 	Eigen::VectorXd NewV;
 	Eigen::VectorXd ReactionForces;
-	if (ContactsArray.size())
-	{
-		Eigen::MatrixXd ContactMatrix;
-		ContactMatrix.resize(ContactsArray.size(), n);
-		ContactMatrix.setZero();
 
-		for (int i = 0; i < ContactsArray.size(); ++ i)
-		{
-			auto C = ContactsArray[i];
-			Eigen::Vector3d const nw = ToEigen(C.Normal);
-			Eigen::Matrix4d const E = C.Which->PositionFrames.back();
-			glm::mat4 const m = ToGLM(E);
-			vec3d const local = C.Position.GetTransformed(glm::inverse(m));
+	Eigen::MatrixXd A;
+	A.resize(n + j, n + j);
+	A.setZero();
+	A.block(0, 0, n, n) = Mtilde;
+	A.block(n, 0, j, n) = G;
+	A.block(0, n, n, j) = G.transpose();
 
-			Eigen::Matrix<double, 1, 6> const ContactRow = nw.transpose() * ThetaFromE(C.Which->PositionFrames.back()) * Rigid::gamma(ToEigen(local));
+	Eigen::VectorXd b;
+	b.resize(n + j);
+	b.setZero();
+	b.segment(0, n) = ftilde;
 
-			ContactMatrix.block<1, 6>(i, C.Which->Index) = ContactRow;
-		}
+	Eigen::VectorXd const x = A.ldlt().solve(b);
 
-		Eigen::VectorXd Nv;
-		Nv.resize(ContactsArray.size());
-		Nv = restitution * ContactMatrix * v;
+	//cout << "x = " << endl;
+	//cout << x << endl;
+	//cout << endl;
 
-		Eigen::VectorXd LinV = Mtilde.ldlt().solve(ftilde);
-		NewV = quadprog(Mtilde, -ftilde, -ContactMatrix, Nv, v);
-		cout << "Linear Solution=" << endl << LinV << endl;
-		cout << "QP Solution=" << endl << NewV << endl;
-	}
-	else
-	{
-#if 0
-		NewV = Mtilde.ldlt().solve(ftilde);
-#else
-		Eigen::MatrixXd A;
-		A.resize(n + j, n + j);
-		A.setZero();
-		A.block(0, 0, n, n) = Mtilde;
-		A.block(n, 0, j, n) = G;
-		A.block(0, n, n, j) = G.transpose();
+	NewV = x.segment(0, n);
+	ReactionForces = G.transpose() * x.segment(n, j);
 
-		Eigen::VectorXd b;
-		b.resize(n + j);
-		b.setZero();
-		b.segment(0, n) = ftilde;
-
-		Eigen::VectorXd const x = A.ldlt().solve(b);
-
-		//cout << "x = " << endl;
-		//cout << x << endl;
-		//cout << endl;
-
-		NewV = x.segment(0, n);
-		ReactionForces = G.transpose() * x.segment(n, j);
-
-		//cout << "ReactionForces = " << endl;
-		//cout << ReactionForces << endl;
-		//cout << endl;
-#endif
-	}
+	//cout << "ReactionForces = " << endl;
+	//cout << ReactionForces << endl;
+	//cout << endl;
 
 	SystemMutex.lock();
 	for (SBox * const Box : Boxes)
 	{
 		if (Box->Fixed)
 		{
-			Box->wFrames.push_back(0);
-			Box->vFrames.push_back(0);
-			Box->PositionFrames.push_back(Box->PositionFrames.back());
-			Box->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
+			Box->w = (0);
+			Box->v = (0);
+			Box->Position = (Box->Position);
+			Box->ReactionForce = (Eigen::Vector6d::Zero());
 			continue;
 		}
 		
@@ -451,16 +393,16 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		Eigen::Matrix4d E_i_k;
 		E_i_k.setZero();
-		E_i_k = Box->PositionFrames.back();
+		E_i_k = Box->Position;
 
 		Eigen::Matrix4d E_i_k_1;
 		E_i_k_1.setZero();
 		E_i_k_1 = Rigid::integrate(E_i_k, Phi_i_k_1, h);
 
-		Box->wFrames.push_back(ToIon3D(w_k_1));
-		Box->vFrames.push_back(ToIon3D(v_k_1));
-		Box->PositionFrames.push_back((E_i_k_1));
-		Box->ReactionForceFrames.push_back(ReactionForces.segment(Box->Index, 6));
+		Box->w = (ToIon3D(w_k_1));
+		Box->v = (ToIon3D(v_k_1));
+		Box->Position = ((E_i_k_1));
+		Box->ReactionForce = (ReactionForces.segment(Box->Index, 6));
 	}
 	SystemMutex.unlock();
 }
@@ -516,26 +458,17 @@ void CRigidDynamicsSimulation::GUI()
 			ImGui::SetWindowPos(ImVec2(1000, 350), ImGuiSetCond_Once);
 			vec4f position(0, 0, 0, 1);
 			vec4f scale(1, 1, 1, 0);
-			position.Transform(ToGLM(SelectedParticle->PositionFrames[VisibleFrame]));
-			scale.Transform(ToGLM(SelectedParticle->PositionFrames[VisibleFrame]));
+			position.Transform(ToGLM(SelectedParticle->Position));
+			scale.Transform(ToGLM(SelectedParticle->Position));
 			ImGui::Text("Position: %.3f %.3f %.3f", position.X, position.Y, position.Z);
 			ImGui::Text("Scale: %.3f %.3f %.3f", scale.X, scale.Y, scale.Z);
 			ImGui::Text("Mass: %.5f %.5f %.5f %.5f %.5f %.5f",
 				SelectedParticle->Mass(0), SelectedParticle->Mass(1), SelectedParticle->Mass(2),
 				SelectedParticle->Mass(3), SelectedParticle->Mass(4), SelectedParticle->Mass(5));
-			vec3f l_vel = SelectedParticle->vFrames[VisibleFrame];
+			vec3f l_vel = SelectedParticle->v;
 			ImGui::Text("Linear Velocity: %.3f %.3f %.3f", l_vel.X, l_vel.Y, l_vel.Z);
-			vec3f a_vel = SelectedParticle->wFrames[VisibleFrame];
+			vec3f a_vel = SelectedParticle->w;
 			ImGui::Text("Angular Velocity: %.3f %.3f %.3f", a_vel.X, a_vel.Y, a_vel.Z);
-
-			ImGui::Separator();
-
-			for (auto Contact : SelectedParticle->contactFrames[VisibleFrame])
-			{
-				ImGui::Text("Contacts %d", Contact.count);
-				ImGui::Text("Normal %.3f %.3f %.3f", Contact.normal.x(), Contact.normal.y(), Contact.normal.z());
-				ImGui::Separator();
-			}
 
 			ImGui::End();
 		}
@@ -547,7 +480,6 @@ void CRigidDynamicsSimulation::Reset()
 	SystemMutex.lock();
 	for (SBox * particle : Boxes)
 	{
-		particle->PositionFrames.resize(1);
 	}
 	SystemMutex.unlock();
 }
@@ -605,16 +537,14 @@ void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 	SystemMutex.lock();
 	for (SBox * Box : Boxes)
 	{
-		Box->SceneObject->SetRotation(ToGLM(Box->PositionFrames[CurrentFrame]));
-		color3f Color = Box->Color;
-		if (Box->contactFrames[CurrentFrame].size())
-			Color *= 0.5f;
+		Box->SceneObject->SetRotation(ToGLM(Box->Position));
+		color3f const Color = Box->Color;
 		Box->ColorUniform = Color;
 	}
 
 	for (auto Joint : Joints)
 	{
-		Joint->SceneObject->SetRotation(ToGLM(Joint->Body_i->PositionFrames[CurrentFrame] * Joint->JointFrame));
+		Joint->SceneObject->SetRotation(ToGLM(Joint->Body_i->Position * Joint->JointFrame));
 	}
 	SystemMutex.unlock();
 }
@@ -629,7 +559,7 @@ void CRigidDynamicsSimulation::PickParticle(ray3f const & Ray)
 	for (auto Particle : Boxes)
 	{
 		vec3f Center;
-		Center.Transform(ToGLM(Particle->PositionFrames[VisibleFrame]), 1.f);
+		Center.Transform(ToGLM(Particle->Position), 1.f);
 		float const Radius = 0.125f;
 
 		if (Ray.IntersectsSphere(Center, Radius))
@@ -649,11 +579,11 @@ CRigidDynamicsSimulation::SBox * CRigidDynamicsSimulation::GetParticle(vec2i con
 Eigen::Vector6d CRigidDynamicsSimulation::SBox::GetPhi() const
 {
 	Eigen::Vector6d Phi;
-	Phi(0) = wFrames.back().X;
-	Phi(1) = wFrames.back().Y;
-	Phi(2) = wFrames.back().Z;
-	Phi(3) = vFrames.back().X;
-	Phi(4) = vFrames.back().Y;
-	Phi(5) = vFrames.back().Z;
+	Phi(0) = w.X;
+	Phi(1) = w.Y;
+	Phi(2) = w.Z;
+	Phi(3) = v.X;
+	Phi(4) = v.Y;
+	Phi(5) = v.Z;
 	return Phi;
 }
