@@ -121,7 +121,7 @@ void CApplication::SetupScene()
 	FreeCamera->SetFocalLength(0.4f);
 	FreeCamera->SetFarPlane(10000.f);
 
-	CCameraController * Controller = new CCameraController(FreeCamera);
+	CCameraController * Controller = new CGamePadCameraController(FreeCamera);
 	Controller->SetTheta(-Constants32::Pi / 2);
 	Controller->SetPhi(0);
 	Window->AddListener(Controller);
