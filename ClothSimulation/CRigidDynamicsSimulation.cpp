@@ -302,9 +302,10 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 
 		f.segment(Box->Index, 6) += Coriolis;
 		f.segment(Box->Index + 3, 3) += BodyForces;
-		f.segment(Box->Index, 3) += Box->AppliedTorque * Box->m;
-		f.segment(Box->Index + 3, 3) += Theta_i_T * Box->AppliedForce * Box->m;
-		f.segment(Box->Index, 6) += Box->ReactionForce * Box->m;
+		f.segment(Box->Index, 3) += Box->AppliedTorque;
+		f.segment(Box->Index + 3, 3) += Theta_i_T * Box->AppliedForce;
+		f.segment(Box->Index + 3, 3) += Box->LocalForce;
+		f.segment(Box->Index, 6) += Box->ReactionForce;
 
 		// contacts
 		
@@ -401,6 +402,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Box->ReactionForce = (ReactionForces.segment(Box->Index, 6));
 		Box->AppliedForce = Eigen::Vector3d::Zero();
 		Box->AppliedTorque = Eigen::Vector3d::Zero();
+		Box->LocalForce = Eigen::Vector3d::Zero();
 	}
 }
 

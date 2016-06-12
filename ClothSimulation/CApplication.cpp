@@ -166,6 +166,14 @@ void CApplication::MainLoop()
 			RigidDynamicsSimulation->Boxes[1]->AppliedForce.y() = 8.f;
 			RigidDynamicsSimulation->Boxes[1]->AppliedForce.x() = 8.f;
 		}
+		if (Window->IsKeyDown(EKey::LeftControl))
+		{
+			RigidDynamicsSimulation->Boxes[1]->LocalForce.y() = 8.f;
+		}
+		if (Window->IsKeyDown(EKey::LeftShift))
+		{
+			RigidDynamicsSimulation->Boxes[0]->LocalForce.y() = 8.f;
+		}
 		
 		// GUI
 		GUIManager->NewFrame();

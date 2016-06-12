@@ -41,6 +41,7 @@ public:
 		Eigen::Vector6d ReactionForce = Eigen::Vector6d::Zero();
 		Eigen::Vector3d AppliedForce = Eigen::Vector3d::Zero();
 		Eigen::Vector3d AppliedTorque = Eigen::Vector3d::Zero();
+		Eigen::Vector3d LocalForce = Eigen::Vector3d::Zero();
 		vec3d w;
 		vec3d v;
 
