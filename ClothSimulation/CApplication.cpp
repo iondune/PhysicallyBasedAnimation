@@ -101,6 +101,7 @@ void CApplication::LoadAssets()
 	ClothShader = AssetManager->LoadShader("Cloth");
 	GroundShader = AssetManager->LoadShader("Ground");
 	DiffuseShader = AssetManager->LoadShader("Diffuse");
+	ColorShader = AssetManager->LoadShader("Color");
 
 	GroundTexture = AssetManager->LoadTexture("Ground.png");
 	if (GroundTexture)

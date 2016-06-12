@@ -499,6 +499,11 @@ void CRigidDynamicsSimulation::AddSceneObjects()
 		Joint->SceneObject->SetUniform("uColor", CUniform<color3f>(Colors::Black));
 		Joint->SceneObject->SetFeatureEnabled(EDrawFeature::Wireframe, true);
 		Application->RenderPass->AddSceneObject(Joint->SceneObject);
+
+		Joint->CoordianteFrame = new CCoordinateFrameSceneObject();
+		Joint->CoordianteFrame->SetScale(0.05f);
+		Joint->CoordianteFrame->SetShader(Application->ColorShader);
+		Application->RenderPass->AddSceneObject(Joint->CoordianteFrame);
 	}
 
 	if (! PlaneObjectsCreated)
@@ -534,6 +539,7 @@ void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
 	for (auto Joint : Joints)
 	{
 		Joint->SceneObject->SetRotation(ToGLM(Joint->Body_i->Position * Joint->JointFrame));
+		Joint->CoordianteFrame->SetRotation(ToGLM(Joint->Body_i->Position * Joint->JointFrame));
 	}
 }
 

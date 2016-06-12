@@ -28,6 +28,7 @@ public:
 	SharedPointer<ion::Graphics::IShaderProgram> ClothShader;
 	SharedPointer<ion::Graphics::IShaderProgram> GroundShader;
 	SharedPointer<ion::Graphics::IShaderProgram> DiffuseShader;
+	SharedPointer<ion::Graphics::IShaderProgram> ColorShader;
 
 	ion::Scene::CSimpleMesh * CubeMesh = nullptr;
 	ion::Scene::CSimpleMesh * SphereMesh = nullptr;

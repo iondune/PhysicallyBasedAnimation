@@ -68,6 +68,7 @@ public:
 		int Index = 0;
 
 		ion::Scene::CSimpleMeshSceneObject * SceneObject = nullptr;
+		ion::Scene::CCoordinateFrameSceneObject * CoordianteFrame = nullptr;
 	};
 
 	SSettings Settings;
