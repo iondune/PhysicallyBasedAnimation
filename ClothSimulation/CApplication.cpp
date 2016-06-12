@@ -162,8 +162,8 @@ void CApplication::MainLoop()
 
 		if (Window->IsKeyDown(EKey::Space))
 		{
-			RigidDynamicsSimulation->Boxes[1]->AppliedForce.y() = 1.f;
-			RigidDynamicsSimulation->Boxes[1]->AppliedForce.x() = 1.f;
+			RigidDynamicsSimulation->Boxes[1]->AppliedForce.y() = 8.f;
+			RigidDynamicsSimulation->Boxes[1]->AppliedForce.x() = 8.f;
 		}
 		
 		// GUI
