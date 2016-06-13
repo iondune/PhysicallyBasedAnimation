@@ -163,13 +163,23 @@ void CApplication::MainLoop()
 	{
 		TimeManager->Update();
 
-		if (Window->IsKeyDown(EKey::Space))
+		if (Window->IsKeyDown(EKey::Space) || Window->IsKeyDown(EKey::Z) || Window->IsKeyDown(EKey::X))
 		{
 			for (int i = 1; i <= 2; ++ i)
 			{
 				double const Magnitude = 50.0;
 				double const ControlRegion = 0.2;
-				vec3d Movement = RigidDynamicsSimulation->Boxes[i]->OriginalTranslation - RigidDynamicsSimulation->Boxes[i]->GetTranslation();
+				vec3d GoalPosition = RigidDynamicsSimulation->Boxes[i]->OriginalTranslation;
+				if (Window->IsKeyDown(EKey::Z))
+				{
+					std::swap(GoalPosition.X, GoalPosition.Z);
+				}
+				if (Window->IsKeyDown(EKey::X))
+				{
+					std::swap(GoalPosition.X, GoalPosition.Z);
+					GoalPosition.Z *= -1;
+				}
+				vec3d Movement = GoalPosition - RigidDynamicsSimulation->Boxes[i]->GetTranslation();
 
 				printf("Length %d: %.6f %s\n", i, Movement.Length(), (Movement.Length() < ControlRegion ? "under gravity control" : ""));
 				//if (Movement.Length() < ControlRegion)
@@ -181,13 +191,9 @@ void CApplication::MainLoop()
 				RigidDynamicsSimulation->Boxes[i]->AppliedForce = Magnitude * ToEigen(Movement);
 			}
 		}
-		if (Window->IsKeyDown(EKey::Z))
+		if (Window->IsKeyDown(EKey::O))
 		{
-			RigidDynamicsSimulation->Boxes[2]->LocalForce.y() = 8.f;
-		}
-		if (Window->IsKeyDown(EKey::X))
-		{
-			RigidDynamicsSimulation->Boxes[1]->LocalForce.y() = 8.f;
+			RigidDynamicsSimulation->Boxes[1]->AppliedTorque.x() = 0.01;
 		}
 		
 		// GUI
