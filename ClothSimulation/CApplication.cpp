@@ -441,7 +441,7 @@ void DoCCD_IK(vec3f const & Goal)
 		f32 Delta = DegToRad(30.f);
 		for (int i = 0; i < 500; ++ i)
 		{
-			for (int t = 0; t < ION_ARRAYSIZE(Joints); ++ t)
+			for (int t = ION_ARRAYSIZE(Joints) - 1; t >= 0; -- t)
 			{
 				for (int u = 0; u < 3; ++ u)
 				{
@@ -468,7 +468,7 @@ void DoCCD_IK(vec3f const & Goal)
 					}
 				}
 			}
-			Delta /= 1.1f;
+			Delta /= 1.01f;
 		}
 	}
 
