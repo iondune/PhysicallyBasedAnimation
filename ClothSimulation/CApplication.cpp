@@ -133,6 +133,8 @@ void CApplication::SetupScene()
 	RenderPass->SetActiveCamera(FreeCamera);
 }
 
+CLineSceneObject * lns = nullptr;
+
 void CApplication::AddSceneObjects()
 {
 	GroundObject = new CSimpleMeshSceneObject();
@@ -150,11 +152,12 @@ void CApplication::AddSceneObjects()
 	PointLight = new CPointLight();
 	RenderPass->AddLight(PointLight);
 
-	LineObject = new CLineSceneObject();
+	lns = LineObject = new CLineSceneObject();
 	LineObject->SetShader(ColorShader);
 	RenderPass->AddSceneObject(LineObject);
 }
 
+void DoCCD_IK(vec3f const & Goal);
 
 void CApplication::MainLoop()
 {
@@ -170,6 +173,8 @@ void CApplication::MainLoop()
 		LineObject->ResetLines();
 		LineObject->AddLine(vec3f(0.2f, 1.25f, 0), vec3f(0.45f, 1.25f, 0), Colors::Red);
 		LineObject->AddLine(vec3f(0.45f, 1.25f, 0), vec3f(0.7f, 1.25f, 0), Colors::Green);
+
+		DoCCD_IK(vec3f(0.45f, 0, 0));
 
 		if (Window->IsKeyDown(EKey::Space) || Window->IsKeyDown(EKey::Z) || Window->IsKeyDown(EKey::X))
 		{
@@ -219,4 +224,103 @@ void CApplication::MainLoop()
 	}
 
 	SimulationSystem->Stop();
+}
+
+void DoCCD_IK(vec3f const & Goal)
+{
+	struct Joint
+	{
+		Joint * Parent;
+		vec3f Rotation = vec3f(0, 3.1415f, 0);
+		f32 Length;
+
+		Joint()
+			: Parent(0), Length(0)
+		{}
+
+		glm::mat4 getLocalTransformation()
+		{
+			glm::mat4 Trans = glm::translate(glm::mat4(1.f), glm::vec3(Length, 0, 0));
+
+			glm::mat4 Rot = glm::mat4(1.f);
+			Rot = glm::rotate(Rot, Rotation.Z, glm::vec3(0, 0, 1));
+			Rot = glm::rotate(Rot, Rotation.Y, glm::vec3(0, 1, 0));
+			Rot = glm::rotate(Rot, Rotation.X, glm::vec3(1, 0, 0));
+
+			return Rot * Trans;
+		}
+
+		glm::mat4 getTransformation()
+		{
+			glm::mat4 Trans = getLocalTransformation();
+
+			if (Parent)
+				Trans = Parent->getTransformation() * Trans;
+
+			return Trans;
+		}
+
+		vec3f const getLocation()
+		{
+			glm::vec4 v(0, 0, 0, 1);
+			v = getTransformation() * v;
+
+			return vec3f(v.x, v.y, v.z);
+		}
+	};
+
+	Joint Root, Joint1, Hand;
+	Root.Length = Joint1.Length = 0.25f;
+	Joint1.Parent = & Root;
+	Hand.Parent = & Joint1;
+
+	Joint * Joints[] = { & Root, & Joint1 };
+
+	vec3f EndEffector(Goal.X, Goal.Y, Goal.Z);
+
+	{
+		auto GetValue = [&]() -> f32
+		{
+			vec3f const HandLoc = Hand.getLocation();
+			return Sq(EndEffector.GetDistanceFrom(HandLoc));
+		};
+
+		f32 Delta = DegToRad(30.f);
+		for (int i = 0; i < 500; ++ i)
+		{
+			for (int t = 0; t < ION_ARRAYSIZE(Joints); ++ t)
+			{
+				for (int u = 0; u < 3; ++ u)
+				{
+					f32 const LastValue = GetValue();
+					Joints[t]->Rotation[u] += Delta;
+					f32 const AddValue = GetValue();
+					Joints[t]->Rotation[u] -= 2 * Delta;
+					f32 const SubValue = GetValue();
+					Joints[t]->Rotation[u] += Delta;
+
+					if (LastValue < AddValue && LastValue < SubValue)
+					{
+					}
+					else if (AddValue < SubValue)
+					{
+						Joints[t]->Rotation[u] += Delta;
+					}
+					else if (SubValue < AddValue)
+					{
+						Joints[t]->Rotation[u] -= Delta;
+					}
+					else
+					{
+					}
+				}
+			}
+			Delta /= 1.25f;
+		}
+	}
+
+	vec3f cent = vec3f(0.2f, 1.25f, 0);
+	lns->AddLine(cent, cent + Root.getLocation(), Colors::Magenta);
+	lns->AddLine(cent + Root.getLocation(), cent + Joint1.getLocation(), Colors::Orange);
+	lns->AddLine(cent + Joint1.getLocation(), cent + Hand.getLocation(), Colors::Cyan);
 }
