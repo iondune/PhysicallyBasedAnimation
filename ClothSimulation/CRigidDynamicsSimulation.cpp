@@ -253,7 +253,7 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 	int const n = BodyMatrixSize;
 	int const j = JointMatrixSize;
 	double const h = TimeDelta;
-	double const damping = 2.5;
+	double const damping = 12.5;
 
 	Eigen::MatrixXd M;
 	Eigen::VectorXd f;
