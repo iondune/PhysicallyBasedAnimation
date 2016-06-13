@@ -57,49 +57,8 @@ void CRigidDynamicsSimulation::Setup()
 	SBox * p = nullptr;
 
 	p = new SBox();
-	p->Extent = Size;
+	p->Extent = vec3d(0.3, 0.1, 0.1);
 	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center));
-	p->w = (vec3d(1, 0, 0));
-	p->v = (0);
-	p->ReactionForce = (Eigen::Vector6d::Zero());
-	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
-	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
-	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
-	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
-	p->Mass(3) = p->m;
-	p->Mass(4) = p->m;
-	p->Mass(5) = p->m;
-	p->Index = n;
-	p->Color = Colors::Red;
-	Boxes.push_back(p);
-
-	n += 6;
-
-	p = new SBox();
-	p->Extent = Size * 2;
-	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.275, 0, 0)));
-	p->w = (vec3d(2, 0, 0));
-	p->v = (vec3d(0, 1, 0));
-	p->ReactionForce = (Eigen::Vector6d::Zero());
-	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
-	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
-	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
-	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
-	p->Mass(3) = p->m;
-	p->Mass(4) = p->m;
-	p->Mass(5) = p->m;
-	p->Index = n;
-	p->Color = Colors::Green;
-	Boxes.push_back(p);
-
-	n += 6;
-
-	p = new SBox();
-	p->Extent = Size;
-	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.275, 0, 0)));
-	p->w = (0);// vec3d(5, 0, 5));
-	p->v = (0);// vec3d(0, 0, 1));
-	p->ReactionForce = (Eigen::Vector6d::Zero());
 	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
 	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
 	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
@@ -114,25 +73,67 @@ void CRigidDynamicsSimulation::Setup()
 
 	//n += 6;
 
-	//p = new SBox();
-	//p->Extent = Size * 0.5;
-	//p->PositionFrames.push_back(RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(-0.1, 0, 0)));
-	//p->wFrames.push_back(vec3d(0, 0, 2));
-	//p->vFrames.push_back(vec3d(1, 0, 0));
-	//p->contactFrames.push_back(vector<Contacts>());
-	//p->ReactionForceFrames.push_back(Eigen::Vector6d::Zero());
-	//p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
-	//p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
-	//p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
-	//p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
-	//p->Mass(3) = p->m;
-	//p->Mass(4) = p->m;
-	//p->Mass(5) = p->m;
-	//p->Index = n;
-	//p->Color = Colors::Magenta;
-	//Boxes.push_back(p);
+	p = new SBox();
+	p->Extent = vec3d(0.175, 0.075, 0.075);
+	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.3 / 2 + 0.15 / 2 + 0.1, 0, 0)));
+	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
+	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = p->m;
+	p->Mass(4) = p->m;
+	p->Mass(5) = p->m;
+	p->Index = n;
+	p->Color = Colors::Red;
+	Boxes.push_back(p);
 
-	//n += 6;
+	n += 6;
+
+	p = new SBox();
+	p->Extent = vec3d(0.175, 0.075, 0.075);
+	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0.3 / 2 + 0.45 / 2 + 0.2, 0, 0)));
+	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
+	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = p->m;
+	p->Mass(4) = p->m;
+	p->Mass(5) = p->m;
+	p->Index = n;
+	p->Color = Colors::Green;
+	Boxes.push_back(p);
+
+	n += 6;
+
+	p = new SBox();
+	p->Extent = vec3d(0.25, 0.25, 0.075);
+	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0, -0.1 - 0.1, 0)));
+	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
+	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = p->m;
+	p->Mass(4) = p->m;
+	p->Mass(5) = p->m;
+	p->Index = -1;
+	p->Color = color3f(0.1f, 0.4f, 1.f);
+	p->Fixed = true;
+	Boxes.push_back(p);
+
+	p = new SBox();
+	p->Extent = vec3d(0.12);
+	p->Position = (RotateAndTranslateToMatrix(vec3f(0, 0, 0), Center + vec3d(0, 0.1 + 0.04, 0)));
+	p->m = Density * p->Extent.X * p->Extent.Y * p->Extent.Z;
+	p->Mass(0) = (1.0 / 12.0) * p->m * Dot(p->Extent.YZ(), p->Extent.YZ());
+	p->Mass(1) = (1.0 / 12.0) * p->m * Dot(p->Extent.XZ(), p->Extent.XZ());
+	p->Mass(2) = (1.0 / 12.0) * p->m * Dot(p->Extent.XY(), p->Extent.XY());
+	p->Mass(3) = p->m;
+	p->Mass(4) = p->m;
+	p->Mass(5) = p->m;
+	p->Index = -1;
+	p->Color = color3f(0.1f, 0.4f, 1.f);
+	p->Fixed = true;
+	Boxes.push_back(p);
 
 	BodyMatrixSize = n;
 
@@ -153,16 +154,16 @@ void CRigidDynamicsSimulation::Setup()
 	joint = new SJoint();
 	joint->Body_i = Boxes[0];
 	joint->Body_k = Boxes[1];
-	joint->JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.11f, 0, 0)));
+	joint->JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.3f / 2 + 0.05, 0, 0)));
 	joint->Index = j;
 	Joints.push_back(joint);
 
 	j += 3;
 
 	joint = new SJoint();
-	joint->Body_i = Boxes[0];
+	joint->Body_i = Boxes[1];
 	joint->Body_k = Boxes[2];
-	joint->JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(-0.11f, 0, 0)));
+	joint->JointFrame = ToEigen(glm::translate(glm::mat4(1.f), glm::vec3(0.15f / 2 + 0.05, 0, 0)));
 	joint->Index = j;
 	Joints.push_back(joint);
 
@@ -172,6 +173,12 @@ void CRigidDynamicsSimulation::Setup()
 
 	AddSceneObjects();
 	UpdateSceneObjects(0);
+
+	for (int t = 0; t < Boxes.size(); ++ t)
+	{
+		cout << "Box " << t << " position: " << Boxes[t]->GetTranslation() << endl;
+		Boxes[t]->OriginalTranslation = Boxes[t]->GetTranslation();
+	}
 }
 
 Eigen::Matrix4d ToEigen(glm::mat4 const & m)
@@ -577,4 +584,11 @@ Eigen::Vector6d CRigidDynamicsSimulation::SBox::GetPhi() const
 	Phi(4) = v.Y;
 	Phi(5) = v.Z;
 	return Phi;
+}
+
+vec3d CRigidDynamicsSimulation::SBox::GetTranslation()
+{
+	vec3d p = 0;
+	p.Transform(ToGLM(Position));
+	return p;
 }

@@ -1,5 +1,7 @@
 
 #include "CApplication.h"
+#include "Util.h"
+
 
 using namespace ion;
 using namespace ion::Scene;
@@ -163,16 +165,29 @@ void CApplication::MainLoop()
 
 		if (Window->IsKeyDown(EKey::Space))
 		{
-			RigidDynamicsSimulation->Boxes[1]->AppliedForce.y() = 8.f;
-			RigidDynamicsSimulation->Boxes[1]->AppliedForce.x() = 8.f;
+			for (int i = 1; i <= 2; ++ i)
+			{
+				double const Magnitude = 50.0;
+				double const ControlRegion = 0.2;
+				vec3d Movement = RigidDynamicsSimulation->Boxes[i]->OriginalTranslation - RigidDynamicsSimulation->Boxes[i]->GetTranslation();
+
+				printf("Length %d: %.6f %s\n", i, Movement.Length(), (Movement.Length() < ControlRegion ? "under gravity control" : ""));
+				//if (Movement.Length() < ControlRegion)
+					Movement += 
+				//	//Interpolate(vec3d(), 
+						vec3d(0, 9.8 * RigidDynamicsSimulation->Boxes[i]->m / Magnitude, 0)
+				//		//, Movement.Length() / ControlRegion)
+					;
+				RigidDynamicsSimulation->Boxes[i]->AppliedForce = Magnitude * ToEigen(Movement);
+			}
 		}
-		if (Window->IsKeyDown(EKey::LeftControl))
+		if (Window->IsKeyDown(EKey::Z))
+		{
+			RigidDynamicsSimulation->Boxes[2]->LocalForce.y() = 8.f;
+		}
+		if (Window->IsKeyDown(EKey::X))
 		{
 			RigidDynamicsSimulation->Boxes[1]->LocalForce.y() = 8.f;
-		}
-		if (Window->IsKeyDown(EKey::LeftShift))
-		{
-			RigidDynamicsSimulation->Boxes[0]->LocalForce.y() = 8.f;
 		}
 		
 		// GUI

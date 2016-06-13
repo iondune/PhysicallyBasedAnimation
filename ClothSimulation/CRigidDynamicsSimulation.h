@@ -42,10 +42,13 @@ public:
 		Eigen::Vector3d AppliedForce = Eigen::Vector3d::Zero();
 		Eigen::Vector3d AppliedTorque = Eigen::Vector3d::Zero();
 		Eigen::Vector3d LocalForce = Eigen::Vector3d::Zero();
-		vec3d w;
-		vec3d v;
+		vec3d w = 0;
+		vec3d v = 0;
 
 		Eigen::Vector6d GetPhi() const;
+		vec3d GetTranslation();
+
+		vec3d OriginalTranslation;
 	};
 
 	struct SPlane
