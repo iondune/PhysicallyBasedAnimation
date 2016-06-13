@@ -39,6 +39,8 @@ public:
 	ion::Scene::CSimpleMeshSceneObject * GroundObject = nullptr;
 	CLineSceneObject * LineObject = nullptr;
 
+	vec3f GoalPosition = vec3f(0.45f, 0, 0);
+
 protected:
 
 	void InitializeEngine();

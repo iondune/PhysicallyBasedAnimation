@@ -43,6 +43,27 @@ void CApplication::OnEvent(IEvent & Event)
 				break;
 			case EKey::Space:
 				break;
+
+			case EKey::I:
+				GoalPosition.Z += 0.01;
+				break;
+			case EKey::K:
+				GoalPosition.Z -= 0.01;
+				break;
+
+			case EKey::J:
+				GoalPosition.X -= 0.01;
+				break;
+			case EKey::L:
+				GoalPosition.X += 0.01;
+				break;
+
+			case EKey::U:
+				GoalPosition.Y += 0.01;
+				break;
+			case EKey::O:
+				GoalPosition.Y -= 0.01;
+				break;
 			}
 		}
 	}
@@ -174,7 +195,7 @@ void CApplication::MainLoop()
 		LineObject->AddLine(vec3f(0.2f, 1.25f, 0), vec3f(0.45f, 1.25f, 0), Colors::Red);
 		LineObject->AddLine(vec3f(0.45f, 1.25f, 0), vec3f(0.7f, 1.25f, 0), Colors::Green);
 
-		DoCCD_IK(vec3f(0.45f, 0, 0));
+		DoCCD_IK(GoalPosition);
 
 		if (Window->IsKeyDown(EKey::Space) || Window->IsKeyDown(EKey::Z) || Window->IsKeyDown(EKey::X))
 		{
