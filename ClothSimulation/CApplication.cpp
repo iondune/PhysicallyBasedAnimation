@@ -316,14 +316,8 @@ void CApplication::MainLoop()
 				double const Magnitude = 50.0;
 				double const ControlRegion = 0.2;
 				vec3d Movement = RigidDynamicsSimulation->Boxes[i]->GoalTranslation - RigidDynamicsSimulation->Boxes[i]->GetTranslation();
+				Movement += vec3d(0, 9.8 * RigidDynamicsSimulation->Boxes[i]->m / Magnitude, 0);
 
-				printf("Length %d: %.6f %s\n", i, Movement.Length(), (Movement.Length() < ControlRegion ? "under gravity control" : ""));
-				//if (Movement.Length() < ControlRegion)
-					Movement += 
-				//	//Interpolate(vec3d(), 
-						vec3d(0, 9.8 * RigidDynamicsSimulation->Boxes[i]->m / Magnitude, 0)
-				//		//, Movement.Length() / ControlRegion)
-					;
 				RigidDynamicsSimulation->Boxes[i]->AppliedForce = Magnitude * ToEigen(Movement);
 			}
 		}
