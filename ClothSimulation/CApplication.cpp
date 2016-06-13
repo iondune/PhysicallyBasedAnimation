@@ -42,6 +42,7 @@ void CApplication::OnEvent(IEvent & Event)
 			switch (KeyboardEvent.Key)
 			{
 			case EKey::F1:
+				ToggleBool(Recording);
 				break;
 			case EKey::F:
 				RenderPass->SetActiveCamera(FreeCamera);
@@ -358,6 +359,19 @@ void CApplication::MainLoop()
 		RenderTarget->ClearColorAndDepth();
 		SceneManager->DrawAll();
 		ImGui::Render();
+
+
+		if (Recording)
+		{
+			CImage * Image = RenderTarget->ReadImage();
+
+			static int FrameCounter = 0;
+			string FileName = String::Build("Frames/Frame%06d.png", FrameCounter);
+			FrameCounter ++;
+
+			Image->Write(FileName);
+		}
+
 		Window->SwapBuffers();
 	}
 
