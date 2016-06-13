@@ -45,24 +45,24 @@ void CApplication::OnEvent(IEvent & Event)
 				break;
 
 			case EKey::I:
-				GoalPosition.Z += 0.01;
+				GoalPosition.Z -= 0.01f;
 				break;
 			case EKey::K:
-				GoalPosition.Z -= 0.01;
+				GoalPosition.Z += 0.01f;
 				break;
 
 			case EKey::J:
-				GoalPosition.X -= 0.01;
+				GoalPosition.X -= 0.01f;
 				break;
 			case EKey::L:
-				GoalPosition.X += 0.01;
+				GoalPosition.X += 0.01f;
 				break;
 
 			case EKey::U:
-				GoalPosition.Y += 0.01;
+				GoalPosition.Y += 0.01f;
 				break;
 			case EKey::O:
-				GoalPosition.Y -= 0.01;
+				GoalPosition.Y -= 0.01f;
 				break;
 			}
 		}
@@ -119,7 +119,7 @@ void CApplication::InitializeEngine()
 void CApplication::LoadAssets()
 {
 	CubeMesh = CGeometryCreator::CreateCube();
-	SphereMesh = CGeometryCreator::CreateSphere();
+	SphereMesh = CGeometryCreator::CreateSphere(0.5f, 12, 8);
 
 	ClothShader = AssetManager->LoadShader("Cloth");
 	GroundShader = AssetManager->LoadShader("Ground");
@@ -156,6 +156,14 @@ void CApplication::SetupScene()
 
 CLineSceneObject * lns = nullptr;
 
+CSimpleMeshSceneObject * jnt1 = nullptr;
+CSimpleMeshSceneObject * jnt2 = nullptr;
+CSimpleMeshSceneObject * jnt3 = nullptr;
+CSimpleMeshSceneObject * jnt1hlf = nullptr;
+CSimpleMeshSceneObject * jnt2hlf = nullptr;
+CSimpleMeshSceneObject * jnt3hlf = nullptr;
+CSimpleMeshSceneObject * gl = nullptr;
+
 void CApplication::AddSceneObjects()
 {
 	GroundObject = new CSimpleMeshSceneObject();
@@ -176,6 +184,62 @@ void CApplication::AddSceneObjects()
 	lns = LineObject = new CLineSceneObject();
 	LineObject->SetShader(ColorShader);
 	RenderPass->AddSceneObject(LineObject);
+
+	jnt1 = new CSimpleMeshSceneObject();
+	jnt1->SetMesh(SphereMesh);
+	jnt1->SetScale(0.0125f);
+	jnt1->SetShader(DiffuseShader);
+	jnt1->SetUniform("uColor", CUniform<color3f>(Colors::Magenta));
+	jnt1->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+	RenderPass->AddSceneObject(jnt1);
+
+	jnt2 = new CSimpleMeshSceneObject();
+	jnt2->SetMesh(SphereMesh);
+	jnt2->SetScale(0.0125f);
+	jnt2->SetShader(DiffuseShader);
+	jnt2->SetUniform("uColor", CUniform<color3f>(Colors::Orange));
+	jnt2->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+	RenderPass->AddSceneObject(jnt2);
+
+	jnt3 = new CSimpleMeshSceneObject();
+	jnt3->SetMesh(SphereMesh);
+	jnt3->SetScale(0.0125f);
+	jnt3->SetShader(DiffuseShader);
+	jnt3->SetUniform("uColor", CUniform<color3f>(Colors::Cyan));
+	jnt3->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+	RenderPass->AddSceneObject(jnt3);
+
+	gl = new CSimpleMeshSceneObject();
+	gl->SetMesh(SphereMesh);
+	gl->SetScale(0.01f);
+	gl->SetShader(DiffuseShader);
+	gl->SetUniform("uColor", CUniform<color3f>(Colors::Yellow * 0.75f));
+	gl->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+	RenderPass->AddSceneObject(gl);
+
+	jnt1hlf = new CSimpleMeshSceneObject();
+	jnt1hlf->SetMesh(CubeMesh);
+	jnt1hlf->SetScale(0.0125f);
+	jnt1hlf->SetShader(DiffuseShader);
+	jnt1hlf->SetUniform("uColor", CUniform<color3f>(Colors::Magenta));
+	jnt1hlf->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+	RenderPass->AddSceneObject(jnt1hlf);
+
+	jnt2hlf = new CSimpleMeshSceneObject();
+	jnt2hlf->SetMesh(CubeMesh);
+	jnt2hlf->SetScale(0.0125f);
+	jnt2hlf->SetShader(DiffuseShader);
+	jnt2hlf->SetUniform("uColor", CUniform<color3f>(Colors::Orange));
+	jnt2hlf->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+	RenderPass->AddSceneObject(jnt2hlf);
+
+	jnt3hlf = new CSimpleMeshSceneObject();
+	jnt3hlf->SetMesh(CubeMesh);
+	jnt3hlf->SetScale(0.0125f);
+	jnt3hlf->SetShader(DiffuseShader);
+	jnt3hlf->SetUniform("uColor", CUniform<color3f>(Colors::Cyan));
+	jnt3hlf->SetFeatureEnabled(EDrawFeature::Wireframe, true);
+	RenderPass->AddSceneObject(jnt3hlf);
 }
 
 void DoCCD_IK(vec3f const & Goal);
@@ -196,6 +260,7 @@ void CApplication::MainLoop()
 		LineObject->AddLine(vec3f(0.45f, 1.25f, 0), vec3f(0.7f, 1.25f, 0), Colors::Green);
 
 		DoCCD_IK(GoalPosition);
+		gl->SetPosition(vec3f(0.2f, 1.25f, 0) + GoalPosition);
 
 		if (Window->IsKeyDown(EKey::Space) || Window->IsKeyDown(EKey::Z) || Window->IsKeyDown(EKey::X))
 		{
@@ -271,9 +336,31 @@ void DoCCD_IK(vec3f const & Goal)
 			return Rot * Trans;
 		}
 
+		glm::mat4 getLocalHalfTransformation()
+		{
+			glm::mat4 Trans = glm::translate(glm::mat4(1.f), glm::vec3(Length / 2.f, 0, 0));
+
+			glm::mat4 Rot = glm::mat4(1.f);
+			Rot = glm::rotate(Rot, Rotation.Z, glm::vec3(0, 0, 1));
+			Rot = glm::rotate(Rot, Rotation.Y, glm::vec3(0, 1, 0));
+			Rot = glm::rotate(Rot, Rotation.X, glm::vec3(1, 0, 0));
+
+			return Rot * Trans;
+		}
+
 		glm::mat4 getTransformation()
 		{
 			glm::mat4 Trans = getLocalTransformation();
+
+			if (Parent)
+				Trans = Parent->getTransformation() * Trans;
+
+			return Trans;
+		}
+
+		glm::mat4 getHalfTransformation()
+		{
+			glm::mat4 Trans = getLocalHalfTransformation();
 
 			if (Parent)
 				Trans = Parent->getTransformation() * Trans;
@@ -285,6 +372,14 @@ void DoCCD_IK(vec3f const & Goal)
 		{
 			glm::vec4 v(0, 0, 0, 1);
 			v = getTransformation() * v;
+
+			return vec3f(v.x, v.y, v.z);
+		}
+
+		vec3f const getHalfLocation()
+		{
+			glm::vec4 v(0, 0, 0, 1);
+			v = getHalfTransformation() * v;
 
 			return vec3f(v.x, v.y, v.z);
 		}
@@ -336,12 +431,18 @@ void DoCCD_IK(vec3f const & Goal)
 					}
 				}
 			}
-			Delta /= 1.25f;
+			Delta /= 1.1f;
 		}
 	}
 
 	vec3f cent = vec3f(0.2f, 1.25f, 0);
 	lns->AddLine(cent, cent + Root.getLocation(), Colors::Magenta);
+	jnt1->SetPosition(cent + Root.getLocation());
+	jnt1hlf->SetPosition(cent + Root.getHalfLocation());
 	lns->AddLine(cent + Root.getLocation(), cent + Joint1.getLocation(), Colors::Orange);
+	jnt2->SetPosition(cent + Joint1.getLocation());
+	jnt2hlf->SetPosition(cent + Joint1.getHalfLocation());
 	lns->AddLine(cent + Joint1.getLocation(), cent + Hand.getLocation(), Colors::Cyan);
+	jnt3->SetPosition(cent + Hand.getLocation());
+	jnt3hlf->SetPosition(cent + Hand.getHalfLocation());
 }
