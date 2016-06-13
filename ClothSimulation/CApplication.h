@@ -41,6 +41,8 @@ public:
 
 	vec3f GoalPosition = vec3f(0.45f, 0, 0);
 
+	bool ArmTracking = false;
+
 protected:
 
 	void InitializeEngine();

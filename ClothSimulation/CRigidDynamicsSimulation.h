@@ -49,6 +49,7 @@ public:
 		vec3d GetTranslation();
 
 		vec3d OriginalTranslation;
+		vec3d GoalTranslation;
 	};
 
 	struct SPlane

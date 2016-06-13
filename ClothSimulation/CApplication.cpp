@@ -10,6 +10,17 @@ using namespace ion::Graphics;
 
 bool needUpdate = true;
 
+CLineSceneObject * lns = nullptr;
+
+CSimpleMeshSceneObject * jnt1 = nullptr;
+CSimpleMeshSceneObject * jnt2 = nullptr;
+CSimpleMeshSceneObject * jnt3 = nullptr;
+CSimpleMeshSceneObject * jnt1hlf = nullptr;
+CSimpleMeshSceneObject * jnt2hlf = nullptr;
+CSimpleMeshSceneObject * jnt3hlf = nullptr;
+CSimpleMeshSceneObject * gl = nullptr;
+
+
 void CApplication::Run()
 {
 	InitializeEngine();
@@ -44,6 +55,7 @@ void CApplication::OnEvent(IEvent & Event)
 			case EKey::P:
 				break;
 			case EKey::Space:
+				ToggleBool(ArmTracking);
 				break;
 
 			case EKey::I:
@@ -71,6 +83,34 @@ void CApplication::OnEvent(IEvent & Event)
 			case EKey::O:
 				GoalPosition.Y -= 0.01f;
 				needUpdate = true;
+				break;
+
+			case EKey::Z:
+				for (int i = 1; i <= 2; ++ i)
+				{
+					RigidDynamicsSimulation->Boxes[i]->GoalTranslation = RigidDynamicsSimulation->Boxes[i]->OriginalTranslation;
+					std::swap(RigidDynamicsSimulation->Boxes[i]->GoalTranslation.X, RigidDynamicsSimulation->Boxes[i]->GoalTranslation.Z);
+				}
+				break;
+			case EKey::X:
+				for (int i = 1; i <= 2; ++ i)
+				{
+					RigidDynamicsSimulation->Boxes[i]->GoalTranslation = RigidDynamicsSimulation->Boxes[i]->OriginalTranslation;
+					std::swap(RigidDynamicsSimulation->Boxes[i]->GoalTranslation.X, RigidDynamicsSimulation->Boxes[i]->GoalTranslation.Z);
+					RigidDynamicsSimulation->Boxes[i]->GoalTranslation.Z *= -1;
+				}
+				break;
+			case EKey::C:
+				for (int i = 1; i <= 2; ++ i)
+				{
+					RigidDynamicsSimulation->Boxes[i]->GoalTranslation = (i == 1 ? jnt1hlf->GetPosition() : jnt2hlf->GetPosition());
+				}
+				break;
+			case EKey::V:
+				for (int i = 1; i <= 2; ++ i)
+				{
+					RigidDynamicsSimulation->Boxes[i]->GoalTranslation = RigidDynamicsSimulation->Boxes[i]->OriginalTranslation;
+				}
 				break;
 			}
 		}
@@ -161,16 +201,6 @@ void CApplication::SetupScene()
 
 	RenderPass->SetActiveCamera(FreeCamera);
 }
-
-CLineSceneObject * lns = nullptr;
-
-CSimpleMeshSceneObject * jnt1 = nullptr;
-CSimpleMeshSceneObject * jnt2 = nullptr;
-CSimpleMeshSceneObject * jnt3 = nullptr;
-CSimpleMeshSceneObject * jnt1hlf = nullptr;
-CSimpleMeshSceneObject * jnt2hlf = nullptr;
-CSimpleMeshSceneObject * jnt3hlf = nullptr;
-CSimpleMeshSceneObject * gl = nullptr;
 
 void CApplication::AddSceneObjects()
 {
@@ -264,8 +294,8 @@ void CApplication::MainLoop()
 		TimeManager->Update();
 
 		LineObject->ResetLines();
-		LineObject->AddLine(vec3f(0.2f, 1.25f, 0), vec3f(0.45f, 1.25f, 0), Colors::Red);
-		LineObject->AddLine(vec3f(0.45f, 1.25f, 0), vec3f(0.7f, 1.25f, 0), Colors::Green);
+		//LineObject->AddLine(vec3f(0.2f, 1.25f, 0), vec3f(0.45f, 1.25f, 0), Colors::Red);
+		//LineObject->AddLine(vec3f(0.45f, 1.25f, 0), vec3f(0.7f, 1.25f, 0), Colors::Green);
 
 		if (needUpdate)
 		{
@@ -273,27 +303,19 @@ void CApplication::MainLoop()
 			gl->SetPosition(vec3f(0.2f, 1.25f, 0) + GoalPosition);
 			needUpdate = false;
 		}
-		if (Window->IsKeyDown(EKey::Space) || Window->IsKeyDown(EKey::Z) || Window->IsKeyDown(EKey::X) || Window->IsKeyDown(EKey::C))
+
+		vec3f cent = vec3f(0.2f, 1.25f, 0);
+		lns->AddLine(cent, jnt1->GetPosition(), Colors::Magenta);
+		lns->AddLine(jnt1->GetPosition(), jnt2->GetPosition(), Colors::Orange);
+		lns->AddLine(jnt2->GetPosition(), jnt3->GetPosition(), Colors::Cyan);
+
+		if (ArmTracking)
 		{
 			for (int i = 1; i <= 2; ++ i)
 			{
 				double const Magnitude = 50.0;
 				double const ControlRegion = 0.2;
-				vec3d GoalPosition = RigidDynamicsSimulation->Boxes[i]->OriginalTranslation;
-				if (Window->IsKeyDown(EKey::Z))
-				{
-					std::swap(GoalPosition.X, GoalPosition.Z);
-				}
-				if (Window->IsKeyDown(EKey::X))
-				{
-					std::swap(GoalPosition.X, GoalPosition.Z);
-					GoalPosition.Z *= -1;
-				}
-				if (Window->IsKeyDown(EKey::C))
-				{
-					GoalPosition = (i == 1 ? jnt1hlf->GetPosition() : jnt2hlf->GetPosition());
-				}
-				vec3d Movement = GoalPosition - RigidDynamicsSimulation->Boxes[i]->GetTranslation();
+				vec3d Movement = RigidDynamicsSimulation->Boxes[i]->GoalTranslation - RigidDynamicsSimulation->Boxes[i]->GetTranslation();
 
 				printf("Length %d: %.6f %s\n", i, Movement.Length(), (Movement.Length() < ControlRegion ? "under gravity control" : ""));
 				//if (Movement.Length() < ControlRegion)
@@ -451,13 +473,10 @@ void DoCCD_IK(vec3f const & Goal)
 	}
 
 	vec3f cent = vec3f(0.2f, 1.25f, 0);
-	lns->AddLine(cent, cent + Root.getLocation(), Colors::Magenta);
 	jnt1->SetPosition(cent + Root.getLocation());
 	jnt1hlf->SetPosition(cent + Root.getHalfLocation());
-	lns->AddLine(cent + Root.getLocation(), cent + Joint1.getLocation(), Colors::Orange);
 	jnt2->SetPosition(cent + Joint1.getLocation());
 	jnt2hlf->SetPosition(cent + Joint1.getHalfLocation());
-	lns->AddLine(cent + Joint1.getLocation(), cent + Hand.getLocation(), Colors::Cyan);
 	jnt3->SetPosition(cent + Hand.getLocation());
 	jnt3hlf->SetPosition(cent + Hand.getHalfLocation());
 }
