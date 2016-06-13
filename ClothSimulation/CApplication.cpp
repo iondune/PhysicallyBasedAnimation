@@ -149,6 +149,10 @@ void CApplication::AddSceneObjects()
 
 	PointLight = new CPointLight();
 	RenderPass->AddLight(PointLight);
+
+	LineObject = new CLineSceneObject();
+	LineObject->SetShader(ColorShader);
+	RenderPass->AddSceneObject(LineObject);
 }
 
 
@@ -162,6 +166,10 @@ void CApplication::MainLoop()
 	while (WindowManager->Run())
 	{
 		TimeManager->Update();
+
+		LineObject->ResetLines();
+		LineObject->AddLine(vec3f(0.2f, 1.25f, 0), vec3f(0.45f, 1.25f, 0), Colors::Red);
+		LineObject->AddLine(vec3f(0.45f, 1.25f, 0), vec3f(0.7f, 1.25f, 0), Colors::Green);
 
 		if (Window->IsKeyDown(EKey::Space) || Window->IsKeyDown(EKey::Z) || Window->IsKeyDown(EKey::X))
 		{

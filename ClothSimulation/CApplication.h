@@ -4,6 +4,7 @@
 #include <ionEngine.h>
 #include "CSimulationSystem.h"
 #include "CRigidDynamicsSimulation.h"
+#include "CLineSceneObject.h"
 
 
 class CApplication : public Singleton<CApplication>, public IEventListener
@@ -36,6 +37,7 @@ public:
 	SharedPointer<ion::Graphics::ITexture> GroundTexture;
 
 	ion::Scene::CSimpleMeshSceneObject * GroundObject = nullptr;
+	CLineSceneObject * LineObject = nullptr;
 
 protected:
 

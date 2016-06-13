@@ -14,6 +14,7 @@
     <ClCompile Include="Rigid.cpp">
       <Filter>Provided</Filter>
     </ClCompile>
+    <ClCompile Include="CLineSceneObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
@@ -28,6 +29,7 @@
     <ClInclude Include="Rigid.h">
       <Filter>Provided</Filter>
     </ClInclude>
+    <ClInclude Include="CLineSceneObject.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Provided">

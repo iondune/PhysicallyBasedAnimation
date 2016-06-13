@@ -28,6 +28,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CApplication.cpp" />
+    <ClCompile Include="CLineSceneObject.cpp" />
     <ClCompile Include="CRigidDynamicsSimulation.cpp" />
     <ClCompile Include="CSimulationSystem.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -39,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CApplication.h" />
+    <ClInclude Include="CLineSceneObject.h" />
     <ClInclude Include="CRigidDynamicsSimulation.h" />
     <ClInclude Include="CSimulationSystem.h" />
     <ClInclude Include="MosekSolver.h" />
