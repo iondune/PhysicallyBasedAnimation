@@ -273,7 +273,7 @@ void CApplication::MainLoop()
 			gl->SetPosition(vec3f(0.2f, 1.25f, 0) + GoalPosition);
 			needUpdate = false;
 		}
-		if (Window->IsKeyDown(EKey::Space) || Window->IsKeyDown(EKey::Z) || Window->IsKeyDown(EKey::X))
+		if (Window->IsKeyDown(EKey::Space) || Window->IsKeyDown(EKey::Z) || Window->IsKeyDown(EKey::X) || Window->IsKeyDown(EKey::C))
 		{
 			for (int i = 1; i <= 2; ++ i)
 			{
@@ -288,6 +288,10 @@ void CApplication::MainLoop()
 				{
 					std::swap(GoalPosition.X, GoalPosition.Z);
 					GoalPosition.Z *= -1;
+				}
+				if (Window->IsKeyDown(EKey::C))
+				{
+					GoalPosition = (i == 1 ? jnt1hlf->GetPosition() : jnt2hlf->GetPosition());
 				}
 				vec3d Movement = GoalPosition - RigidDynamicsSimulation->Boxes[i]->GetTranslation();
 
