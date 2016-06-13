@@ -8,6 +8,8 @@ using namespace ion::Scene;
 using namespace ion::Graphics;
 
 
+bool needUpdate = true;
+
 void CApplication::Run()
 {
 	InitializeEngine();
@@ -46,23 +48,29 @@ void CApplication::OnEvent(IEvent & Event)
 
 			case EKey::I:
 				GoalPosition.Z -= 0.01f;
+				needUpdate = true;
 				break;
 			case EKey::K:
 				GoalPosition.Z += 0.01f;
+				needUpdate = true;
 				break;
 
 			case EKey::J:
 				GoalPosition.X -= 0.01f;
+				needUpdate = true;
 				break;
 			case EKey::L:
 				GoalPosition.X += 0.01f;
+				needUpdate = true;
 				break;
 
 			case EKey::U:
 				GoalPosition.Y += 0.01f;
+				needUpdate = true;
 				break;
 			case EKey::O:
 				GoalPosition.Y -= 0.01f;
+				needUpdate = true;
 				break;
 			}
 		}
@@ -259,9 +267,12 @@ void CApplication::MainLoop()
 		LineObject->AddLine(vec3f(0.2f, 1.25f, 0), vec3f(0.45f, 1.25f, 0), Colors::Red);
 		LineObject->AddLine(vec3f(0.45f, 1.25f, 0), vec3f(0.7f, 1.25f, 0), Colors::Green);
 
-		DoCCD_IK(GoalPosition);
-		gl->SetPosition(vec3f(0.2f, 1.25f, 0) + GoalPosition);
-
+		if (needUpdate)
+		{
+			DoCCD_IK(GoalPosition);
+			gl->SetPosition(vec3f(0.2f, 1.25f, 0) + GoalPosition);
+			needUpdate = false;
+		}
 		if (Window->IsKeyDown(EKey::Space) || Window->IsKeyDown(EKey::Z) || Window->IsKeyDown(EKey::X))
 		{
 			for (int i = 1; i <= 2; ++ i)
