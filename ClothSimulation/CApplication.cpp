@@ -327,10 +327,6 @@ void CApplication::MainLoop()
 				RigidDynamicsSimulation->Boxes[i]->AppliedForce = Magnitude * ToEigen(Movement);
 			}
 		}
-		if (Window->IsKeyDown(EKey::O))
-		{
-			RigidDynamicsSimulation->Boxes[1]->AppliedTorque.x() = 0.01;
-		}
 		
 		// GUI
 		GUIManager->NewFrame();
