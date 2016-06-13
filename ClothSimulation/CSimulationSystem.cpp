@@ -1,6 +1,7 @@
 
 #include "CSimulationSystem.h"
 #include "CRigidDynamicsSimulation.h"
+#include "CApplication.h"
 
 using namespace ion;
 
@@ -57,27 +58,14 @@ void CSimulationSystem::Update()
 
 void CSimulationSystem::GUI()
 {
+	SingletonPointer<CApplication> Application;
+
 	MaxFrames = SimulatedFrames - 1;
 
 	ImGui::SetNextWindowPos(ImVec2(10, 10));
 	ImGui::Begin("Simulation");
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::Separator();
-	if (Simulating)
-	{
-		if (ImGui::Button("Stop"))
-		{
-			Simulating = false;
-		}
-	}
-	else
-	{
-		if (ImGui::Button("Simulate"))
-		{
-			Simulating = true;
-		}
-	}
-	ImGui::SameLine();
 	if (Paused)
 	{
 		if (ImGui::Button("Play"))
@@ -113,30 +101,9 @@ void CSimulationSystem::GUI()
 	bool UpdatedNeeded = false;
 
 	ImGui::Text("Simulated Frames: %d", MaxFrames);
-	if (ImGui::SliderInt("Current Frame", &DisplayedFrame, 0, MaxFrames))
-	{
-		UpdatedNeeded = true;
-		Paused = true;
-	}
-	if (ImGui::Button("<< Previous"))
-	{
-		if (DisplayedFrame > 0)
-		{
-			--DisplayedFrame;
-			UpdatedNeeded = true;
-		}
-		Paused = true;
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Next >>"))
-	{
-		if (DisplayedFrame < MaxFrames)
-		{
-			++DisplayedFrame;
-			UpdatedNeeded = true;
-		}
-		Paused = true;
-	}
+	ImGui::Separator();
+
+	ImGui::Text("End Effector: %.3f %.3f %.3f", Application->GoalPosition.X, Application->GoalPosition.Y, Application->GoalPosition.Z);
 
 	if (UpdatedNeeded)
 	{
