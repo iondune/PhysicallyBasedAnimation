@@ -172,7 +172,7 @@ void CRigidDynamicsSimulation::Setup()
 	JointMatrixSize = j;
 
 	AddSceneObjects();
-	UpdateSceneObjects(0);
+	UpdateSceneObjects();
 
 	for (int t = 0; t < Boxes.size(); ++ t)
 	{
@@ -407,6 +407,13 @@ void CRigidDynamicsSimulation::SimulateStep(double const TimeDelta)
 		Box->v = (ToIon3D(v_k_1));
 		Box->Position = ((E_i_k_1));
 		Box->ReactionForce = (ReactionForces.segment(Box->Index, 6));
+	}
+}
+
+void CRigidDynamicsSimulation::FinishSteps()
+{
+	for (SBox * const Box : Boxes)
+	{
 		Box->AppliedForce = Eigen::Vector3d::Zero();
 		Box->AppliedTorque = Eigen::Vector3d::Zero();
 		Box->LocalForce = Eigen::Vector3d::Zero();
@@ -536,7 +543,7 @@ void CRigidDynamicsSimulation::AddSceneObjects()
 	}
 }
 
-void CRigidDynamicsSimulation::UpdateSceneObjects(uint const CurrentFrame)
+void CRigidDynamicsSimulation::UpdateSceneObjects()
 {
 	for (SBox * Box : Boxes)
 	{

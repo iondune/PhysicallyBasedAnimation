@@ -11,10 +11,11 @@ public:
 
 	virtual void Setup() = 0;
 	virtual void SimulateStep(double const TimeDelta) = 0;
+	virtual void FinishSteps() = 0;
 	virtual void GUI() = 0;
 	virtual void Reset() = 0;
 
-	virtual void UpdateSceneObjects(uint const CurrentFrame) = 0;
+	virtual void UpdateSceneObjects() = 0;
 
 };
 
@@ -40,10 +41,7 @@ protected:
 
 	vector<ISimulation *> Simulations;
 
-	int DisplayedFrame = 0;
-	int MaxFrames = 1;
-
-	std::atomic<int> SimulatedFrames = 1;
+	int SimulatedFrames = 0;
 
 	bool Running = true;
 	bool Simulating = false;

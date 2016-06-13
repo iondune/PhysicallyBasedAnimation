@@ -31,27 +31,22 @@ void CSimulationSystem::Update()
 
 		double TimeNeeded = TimeStep / pow(10, PlaybackSpeed);
 
-		if (StepAccumulator > TimeNeeded)
+		while (StepAccumulator > TimeNeeded)
 		{
-			if (StepAccumulator > TimeNeeded * 2)
-				StepAccumulator = TimeNeeded; // Behind by a total frame, simulate next immediately
-			else
-				StepAccumulator -= TimeNeeded;
+			StepAccumulator -= TimeNeeded;
 
 			for (auto Simulation : Simulations)
 			{
 				Simulation->SimulateStep(TimeStep);
 			}
-			SimulatedFrames ++;
 
-			if (DisplayedFrame < MaxFrames)
-			{
-				++DisplayedFrame;
-				for (auto Simulation : Simulations)
-				{
-					Simulation->UpdateSceneObjects(DisplayedFrame);
-				}
-			}
+			SimulatedFrames ++;
+		}
+
+		for (auto Simulation : Simulations)
+		{
+			Simulation->FinishSteps();
+			Simulation->UpdateSceneObjects();
 		}
 	}
 }
@@ -59,8 +54,6 @@ void CSimulationSystem::Update()
 void CSimulationSystem::GUI()
 {
 	SingletonPointer<CApplication> Application;
-
-	MaxFrames = SimulatedFrames - 1;
 
 	ImGui::SetNextWindowPos(ImVec2(10, 10));
 	ImGui::Begin("Simulation");
@@ -98,20 +91,10 @@ void CSimulationSystem::GUI()
 	ImGui::Text("Playback Speed: 1e%d", PlaybackSpeed);
 	ImGui::SliderInt("Playback Speed", &PlaybackSpeed, -3, 0);
 
-	bool UpdatedNeeded = false;
-
-	ImGui::Text("Simulated Frames: %d", MaxFrames);
+	ImGui::Text("Simulated Frames: %d", SimulatedFrames);
 	ImGui::Separator();
 
 	ImGui::Text("End Effector: %.3f %.3f %.3f", Application->GoalPosition.X, Application->GoalPosition.Y, Application->GoalPosition.Z);
-
-	if (UpdatedNeeded)
-	{
-		for (auto Simulation : Simulations)
-		{
-			Simulation->UpdateSceneObjects(DisplayedFrame);
-		}
-	}
 
 	for (auto Simulation : Simulations)
 	{
@@ -126,12 +109,11 @@ void CSimulationSystem::Reset()
 	Simulating = false;
 
 	SimulatedFrames = 1;
-	DisplayedFrame = 0;
 
 	for (auto Simulation : Simulations)
 	{
 		Simulation->Reset();
-		Simulation->UpdateSceneObjects(DisplayedFrame);
+		Simulation->UpdateSceneObjects();
 	}
 }
 
