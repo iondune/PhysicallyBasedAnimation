@@ -33,7 +33,7 @@ public:
 
 	void AddSimulation(ISimulation * Simulation);
 
-	double TimeStep = 1e-3;
+	double TimeStep = 1e-2;
 	int TimeStepPower = -3;
 
 protected:
@@ -44,7 +44,6 @@ protected:
 	int MaxFrames = 1;
 
 	std::atomic<int> SimulatedFrames = 1;
-	std::mutex SimulationMutex;
 
 	bool Running = true;
 	bool Simulating = false;

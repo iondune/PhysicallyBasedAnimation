@@ -32,15 +32,16 @@ void CSimulationSystem::Update()
 
 		if (StepAccumulator > TimeNeeded)
 		{
-			StepAccumulator = 0;
+			if (StepAccumulator > TimeNeeded * 2)
+				StepAccumulator = TimeNeeded; // Behind by a total frame, simulate next immediately
+			else
+				StepAccumulator -= TimeNeeded;
 
-			SimulationMutex.lock();
 			for (auto Simulation : Simulations)
 			{
 				Simulation->SimulateStep(TimeStep);
 			}
 			SimulatedFrames ++;
-			SimulationMutex.unlock();
 
 			if (DisplayedFrame < MaxFrames)
 			{
@@ -156,7 +157,6 @@ void CSimulationSystem::GUI()
 void CSimulationSystem::Reset()
 {
 	Simulating = false;
-	SimulationMutex.lock();
 
 	SimulatedFrames = 1;
 	DisplayedFrame = 0;
@@ -166,8 +166,6 @@ void CSimulationSystem::Reset()
 		Simulation->Reset();
 		Simulation->UpdateSceneObjects(DisplayedFrame);
 	}
-
-	SimulationMutex.unlock();
 }
 
 void CSimulationSystem::AddSimulation(ISimulation * Simulation)
