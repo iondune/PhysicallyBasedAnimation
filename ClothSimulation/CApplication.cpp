@@ -58,33 +58,6 @@ void CApplication::OnEvent(IEvent & Event)
 				ToggleBool(ArmTracking);
 				break;
 
-			case EKey::I:
-				GoalPosition.Z -= 0.01f;
-				needUpdate = true;
-				break;
-			case EKey::K:
-				GoalPosition.Z += 0.01f;
-				needUpdate = true;
-				break;
-
-			case EKey::J:
-				GoalPosition.X -= 0.01f;
-				needUpdate = true;
-				break;
-			case EKey::L:
-				GoalPosition.X += 0.01f;
-				needUpdate = true;
-				break;
-
-			case EKey::U:
-				GoalPosition.Y += 0.01f;
-				needUpdate = true;
-				break;
-			case EKey::O:
-				GoalPosition.Y -= 0.01f;
-				needUpdate = true;
-				break;
-
 			case EKey::Z:
 				for (int i = 1; i <= 2; ++ i)
 				{
@@ -111,6 +84,58 @@ void CApplication::OnEvent(IEvent & Event)
 				{
 					RigidDynamicsSimulation->Boxes[i]->GoalTranslation = RigidDynamicsSimulation->Boxes[i]->OriginalTranslation;
 				}
+				break;
+
+			case EKey::KeyPad1:
+				GoalPosition = vec3f(0.330f, 0.190f, 0.0f);
+				needUpdate = true;
+				break;
+
+			case EKey::KeyPad2:
+				GoalPosition = vec3f(0.0f, -0.050f, -0.320f);
+				needUpdate = true;
+				break;
+
+			case EKey::KeyPad3:
+				GoalPosition = vec3f(0.230f, -0.050f, -0.320f);
+				needUpdate = true;
+				break;
+
+			case EKey::KeyPad4:
+				GoalPosition = vec3f(0.280f, -0.360f, -0.110f);
+				needUpdate = true;
+				break;
+			}
+		}
+		else if (KeyboardEvent.Pressed)
+		{
+			switch (KeyboardEvent.Key)
+			{
+			case EKey::I:
+				GoalPosition.Z -= 0.01f;
+				needUpdate = true;
+				break;
+			case EKey::K:
+				GoalPosition.Z += 0.01f;
+				needUpdate = true;
+				break;
+
+			case EKey::J:
+				GoalPosition.X -= 0.01f;
+				needUpdate = true;
+				break;
+			case EKey::L:
+				GoalPosition.X += 0.01f;
+				needUpdate = true;
+				break;
+
+			case EKey::U:
+				GoalPosition.Y += 0.01f;
+				needUpdate = true;
+				break;
+			case EKey::O:
+				GoalPosition.Y -= 0.01f;
+				needUpdate = true;
 				break;
 			}
 		}
